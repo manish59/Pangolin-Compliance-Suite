@@ -1,6 +1,8 @@
 from django.urls import path
 from . import views
 
+# app_name = "projects"
+
 urlpatterns = [
     # Project list view - main page with the table and search functionality
     path('', views.ProjectListView.as_view(), name='project_list'),

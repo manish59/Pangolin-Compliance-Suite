@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'environments',
     'test_protocols',
     'rest_framework',
+    'authentication',
 ]
 
 MIDDLEWARE = [
