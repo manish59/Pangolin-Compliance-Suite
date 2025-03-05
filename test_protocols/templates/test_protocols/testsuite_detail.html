@@ -15,13 +15,13 @@
 
 {% block action_buttons %}
 <div class="flex justify-end space-x-2">
-    <a href="{% url 'testsuite:testsuite_update' testsuite.id %}" class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 active:bg-green-800 focus:outline-none focus:border-green-800 focus:ring focus:ring-green-200 disabled:opacity-25 transition">
+    <a href="{% url 'testsuite:testsuite_update' testsuite.pk %}" class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 active:bg-green-800 focus:outline-none focus:border-green-800 focus:ring focus:ring-green-200 disabled:opacity-25 transition">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
         </svg>
         Edit Test Suite
     </a>
-    <a href="{% url 'testsuite:suite_protocol_create' testsuite.id %}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:border-blue-800 focus:ring focus:ring-blue-200 disabled:opacity-25 transition">
+    <a href="{% url 'testsuite:suite_protocol_create' testsuite.pk %}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:border-blue-800 focus:ring focus:ring-blue-200 disabled:opacity-25 transition">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         </svg>
@@ -97,7 +97,7 @@
                     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                         <td class="px-6 py-4">{{ protocol.order_index }}</td>
                         <td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">
-                            <a href="{% url 'testsuite:protocol_detail' protocol.id %}" class="text-blue-600 dark:text-blue-400 hover:underline">
+                            <a href="{% url 'testsuite:protocol_detail' protocol.pk %}" class="text-blue-600 dark:text-blue-400 hover:underline">
                                 {{ protocol.name }}
                             </a>
                         </td>
@@ -118,19 +118,24 @@
                         </td>
                         <td class="px-6 py-4">
                             {% if protocol.connection_config %}
-                                <a href="{% url 'testsuite:connection_detail' protocol.connection_config.id %}" class="text-blue-600 dark:text-blue-400 hover:underline">
+                                <a href="/test_suites/connections/{{ protocol.connection_config.pk }}" class="text-blue-600 dark:text-blue-400 hover:underline">
                                     {{ protocol.connection_config.config_type|title }}
                                 </a>
                             {% else %}
-                                <a href="{% url 'testsuite:protocol_connection_create' protocol.id %}" class="text-gray-500 dark:text-gray-400 hover:underline">
-                                    Add Connection
+                                <a href="{% url 'testsuite:protocol_connection_create' protocol.pk %}" class="text-gray-500 dark:text-gray-400 hover:underline">
+                                    <span class="inline-flex items-center">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                        </svg>
+                                        Add Connection
+                                    </span>
                                 </a>
                             {% endif %}
                         </td>
                         <td class="px-6 py-4">
                             {% with last_run=protocol.runs.first %}
                                 {% if last_run %}
-                                    <a href="{% url 'testsuite:run_detail' last_run.id %}" class="text-blue-600 dark:text-blue-400 hover:underline">
+                                    <a href="{% url 'testsuite:run_detail' last_run.pk %}" class="text-blue-600 dark:text-blue-400 hover:underline">
                                         {{ last_run.started_at|date:"M d, Y" }}
                                     </a>
                                 {% else %}
@@ -139,9 +144,9 @@
                             {% endwith %}
                         </td>
                         <td class="px-6 py-4 flex space-x-2">
-                            <a href="{% url 'testsuite:protocol_detail' protocol.id %}" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">View</a>
-                            <a href="{% url 'testsuite:protocol_update' protocol.id %}" class="font-medium text-green-600 dark:text-green-500 hover:underline">Edit</a>
-                            <a href="{% url 'testsuite:protocol_run_create' protocol.id %}" class="font-medium text-indigo-600 dark:text-indigo-500 hover:underline">Run</a>
+                            <a href="{% url 'testsuite:protocol_detail' protocol.pk %}" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">View</a>
+                            <a href="{% url 'testsuite:protocol_update' protocol.pk %}" class="font-medium text-green-600 dark:text-green-500 hover:underline">Edit</a>
+                            <a href="{% url 'testsuite:protocol_run_create' protocol.pk %}" class="font-medium text-indigo-600 dark:text-indigo-500 hover:underline">Run</a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -151,7 +156,7 @@
         {% else %}
         <div class="bg-white dark:bg-gray-800 p-6 text-center border border-gray-200 dark:border-gray-700 rounded-lg">
             <p class="text-gray-500 dark:text-gray-400">No protocols found in this test suite.</p>
-            <a href="{% url 'testsuite:suite_protocol_create' testsuite.id %}" class="inline-flex items-center mt-4 px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:border-blue-800 focus:ring focus:ring-blue-200 disabled:opacity-25 transition">
+            <a href="{% url 'testsuite:suite_protocol_create' testsuite.pk %}" class="inline-flex items-center mt-4 px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:border-blue-800 focus:ring focus:ring-blue-200 disabled:opacity-25 transition">
                 Create First Protocol
             </a>
         </div>

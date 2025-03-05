@@ -88,6 +88,12 @@ class TestProtocolCreateView(CreateView):
         suite_id = self.kwargs.get('suite_id')
         if suite_id:
             form.instance.suite = get_object_or_404(TestSuite, pk=suite_id)
+        suite = form.instance.suite
+        name = form.instance.name
+        if TestProtocol.objects.filter(suite=suite, name=name).exists():
+            form.add_error('name', 'A protocol with this name already exists in this suite.')
+            return self.form_invalid(form)
+
         return super().form_valid(form)
 
     def get_success_url(self):

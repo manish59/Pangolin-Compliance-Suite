@@ -50,7 +50,7 @@ class TestProtocol(BaseModel):
 
 
 
-class ConnectionConfig(models.Model):
+class ConnectionConfig(BaseModel):
     CONFIG_TYPE_CHOICES = [
         ('database', 'Database'),
         ('api', 'API'),

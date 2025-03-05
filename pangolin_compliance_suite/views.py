@@ -6,3 +6,6 @@ def home(request):
     Renders the home.html template.
     """
     return render(request, 'home/home.html')
+
+def login(request):
+    return (request, 'home/login.html', {})
