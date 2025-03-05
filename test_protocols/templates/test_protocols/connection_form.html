@@ -1,0 +1,248 @@
+{% extends 'test_protocols/base.html' %}
+
+{% block breadcrumbs %}
+<li>
+    <div class="flex items-center">
+        <svg class="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
+        </svg>
+        {% if form.initial.protocol %}
+        {% with protocol_id=form.initial.protocol %}
+        <a href="{% url 'testsuite:protocol_detail' protocol_id %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2 dark:text-gray-400 dark:hover:text-white">
+            Protocol
+        </a>
+        {% endwith %}
+        {% else %}
+        <a href="{% url 'testsuite:connection_list' %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2 dark:text-gray-400 dark:hover:text-white">
+            Connections
+        </a>
+        {% endif %}
+    </div>
+</li>
+<li>
+    <div class="flex items-center">
+        <svg class="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
+        </svg>
+        <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2 dark:text-gray-400">
+            {% if object %}Edit{% else %}Create{% endif %} Connection
+        </span>
+    </div>
+</li>
+{% endblock %}
+
+{% block page_title %}
+    {% if object %}
+        Edit Connection Configuration
+    {% else %}
+        {% if form.initial.protocol %}
+        Create Connection for Protocol
+        {% else %}
+        Create New Connection Configuration
+        {% endif %}
+    {% endif %}
+{% endblock %}
+
+{% block main_content %}
+<div class="p-6">
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+            {% if 'protocol' in form.fields %}
+            <div>
+                <label for="{{ form.protocol.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Protocol <span class="text-red-500">*</span>
+                </label>
+                <div class="mt-1">
+                    <select name="{{ form.protocol.name }}" id="{{ form.protocol.id_for_label }}"
+                            class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                            required>
+                        {% for choice in form.protocol.field.queryset %}
+                            <option value="{{ choice.id }}" {% if form.protocol.value|stringformat:"s" == choice.id|stringformat:"s" %}selected{% endif %}>
+                                {{ choice }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% if form.protocol.errors %}
+                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.protocol.errors.0 }}</p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <div>
+                <label for="{{ form.config_type.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Connection Type <span class="text-red-500">*</span>
+                </label>
+                <div class="mt-1">
+                    <select name="{{ form.config_type.name }}" id="{{ form.config_type.id_for_label }}"
+                            class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                            required>
+                        {% for choice in form.config_type.field.choices %}
+                            <option value="{{ choice.0 }}" {% if form.config_type.value == choice.0 %}selected{% endif %}>
+                                {{ choice.1 }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% if form.config_type.errors %}
+                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.config_type.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.host.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Host
+                </label>
+                <div class="mt-1">
+                    <input type="text" name="{{ form.host.name }}" id="{{ form.host.id_for_label }}"
+                           class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                           placeholder="Enter host name or IP" value="{{ form.host.value|default:'' }}">
+                </div>
+                {% if form.host.errors %}
+                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.host.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.port.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Port
+                </label>
+                <div class="mt-1">
+                    <input type="number" name="{{ form.port.name }}" id="{{ form.port.id_for_label }}"
+                           class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                           placeholder="Enter port number" value="{{ form.port.value|default:'' }}">
+                </div>
+                {% if form.port.errors %}
+                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.port.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Username Environment Variable
+                </label>
+                <div class="mt-1">
+                    <select name="{{ form.username.name }}" id="{{ form.username.id_for_label }}"
+                            class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
+                        <option value="">Select environment variable</option>
+                        {% for choice in form.username.field.queryset %}
+                            <option value="{{ choice.id }}" {% if form.username.value|stringformat:"s" == choice.id|stringformat:"s" %}selected{% endif %}>
+                                {{ choice }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% if form.username.errors %}
+                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.username.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.password.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Password Environment Variable
+                </label>
+                <div class="mt-1">
+                    <select name="{{ form.password.name }}" id="{{ form.password.id_for_label }}"
+                            class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
+                        <option value="">Select environment variable</option>
+                        {% for choice in form.password.field.queryset %}
+                            <option value="{{ choice.id }}" {% if form.password.value|stringformat:"s" == choice.id|stringformat:"s" %}selected{% endif %}>
+                                {{ choice }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% if form.password.errors %}
+                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.password.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.secret_key.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Secret Key Environment Variable
+                </label>
+                <div class="mt-1">
+                    <select name="{{ form.secret_key.name }}" id="{{ form.secret_key.id_for_label }}"
+                            class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
+                        <option value="">Select environment variable</option>
+                        {% for choice in form.secret_key.field.queryset %}
+                            <option value="{{ choice.id }}" {% if form.secret_key.value|stringformat:"s" == choice.id|stringformat:"s" %}selected{% endif %}>
+                                {{ choice }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% if form.secret_key.errors %}
+                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.secret_key.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.timeout_seconds.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Timeout (seconds) <span class="text-red-500">*</span>
+                </label>
+                <div class="mt-1">
+                    <input type="number" name="{{ form.timeout_seconds.name }}" id="{{ form.timeout_seconds.id_for_label }}"
+                           class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                           placeholder="Enter timeout in seconds" value="{{ form.timeout_seconds.value|default:30 }}" required>
+                </div>
+                {% if form.timeout_seconds.errors %}
+                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.timeout_seconds.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.retry_attempts.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Retry Attempts <span class="text-red-500">*</span>
+                </label>
+                <div class="mt-1">
+                    <input type="number" name="{{ form.retry_attempts.name }}" id="{{ form.retry_attempts.id_for_label }}"
+                           class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                           placeholder="Enter number of retry attempts" value="{{ form.retry_attempts.value|default:3 }}" required>
+                </div>
+                {% if form.retry_attempts.errors %}
+                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.retry_attempts.errors.0 }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div>
+            <label for="{{ form.config_data.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Additional Configuration (JSON)
+            </label>
+            <div class="mt-1">
+                <textarea name="{{ form.config_data.name }}" id="{{ form.config_data.id_for_label }}" rows="5"
+                        class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md font-mono"
+                        placeholder='{"key": "value"}'
+                        >{{ form.config_data.value|default:'{}' }}</textarea>
+            </div>
+            {% if form.config_data.errors %}
+            <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.config_data.errors.0 }}</p>
+            {% endif %}
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Enter additional configuration parameters as a JSON object.
+            </p>
+        </div>
+
+        <div class="flex justify-end space-x-3">
+            {% if form.initial.protocol %}
+            <a href="{% url 'testsuite:protocol_detail' form.initial.protocol %}"
+               class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                Cancel
+            </a>
+            {% else %}
+            <a href="{% if object %}{% url 'testsuite:connection_detail' object.id %}{% else %}{% url 'testsuite:connection_list' %}{% endif %}"
+               class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                Cancel
+            </a>
+            {% endif %}
+            <button type="submit"
+                   class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                {% if object %}Update{% else %}Create{% endif %} Connection
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

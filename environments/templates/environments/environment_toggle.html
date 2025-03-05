@@ -1,0 +1,116 @@
+{% extends 'home/base.html' %}
+
+{% block title %}
+    {% if environment.is_enabled %}
+        Disable Environment Variable - {{ environment.key }}
+    {% else %}
+        Enable Environment Variable - {{ environment.key }}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <div class="max-w-md mx-auto">
+        <div class="flex items-center mb-6">
+            <a href="{% url 'environment_list' environment.project.id %}" class="text-gray-500 hover:text-gray-700 mr-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+            </a>
+            <h1 class="text-2xl font-bold text-gray-800">
+                {% if environment.is_enabled %}
+                    Disable Environment Variable
+                {% else %}
+                    Enable Environment Variable
+                {% endif %}
+            </h1>
+        </div>
+
+        <div class="bg-white shadow-md rounded-lg overflow-hidden">
+            <div class="p-6">
+                <div class="flex items-center justify-center w-12 h-12 rounded-full
+                    {% if environment.is_enabled %}
+                        bg-yellow-100
+                    {% else %}
+                        bg-green-100
+                    {% endif %}
+                    mx-auto mb-4">
+                    {% if environment.is_enabled %}
+                        <svg class="h-6 w-6 text-yellow-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    {% else %}
+                        <svg class="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    {% endif %}
+                </div>
+
+                <div class="text-center mb-6">
+                    <h3 class="text-lg font-medium text-gray-900">
+                        {% if environment.is_enabled %}
+                            Disable "{{ environment.key }}"?
+                        {% else %}
+                            Enable "{{ environment.key }}"?
+                        {% endif %}
+                    </h3>
+                    <p class="text-sm text-gray-500 mt-1">
+                        {% if environment.is_enabled %}
+                            This variable will no longer be included in environment builds.
+                        {% else %}
+                            This variable will be included in environment builds.
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div class="bg-gray-50 rounded-md p-4 mb-6">
+                    <h4 class="text-sm font-medium text-gray-900 mb-2">Variable Details</h4>
+                    <dl class="text-sm">
+                        <div class="grid grid-cols-3 gap-4 py-2 border-b border-gray-200">
+                            <dt class="font-medium text-gray-500">Key:</dt>
+                            <dd class="col-span-2 text-gray-900">{{ environment.key }}</dd>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 py-2 border-b border-gray-200">
+                            <dt class="font-medium text-gray-500">Type:</dt>
+                            <dd class="col-span-2 text-gray-900">{{ environment.get_variable_type_display }}</dd>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 py-2 border-b border-gray-200">
+                            <dt class="font-medium text-gray-500">Project:</dt>
+                            <dd class="col-span-2 text-gray-900">{{ environment.project.name }}</dd>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 py-2 border-b border-gray-200">
+                            <dt class="font-medium text-gray-500">Status:</dt>
+                            <dd class="col-span-2 text-gray-900">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                    {% if environment.is_enabled %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ environment.is_enabled|yesno:"Enabled,Disabled" }}
+                                </span>
+                            </dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <a href="{% url 'environment_list' environment.project.id %}"
+                           class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Cancel
+                        </a>
+                        <button type="submit"
+                               class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white
+                               {% if environment.is_enabled %}
+                               bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500
+                               {% else %}
+                               bg-green-600 hover:bg-green-700 focus:ring-green-500
+                               {% endif %}
+                               focus:outline-none focus:ring-2 focus:ring-offset-2">
+                            {% if environment.is_enabled %}Disable{% else %}Enable{% endif %} Variable
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

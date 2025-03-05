@@ -15,8 +15,20 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from django.conf.urls.static import static
+from django.conf import settings
+from pangolin_compliance_suite.views import home
 
 urlpatterns = [
+    path('', home, name="home"),
     path('admin/', admin.site.urls),
+    path('projects/', include("projects.urls"), name="projects"),
+    path('environments/', include("environments.urls"), name="environments"),
+    path('test_protocols/', include("test_protocols.urls"), name="test_protocols"),
 ]
+
+
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

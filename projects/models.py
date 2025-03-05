@@ -41,28 +41,29 @@ class Project(BaseModel):
         unique_together = ['name', 'owner']
 
     def __str__(self):
-        return f"{self.name} ({self.owner.username})"
+        return f"{self.name}"
 
-    def clean(self):
+    def clean(self, *args, **kwargs):
         """Validate project data"""
         # Ensure project name is not too short
         if len(self.name.strip()) < 3:
             raise ValidationError({'name': _("Project name must be at least 3 characters.")})
 
         # Check for duplicate projects with the same name for this user
-        duplicate_projects = Project.objects.filter(
-            name__iexact=self.name,
-            owner=self.owner
-        )
+        if self.owner_id is not None:
+            duplicate_projects = Project.objects.filter(
+                name__iexact=self.name,
+                owner=self.owner
+            )
 
-        # If this is an update, exclude the current instance
-        if self.pk:
-            duplicate_projects = duplicate_projects.exclude(pk=self.pk)
+            # If this is an update, exclude the current instance
+            if self.pk:
+                duplicate_projects = duplicate_projects.exclude(pk=self.pk)
 
-        if duplicate_projects.exists():
-            raise ValidationError({'name': _("You already have a project with this name.")})
+            if duplicate_projects.exists():
+                raise ValidationError({'name': _("You already have a project with this name.")})
 
     def save(self, *args, **kwargs):
         """Override save to perform validation"""
-        self.clean()
+        self.clean(*args, **kwargs)
         return super().save(*args, **kwargs)

@@ -1,0 +1,73 @@
+{% extends 'test_protocols/base.html' %}
+
+
+{% block page_title %}Test Suites{% endblock %}
+
+{% block action_buttons %}
+<div class="flex justify-end">
+    <a href="{% url 'testsuite:testsuite_create' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:border-blue-800 focus:ring focus:ring-blue-200 disabled:opacity-25 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        Create New Test Suite
+    </a>
+</div>
+{% endblock %}
+
+{% block main_content %}
+<div class="overflow-x-auto">
+    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+            <tr>
+                <th scope="col" class="px-6 py-3">Name</th>
+                <th scope="col" class="px-6 py-3">Description</th>
+                <th scope="col" class="px-6 py-3">Project</th>
+                <th scope="col" class="px-6 py-3">Created</th>
+                <th scope="col" class="px-6 py-3">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for testsuite in testsuites %}
+            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                <td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">
+                    <a href="/test_protocols/ %}" class="text-blue-600 dark:text-blue-400 hover:underline">
+                        {{ testsuite.name }}
+                    </a>
+                </td>
+                <td class="px-6 py-4">{{ testsuite.description|truncatechars:50 }}</td>
+                <td class="px-6 py-4">{{ testsuite.project }}</td>
+                <td class="px-6 py-4">{{ testsuite.created_at|date:"M d, Y" }}</td>
+                <td class="px-6 py-4 flex space-x-2">
+                    <a href="{% url 'testsuite:testsuite_detail' testsuite.id %}" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">View</a>
+                    <a href="{% url 'testsuite:testsuite_update' testsuite.id %}" class="font-medium text-green-600 dark:text-green-500 hover:underline">Edit</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                <td colspan="5" class="px-6 py-4 text-center">No test suites found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if is_paginated %}
+<div class="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-700">
+    <div class="flex-1 flex justify-between">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+            Previous
+        </a>
+        {% endif %}
+        <span class="text-sm text-gray-700 dark:text-gray-400">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+            Next
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

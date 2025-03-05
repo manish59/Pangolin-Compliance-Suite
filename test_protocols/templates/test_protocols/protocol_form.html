@@ -1,0 +1,154 @@
+{% extends 'test_protocols/base.html' %}
+
+{% block breadcrumbs %}
+<li>
+    <div class="flex items-center">
+        <svg class="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
+        </svg>
+        {% if suite %}
+        <a href="{% url 'testsuite:testsuite_detail' suite.id %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2 dark:text-gray-400 dark:hover:text-white">
+            {{ suite.name }}
+        </a>
+        {% else %}
+        <a href="{% url 'testsuite:protocol_list' %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2 dark:text-gray-400 dark:hover:text-white">
+            Protocols
+        </a>
+        {% endif %}
+    </div>
+</li>
+<li>
+    <div class="flex items-center">
+        <svg class="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
+        </svg>
+        <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2 dark:text-gray-400">
+            {% if object %}Edit{% else %}Create{% endif %} Protocol
+        </span>
+    </div>
+</li>
+{% endblock %}
+
+{% block page_title %}
+    {% if object %}
+        Edit Protocol: {{ object.name }}
+    {% else %}
+        {% if suite %}
+            Create Protocol for {{ suite.name }}
+        {% else %}
+            Create New Protocol
+        {% endif %}
+    {% endif %}
+{% endblock %}
+
+{% block main_content %}
+<div class="p-6">
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+        
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div>
+                <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Name <span class="text-red-500">*</span>
+                </label>
+                <div class="mt-1">
+                    <input type="text" name="{{ form.name.name }}" id="{{ form.name.id_for_label }}" 
+                           class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                           placeholder="Enter protocol name" value="{{ form.name.value|default:'' }}" required>
+                </div>
+                {% if form.name.errors %}
+                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.name.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            {% if 'suite' in form.fields %}
+            <div>
+                <label for="{{ form.suite.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Test Suite <span class="text-red-500">*</span>
+                </label>
+                <div class="mt-1">
+                    <select name="{{ form.suite.name }}" id="{{ form.suite.id_for_label }}" 
+                            class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                            required>
+                        {% for choice in form.suite.field.queryset %}
+                            <option value="{{ choice.id }}" {% if form.suite.value|stringformat:"s" == choice.id|stringformat:"s" %}selected{% endif %}>
+                                {{ choice }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% if form.suite.errors %}
+                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.suite.errors.0 }}</p>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            <div>
+                <label for="{{ form.status.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Status <span class="text-red-500">*</span>
+                </label>
+                <div class="mt-1">
+                    <select name="{{ form.status.name }}" id="{{ form.status.id_for_label }}" 
+                            class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                            required>
+                        {% for choice in form.status.field.choices %}
+                            <option value="{{ choice.0 }}" {% if form.status.value == choice.0 %}selected{% endif %}>
+                                {{ choice.1 }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% if form.status.errors %}
+                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.status.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <div>
+                <label for="{{ form.order_index.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Order Index <span class="text-red-500">*</span>
+                </label>
+                <div class="mt-1">
+                    <input type="number" name="{{ form.order_index.name }}" id="{{ form.order_index.id_for_label }}" 
+                           class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                           placeholder="Enter order index" value="{{ form.order_index.value|default:0 }}" required>
+                </div>
+                {% if form.order_index.errors %}
+                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.order_index.errors.0 }}</p>
+                {% endif %}
+            </div>
+        </div>
+            
+        <div>
+            <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Description
+            </label>
+            <div class="mt-1">
+                <textarea name="{{ form.description.name }}" id="{{ form.description.id_for_label }}" rows="5"
+                        class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                        placeholder="Enter description">{{ form.description.value|default:'' }}</textarea>
+            </div>
+            {% if form.description.errors %}
+            <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.description.errors.0 }}</p>
+            {% endif %}
+        </div>
+        
+        <div class="flex justify-end space-x-3">
+            {% if suite %}
+            <a href="{% url 'testsuite:testsuite_detail' suite.id %}" 
+               class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                Cancel
+            </a>
+            {% else %}
+            <a href="{% if object %}{% url 'testsuite:protocol_detail' object.id %}{% else %}{% url 'testsuite:protocol_list' %}{% endif %}" 
+               class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                Cancel
+            </a>
+            {% endif %}
+            <button type="submit" 
+                   class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                {% if object %}Update{% else %}Create{% endif %} Protocol
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

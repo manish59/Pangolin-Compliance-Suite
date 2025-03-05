@@ -1,0 +1,16 @@
+<!-- environments/templates/environments/environment_confirm_delete.html -->
+{% extends 'home/base.html' %}
+
+{% block content %}
+<div class="container mx-auto px-4">
+    <h1 class="text-2xl font-bold mb-4">Delete Environment Variable</h1>
+    <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+        <p class="text-gray-700">Are you sure you want to delete "{{ object.key }}"?</p>
+        <form method="post" class="mt-6">
+            {% csrf_token %}
+            <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded">Delete</button>
+            <a href="{% url 'environments:environment_list' %}" class="bg-gray-500 text-white px-4 py-2 rounded">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

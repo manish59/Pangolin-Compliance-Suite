@@ -1,0 +1,235 @@
+{% extends 'home/base.html' %}
+
+{% block title %}
+    {% if form.instance.id %}
+       Create Environment Variable - {{ form.instance.key }}
+    {% else %}
+        Add Environment Variable
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <div class="max-w-3xl mx-auto">
+        <div class="flex items-center mb-8">
+            <a href="/environments/{{ project.pk }}/" class="text-gray-500 hover:text-gray-700 mr-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+            </a>
+            <h1 class="text-2xl font-bold text-gray-800">
+                {% if form.instance.id %}
+                    Edit Environment Variable - {{ form.instance.key }}
+                {% else %}
+                    Add Environment Variable
+                {% endif %}
+            </h1>
+        </div>
+
+        <div class="bg-white shadow-md rounded-lg overflow-hidden p-8">
+            <form method="post" class="space-y-8">
+                {% csrf_token %}
+
+                <div>
+                        <label for="Project" class="block text-sm font-medium text-gray-700 mb-2 px-1">
+                            Project <span class="text-red-500">*</span>
+                        </label>
+                        <div class="mt-1">
+                            <select name="project" id="project"
+                                   class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md py-2 px-3
+                                         {% if form.variable_type.errors %}border-red-300{% endif %}"
+                                   onchange="toggleJsonEditor(this.value)">
+                                {% for project in projects %}
+                                <option value="{{ project.pk }}"
+                                {% if form.project.value == project.pk %}selected{% endif %}>
+                                {{ project.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% if form.variable_type.errors %}
+                        <p class="mt-2 text-sm text-red-600 px-1">{{ form.variable_type.errors }}</p>
+                        {% else %}
+                        <p class="mt-2 text-sm text-gray-500 px-1">Choose 'Secret' for sensitive information that needs encryption</p>
+                        {% endif %}
+                    </div>
+                {% if form.non_field_errors %}
+                <div class="bg-red-100 border border-red-200 text-red-700 px-5 py-4 rounded-md relative mb-6" role="alert">
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+
+                <div class="grid grid-cols-1 gap-8">
+                    <div>
+                        <label for="{{ form.key.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2 px-1">
+                            Key <span class="text-red-500">*</span>
+                        </label>
+                        <div class="mt-1">
+                            <input type="text" name="{{ form.key.name }}" id="{{ form.key.id_for_label }}"
+                                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md py-2 px-3
+                                        {% if form.key.errors %}border-red-300{% endif %}"
+                                  placeholder="ENV_VAR_NAME" value="{{ form.key.value|default:'' }}">
+                        </div>
+                        {% if form.key.errors %}
+                        <p class="mt-2 text-sm text-red-600 px-1">{{ form.key.errors }}</p>
+                        {% else %}
+                        <p class="mt-2 text-sm text-gray-500 px-1">Use uppercase with underscores for names (e.g., API_KEY)</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label for="{{ form.variable_type.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2 px-1">
+                            Type <span class="text-red-500">*</span>
+                        </label>
+                        <div class="mt-1">
+                            <select name="{{ form.variable_type.name }}" id="{{ form.variable_type.id_for_label }}"
+                                   class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md py-2 px-3
+                                         {% if form.variable_type.errors %}border-red-300{% endif %}"
+                                   onchange="toggleJsonEditor(this.value)">
+                                {% for value, label in form.variable_type.field.choices %}
+                                <option value="{{ value }}"
+                                    {% if form.variable_type.value == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% if form.variable_type.errors %}
+                        <p class="mt-2 text-sm text-red-600 px-1">{{ form.variable_type.errors }}</p>
+                        {% else %}
+                        <p class="mt-2 text-sm text-gray-500 px-1">Choose 'Secret' for sensitive information that needs encryption</p>
+                        {% endif %}
+                    </div>
+
+                    <div id="value-field">
+                        <label for="{{ form.value.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2 px-1">
+                            Value <span class="text-red-500">*</span>
+                        </label>
+                        <div class="mt-1">
+                            <textarea name="{{ form.value.name }}" id="{{ form.value.id_for_label }}" rows="3"
+                                     class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md py-2 px-3
+                                           {% if form.value.errors %}border-red-300{% endif %}">{{ form.value.value|default:'' }}</textarea>
+                        </div>
+                        {% if form.value.errors %}
+                        <p class="mt-2 text-sm text-red-600 px-1">{{ form.value.errors }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div id="json-editor" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-2 px-1">
+                            JSON Editor
+                        </label>
+                        <div class="mt-1">
+                            <div id="jsoneditor" style="height: 300px; border: 1px solid #ddd; border-radius: 0.375rem;"></div>
+                        </div>
+                        <p class="mt-2 text-sm text-gray-500 px-1">Use the JSON editor to format your JSON properly</p>
+                    </div>
+
+                    <div>
+                        <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2 px-1">
+                            Description
+                        </label>
+                        <div class="mt-1">
+                            <textarea name="{{ form.description.name }}" id="{{ form.description.id_for_label }}" rows="2"
+                                     class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md py-2 px-3
+                                           {% if form.description.errors %}border-red-300{% endif %}">{{ form.description.value|default:'' }}</textarea>
+                        </div>
+                        {% if form.description.errors %}
+                        <p class="mt-2 text-sm text-red-600 px-1">{{ form.description.errors }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="pt-2">
+                        <div class="flex items-start">
+                            <div class="flex items-center h-6">
+                                <input type="checkbox" name="{{ form.is_enabled.name }}" id="{{ form.is_enabled.id_for_label }}"
+                                      class="focus:ring-indigo-500 h-5 w-5 text-indigo-600 border-gray-300 rounded"
+                                      {% if form.is_enabled.value %}checked{% endif %}>
+                            </div>
+                            <div class="ml-3 text-sm">
+                                <label for="{{ form.is_enabled.id_for_label }}" class="font-medium text-gray-700 px-1">Enabled</label>
+                                <p class="text-gray-500 mt-1 px-1">When disabled, this variable will not be included in environment builds</p>
+                            </div>
+                        </div>
+                        {% if form.is_enabled.errors %}
+                        <p class="mt-2 text-sm text-red-600 px-1">{{ form.is_enabled.errors }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-4 pt-8">
+                    <a href="/environments/{{ project.pk }}/"
+                       class="inline-flex justify-center py-2 px-5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Cancel
+                    </a>
+                    <button type="submit"
+                           class="inline-flex justify-center py-2 px-5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        {% if form.instance.id %}Update{% else %}Create{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<!-- Include JSON Editor if you're using it -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.7.4/jsoneditor.min.css" rel="stylesheet" type="text/css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.7.4/jsoneditor.min.js"></script>
+
+<script>
+    let jsonEditor = null;
+
+    function toggleJsonEditor(valueType) {
+        const valueField = document.getElementById('value-field');
+        const jsonEditorDiv = document.getElementById('json-editor');
+
+        // If JSON type selected, show the JSON editor
+        if (valueType === 'json') {
+            valueField.classList.add('hidden');
+            jsonEditorDiv.classList.remove('hidden');
+
+            // Initialize JSON editor if it doesn't exist yet
+            if (!jsonEditor) {
+                const container = document.getElementById('jsoneditor');
+                const options = {
+                    mode: 'tree',
+                    modes: ['tree', 'view', 'form', 'code', 'text'],
+                    onChange: function() {
+                        // Update the textarea with JSON value when editor changes
+                        try {
+                            const json = jsonEditor.get();
+                            document.getElementById('{{ form.value.id_for_label }}').value = JSON.stringify(json);
+                        } catch (err) {
+                            console.error('Error updating JSON value:', err);
+                        }
+                    }
+                };
+                jsonEditor = new JSONEditor(container, options);
+
+                // Try to load existing value as JSON
+                try {
+                    const currentValue = document.getElementById('{{ form.value.id_for_label }}').value;
+                    if (currentValue) {
+                        jsonEditor.set(JSON.parse(currentValue));
+                    } else {
+                        jsonEditor.set({});
+                    }
+                } catch (err) {
+                    console.warn('Could not parse existing value as JSON, setting empty object', err);
+                    jsonEditor.set({});
+                }
+            }
+        } else {
+            valueField.classList.remove('hidden');
+            jsonEditorDiv.classList.add('hidden');
+        }
+    }
+
+    // Call the function on page load to set initial state
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleJsonEditor(document.getElementById('{{ form.variable_type.id_for_label }}').value);
+    });
+</script>
+{% endblock %}
+{% endblock %}
