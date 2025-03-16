@@ -59,7 +59,7 @@ urlpatterns = [
     path('protocol/<uuid:protocol_id>/steps/', views.ExecutionStepListView.as_view(), name='step_list'),
 
     # Create a new execution step for a protocol
-    path('protocol/<uuid:protocol_id>/steps/create/', views.ExecutionStepCreateView.as_view(), name='step_create'),
+    path('protocol/<uuid:protocol_id>/steps/create/', views.ExecutionStepCreateView.as_view(), name='protocol_step_create'),
 
     # View details of a specific execution step
     path('steps/<uuid:pk>/', views.ExecutionStepDetailView.as_view(), name='step_detail'),
@@ -81,4 +81,21 @@ urlpatterns = [
 
     # Execute a specific step during a protocol run
     path('runs/<uuid:run_id>/steps/<uuid:step_id>/execute/', views.ExecuteStepView.as_view(), name='execute_step'),
+
+# New URLs for protocol-specific verification methods
+    path('protocols/<uuid:protocol_id>/verification/create/',
+         views.ProtocolVerificationCreateView.as_view(),
+         name='protocol_verification_create'),
+    path('protocols/<uuid:protocol_id>/verification/<uuid:pk>/',
+         views.ProtocolVerificationDetailView.as_view(),
+         name='protocol_verification_detail'),
+    path('protocols/<uuid:protocol_id>/verification/<uuid:pk>/edit/',
+         views.ProtocolVerificationUpdateView.as_view(),
+         name='protocol_verification_edit'),
+    path('protocols/<uuid:protocol_id>/verification/<uuid:pk>/delete/',
+         views.ProtocolVerificationDeleteView.as_view(),
+         name='protocol_verification_delete'),
+    path('protocols/<uuid:protocol_id>/verifications/',
+         views.ProtocolVerificationListView.as_view(),
+         name='protocol_verification_list'),
 ]

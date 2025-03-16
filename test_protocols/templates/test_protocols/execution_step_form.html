@@ -1,0 +1,193 @@
+{% extends 'test_protocols/base.html' %}
+
+{% block breadcrumbs %}
+<li>
+    <div class="flex items-center">
+        <svg class="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
+        </svg>
+        {% if test_protocol.suite and test_protocol.suite.id %}
+            <a href="{% url 'testsuite:testsuite_detail' test_protocol.suite.id %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2 dark:text-gray-400 dark:hover:text-white">
+                {{ test_protocol.suite.name }}
+            </a>
+        {% else %}
+            <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2 dark:text-gray-400">
+                Test Suite
+            </span>
+        {% endif %}
+    </div>
+</li>
+<li>
+    <div class="flex items-center">
+        <svg class="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
+        </svg>
+        {% if test_protocol and test_protocol.id %}
+            <a href="{% url 'testsuite:protocol_detail' test_protocol.id %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2 dark:text-gray-400 dark:hover:text-white">
+                {{ test_protocol.name }}
+            </a>
+        {% else %}
+            <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2 dark:text-gray-400">
+                Protocol
+            </span>
+        {% endif %}
+    </div>
+</li>
+<li>
+    <div class="flex items-center">
+        <svg class="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
+        </svg>
+        <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2 dark:text-gray-400">
+            {% if form.instance.id %}Edit Execution Step{% else %}Add Execution Step{% endif %}
+        </span>
+    </div>
+</li>
+{% endblock %}
+
+{% block page_title %}
+    {% if form.instance.id %}
+        Edit Execution Step
+    {% else %}
+        Add Execution Step to {{ test_protocol.name }}
+    {% endif %}
+{% endblock %}
+
+{% block main_content %}
+<div class="p-6">
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+
+        {% if form.errors %}
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative mb-6" role="alert">
+            <strong class="font-bold">Please correct the following errors:</strong>
+            <ul class="mt-1 list-disc list-inside">
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <li>{{ field.label }}: {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- Hidden field for the protocol ID -->
+        <input type="hidden" name="test_protocol" value="{{ test_protocol.id }}">
+
+        <div class="grid grid-cols-1 gap-6">
+            <div>
+                <label for="id_args" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Positional Arguments (args)
+                </label>
+                <div class="mt-1">
+                    <textarea name="args" id="id_args" rows="6"
+                             class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md font-mono"
+                             placeholder='["value1", "value2", 123]'>{{ form.args.value|default:"[]" }}</textarea>
+                </div>
+                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    Provide positional arguments as a JSON array. Example: ["value1", "value2", 123]
+                </p>
+                {% if form.args.errors %}
+                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.args.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="id_kwargs" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Keyword Arguments (kwargs)
+                </label>
+                <div class="mt-1">
+                    <textarea name="kwargs" id="id_kwargs" rows="8"
+                             class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md font-mono"
+                             placeholder='{"param1": "value1", "param2": 123, "param3": true}'>{{ form.kwargs.value|default:"{}" }}</textarea>
+                </div>
+                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    Provide keyword arguments as a JSON object. Example: {"param1": "value1", "param2": 123, "param3": true}
+                </p>
+                {% if form.kwargs.errors %}
+                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.kwargs.errors.0 }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="flex justify-end space-x-3 pt-4">
+            {% if test_protocol and test_protocol.id %}
+            <a href="{% url 'testsuite:protocol_detail' test_protocol.id %}"
+               class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600">
+                Cancel
+            </a>
+            {% else %}
+            <a href="{% url 'testsuite:testsuite_list' %}"
+               class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600">
+                Cancel
+            </a>
+            {% endif %}
+            <button type="submit"
+                   class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-700 dark:hover:bg-blue-800">
+                {% if form.instance.id %}Update{% else %}Create{% endif %} Execution Step
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add JSON validation functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const argsField = document.getElementById('id_args');
+        const kwargsField = document.getElementById('id_kwargs');
+
+        function validateJsonField(field) {
+            const value = field.value.trim();
+            if (!value) return true;
+
+            try {
+                JSON.parse(value);
+                field.classList.remove('border-red-500');
+                return true;
+            } catch (e) {
+                field.classList.add('border-red-500');
+                return false;
+            }
+        }
+
+        function formatJson(field) {
+            const value = field.value.trim();
+            if (!value) return;
+
+            try {
+                const parsed = JSON.parse(value);
+                field.value = JSON.stringify(parsed, null, 2);
+            } catch (e) {
+                console.log(e);
+            }
+        }
+
+        // Add event listeners for validation
+        argsField.addEventListener('blur', function() {
+            validateJsonField(argsField);
+            formatJson(argsField);
+        });
+
+        kwargsField.addEventListener('blur', function() {
+            validateJsonField(kwargsField);
+            formatJson(kwargsField);
+        });
+
+        // Add form submission validation
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const argsValid = validateJsonField(argsField);
+            const kwargsValid = validateJsonField(kwargsField);
+
+            if (!argsValid || !kwargsValid) {
+                e.preventDefault();
+                alert('Please fix the JSON errors before submitting the form.');
+            }
+        });
+    });
+</script>
+{% endblock %}

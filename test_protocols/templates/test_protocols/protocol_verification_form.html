@@ -1,0 +1,239 @@
+{% extends 'test_protocols/base.html' %}
+
+{% block breadcrumbs %}
+<li>
+    <div class="flex items-center">
+        <svg class="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
+        </svg>
+        <a href="{% url 'testsuite:testsuite_detail' protocol.suite.id %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2 dark:text-gray-400 dark:hover:text-white">
+            {{ protocol.suite.name }}
+        </a>
+    </div>
+</li>
+<li>
+    <div class="flex items-center">
+        <svg class="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
+        </svg>
+        <a href="{% url 'testsuite:protocol_detail' protocol.id %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2 dark:text-gray-400 dark:hover:text-white">
+            {{ protocol.name }}
+        </a>
+    </div>
+</li>
+<li>
+    <div class="flex items-center">
+        <svg class="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
+        </svg>
+        <a href="{% url 'testsuite:protocol_verification_list' protocol.id %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2 dark:text-gray-400 dark:hover:text-white">
+            Verification Methods
+        </a>
+    </div>
+</li>
+<li>
+    <div class="flex items-center">
+        <svg class="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
+        </svg>
+        <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2 dark:text-gray-400">
+            {% if is_new %}Create{% else %}Edit{% endif %} Verification Method
+        </span>
+    </div>
+</li>
+{% endblock %}
+
+{% block page_title %}
+    {% if is_new %}
+        Create Verification Method for {{ protocol.name }}
+    {% else %}
+        Edit Verification Method: {{ form.instance.name }}
+    {% endif %}
+{% endblock %}
+
+{% block main_content %}
+<div class="p-6">
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+
+        {% if form.errors %}
+        <div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-red-900 dark:text-red-400" role="alert">
+            <div class="font-medium">Please correct the following errors:</div>
+            <ul class="mt-1.5 ml-4 list-disc list-inside">
+                {% for field in form %}
+                    {% for error in field.errors %}
+                    <li>{{ field.label }}: {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div>
+                <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Name <span class="text-red-500">*</span>
+                </label>
+                <div class="mt-1">
+                    <input type="text" name="{{ form.name.name }}" id="{{ form.name.id_for_label }}"
+                           class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                           placeholder="Enter verification method name" value="{{ form.name.value|default:'' }}" required>
+                </div>
+                {% if form.name.errors %}
+                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.name.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.method_type.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Verification Method Type <span class="text-red-500">*</span>
+                </label>
+                <div class="mt-1">
+                    <select name="{{ form.method_type.name }}" id="{{ form.method_type.id_for_label }}"
+                            class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                            required onchange="toggleComparisonOptions()">
+                        <option value="">Select a method type</option>
+                        {% for choice in verification_method_choices %}
+                            <option value="{{ choice.0 }}" {% if form.method_type.value == choice.0 %}selected{% endif %}>
+                                {{ choice.1 }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% if form.method_type.errors %}
+                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.method_type.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <div class="flex items-center">
+                    <input type="checkbox" name="{{ form.supports_comparison.name }}" id="{{ form.supports_comparison.id_for_label }}"
+                           class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+                           {% if form.supports_comparison.value %}checked{% endif %}
+                           onchange="toggleComparisonMethod()">
+                    <label for="{{ form.supports_comparison.id_for_label }}" class="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Supports Comparison
+                    </label>
+                </div>
+                {% if form.supports_comparison.errors %}
+                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.supports_comparison.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div id="comparison_method_container" {% if not form.supports_comparison.value %}class="hidden"{% endif %}>
+                <label for="{{ form.comparison_method.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Comparison Method
+                </label>
+                <div class="mt-1">
+                    <select name="{{ form.comparison_method.name }}" id="{{ form.comparison_method.id_for_label }}"
+                            class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
+                        <option value="">Select a comparison method</option>
+                        {% for choice in comparison_operator_choices %}
+                            <option value="{{ choice.0 }}" {% if form.comparison_method.value == choice.0 %}selected{% endif %}>
+                                {{ choice.1 }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% if form.comparison_method.errors %}
+                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.comparison_method.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="flex items-center">
+                <input type="checkbox" name="{{ form.requires_expected_value.name }}" id="{{ form.requires_expected_value.id_for_label }}"
+                       class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+                       {% if form.requires_expected_value.value %}checked{% endif %}>
+                <label for="{{ form.requires_expected_value.id_for_label }}" class="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Requires Expected Value
+                </label>
+            </div>
+
+            <div class="flex items-center">
+                <input type="checkbox" name="{{ form.supports_dynamic_expected.name }}" id="{{ form.supports_dynamic_expected.id_for_label }}"
+                       class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+                       {% if form.supports_dynamic_expected.value %}checked{% endif %}>
+                <label for="{{ form.supports_dynamic_expected.id_for_label }}" class="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Supports Dynamic Expected Values
+                </label>
+            </div>
+        </div>
+
+        <div>
+            <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Description
+            </label>
+            <div class="mt-1">
+                <textarea name="{{ form.description.name }}" id="{{ form.description.id_for_label }}" rows="3"
+                         class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">{{ form.description.value|default:'' }}</textarea>
+            </div>
+            {% if form.description.errors %}
+            <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.description.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <div>
+            <label for="{{ form.config_schema.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Configuration Schema (JSON)
+            </label>
+            <div class="mt-1">
+                <textarea name="{{ form.config_schema.name }}" id="{{ form.config_schema.id_for_label }}" rows="5"
+                         class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md font-mono">{{ form.config_schema.value|default:'{}' }}</textarea>
+            </div>
+            {% if form.config_schema.errors %}
+            <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.config_schema.errors.0 }}</p>
+            {% endif %}
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Configure JSON schema to define the expected configuration format for this verification method.
+            </p>
+        </div>
+
+        <div class="flex justify-end space-x-3">
+            <a href="{% if form.instance.pk %}{% url 'testsuite:protocol_verification_detail' protocol.id form.instance.pk %}{% else %}{% url 'testsuite:protocol_verification_list' protocol.id %}{% endif %}"
+               class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                Cancel
+            </a>
+            <button type="submit"
+                   class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                {% if is_new %}Create{% else %}Update{% endif %} Verification Method
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function toggleComparisonMethod() {
+        const supportsComparison = document.getElementById('{{ form.supports_comparison.id_for_label }}').checked;
+        const comparisonMethodContainer = document.getElementById('comparison_method_container');
+
+        if (supportsComparison) {
+            comparisonMethodContainer.classList.remove('hidden');
+        } else {
+            comparisonMethodContainer.classList.add('hidden');
+        }
+    }
+
+    function toggleComparisonOptions() {
+        const methodType = document.getElementById('{{ form.method_type.id_for_label }}').value;
+        const supportsComparison = document.getElementById('{{ form.supports_comparison.id_for_label }}');
+
+        // Method types that typically support comparison
+        const comparisonMethods = [
+            'string_exact_match', 'string_contains', 'string_regex_match',
+            'numeric_equal', 'numeric_range', 'numeric_threshold',
+            'api_status_code', 'db_row_count'
+        ];
+
+        if (comparisonMethods.includes(methodType)) {
+            supportsComparison.checked = true;
+        } else {
+            supportsComparison.checked = false;
+        }
+
+        toggleComparisonMethod();
+    }
+</script>
+{% endblock %}

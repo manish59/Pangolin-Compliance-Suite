@@ -1,0 +1,114 @@
+{% extends 'test_protocols/base.html' %}
+
+{% block breadcrumbs %}
+<li>
+    <div class="flex items-center">
+        <svg class="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
+        </svg>
+        <a href="{% url 'testsuite:testsuite_detail' protocol.suite.id %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2 dark:text-gray-400 dark:hover:text-white">
+            {{ protocol.suite.name }}
+        </a>
+    </div>
+</li>
+<li>
+    <div class="flex items-center">
+        <svg class="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
+        </svg>
+        <a href="{% url 'testsuite:protocol_detail' protocol.id %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2 dark:text-gray-400 dark:hover:text-white">
+            {{ protocol.name }}
+        </a>
+    </div>
+</li>
+<li>
+    <div class="flex items-center">
+        <svg class="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
+        </svg>
+        <a href="{% url 'testsuite:protocol_verification_list' protocol.id %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2 dark:text-gray-400 dark:hover:text-white">
+            Verification Methods
+        </a>
+    </div>
+</li>
+<li>
+    <div class="flex items-center">
+        <svg class="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
+        </svg>
+        <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2 dark:text-gray-400">Delete Verification Method</span>
+    </div>
+</li>
+{% endblock %}
+
+{% block page_title %}Delete Verification Method: {{ verification.name }}{% endblock %}
+
+{% block main_content %}
+<div class="p-6 max-w-3xl mx-auto">
+    <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
+        <div class="p-6">
+            <div class="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 mx-auto mb-4">
+                <svg class="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+            </div>
+
+            <div class="text-center mb-6">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white">Are you sure you want to delete "{{ verification.name }}"?</h3>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    This action cannot be undone. This will permanently delete the verification method for <strong>{{ protocol.name }}</strong>.
+                </p>
+            </div>
+
+            <div class="bg-red-50 dark:bg-red-900 p-4 rounded-md mb-6">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-red-600 dark:text-red-300">
+                            Deleting this verification method may affect protocol runs that reference it. Make sure you're not using this method in any active protocols.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 dark:bg-gray-700 rounded-md p-4 mb-6">
+                <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-2">Verification Method Details</h4>
+                <dl class="text-sm">
+                    <div class="grid grid-cols-3 gap-4 py-2 border-b border-gray-200 dark:border-gray-600">
+                        <dt class="font-medium text-gray-500 dark:text-gray-400">Method Type:</dt>
+                        <dd class="col-span-2 text-gray-900 dark:text-gray-300">{{ verification.get_method_type_display }}</dd>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4 py-2 border-b border-gray-200 dark:border-gray-600">
+                        <dt class="font-medium text-gray-500 dark:text-gray-400">Created:</dt>
+                        <dd class="col-span-2 text-gray-900 dark:text-gray-300">{{ verification.created_at|date:"M d, Y H:i" }}</dd>
+                    </div>
+                    {% if verification.description %}
+                    <div class="grid grid-cols-3 gap-4 py-2 border-b border-gray-200 dark:border-gray-600">
+                        <dt class="font-medium text-gray-500 dark:text-gray-400">Description:</dt>
+                        <dd class="col-span-2 text-gray-900 dark:text-gray-300">{{ verification.description }}</dd>
+                    </div>
+                    {% endif %}
+                </dl>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="flex justify-end space-x-3 mt-6">
+                    <a href="{% url 'testsuite:protocol_verification_detail' protocol.id verification.id %}"
+                       class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Cancel
+                    </a>
+                    <button type="submit"
+                           class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                        Delete Verification Method
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

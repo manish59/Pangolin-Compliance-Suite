@@ -1,0 +1,172 @@
+{% extends 'test_protocols/base.html' %}
+
+{% block breadcrumbs %}
+<li>
+    <div class="flex items-center">
+        <svg class="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
+        </svg>
+        {% if protocol.suite and protocol.suite.id %}
+            <a href="{% url 'testsuite:testsuite_detail' protocol.suite.id %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2 dark:text-gray-400 dark:hover:text-white">
+                {{ protocol.suite.name }}
+            </a>
+        {% else %}
+            <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2 dark:text-gray-400">
+                Test Suite
+            </span>
+        {% endif %}
+    </div>
+</li>
+<li>
+    <div class="flex items-center">
+        <svg class="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
+        </svg>
+        {% if protocol and protocol.id %}
+            <a href="{% url 'testsuite:protocol_detail' protocol.id %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2 dark:text-gray-400 dark:hover:text-white">
+                {{ protocol.name }}
+            </a>
+        {% else %}
+            <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2 dark:text-gray-400">
+                Protocol
+            </span>
+        {% endif %}
+    </div>
+</li>
+<li>
+    <div class="flex items-center">
+        <svg class="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
+        </svg>
+        <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2 dark:text-gray-400">
+            Execution Steps
+        </span>
+    </div>
+</li>
+{% endblock %}
+
+{% block page_title %}
+Execution Steps for {{ protocol.name }}
+{% endblock %}
+
+{% block action_buttons %}
+<div class="flex justify-end space-x-2">
+    <a href="{% url 'testsuite:protocol_step_create' protocol.id %}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:border-blue-800 focus:ring focus:ring-blue-200 disabled:opacity-25 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        Add Execution Step
+    </a>
+    {% if steps|length > 1 %}
+    <a href="{% url 'testsuite:step_reorder' protocol.id %}" class="inline-flex items-center px-4 py-2 bg-purple-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-purple-700 active:bg-purple-800 focus:outline-none focus:border-purple-800 focus:ring focus:ring-purple-200 disabled:opacity-25 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+        </svg>
+        Reorder Steps
+    </a>
+    {% endif %}
+    <a href="{% url 'testsuite:protocol_detail' protocol.id %}" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 active:bg-gray-800 focus:outline-none focus:border-gray-800 focus:ring focus:ring-gray-200 disabled:opacity-25 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Back to Protocol
+    </a>
+</div>
+{% endblock %}
+
+{% block main_content %}
+<div class="p-6">
+    {% if steps %}
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                <tr>
+                    <th scope="col" class="px-6 py-3">Created</th>
+                    <th scope="col" class="px-6 py-3">Last Updated</th>
+                    <th scope="col" class="px-6 py-3">Arguments</th>
+                    <th scope="col" class="px-6 py-3">Keyword Arguments</th>
+                    <th scope="col" class="px-6 py-3">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for step in steps %}
+                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {{ step.created_at|date:"M d, Y H:i" }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {{ step.updated_at|date:"M d, Y H:i" }}
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="max-w-xs truncate font-mono text-xs">
+                            {% if step.args %}
+                                {% if step.args|length > 0 %}
+                                    {{ step.args|pprint|truncatechars:40 }}
+                                {% else %}
+                                    <span class="text-gray-400">Empty array</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-gray-400">No arguments</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="max-w-xs truncate font-mono text-xs">
+                            {% if step.kwargs %}
+                                {% if step.kwargs|length > 0 %}
+                                    {{ step.kwargs|pprint|truncatechars:40 }}
+                                {% else %}
+                                    <span class="text-gray-400">Empty object</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-gray-400">No keyword arguments</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex space-x-2">
+                            <a href="{% url 'testsuite:step_detail' step.id %}" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">View</a>
+                            <a href="{% url 'testsuite:step_update' step.id %}" class="font-medium text-green-600 dark:text-green-500 hover:underline">Edit</a>
+                            <a href="{% url 'testsuite:step_clone' step.id %}" class="font-medium text-purple-600 dark:text-purple-500 hover:underline">Clone</a>
+                            <a href="{% url 'testsuite:step_delete' step.id %}" class="font-medium text-red-600 dark:text-red-500 hover:underline">Delete</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if is_paginated %}
+    <div class="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-700">
+        <div class="flex-1 flex justify-between">
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                Previous
+            </a>
+            {% endif %}
+            <span class="text-sm text-gray-700 dark:text-gray-400">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                Next
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="bg-white dark:bg-gray-800 p-6 text-center border border-gray-200 dark:border-gray-700 rounded-lg">
+        <p class="text-gray-500 dark:text-gray-400">No execution steps have been defined for this protocol.</p>
+        <a href="{% url 'testsuite:protocol_step_create' protocol.id %}" class="inline-flex items-center mt-4 px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:border-blue-800 focus:ring focus:ring-blue-200 disabled:opacity-25 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Add First Execution Step
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
