@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 
 from test_protocols.models import ProtocolRun, TestProtocol, ProtocolResult, TestSuite
-from test_protocols.tasks import execute_protocol_run
+from test_protocols.tasks import run_test_protocol, run_test_suite
 
 logger = logging.getLogger(__name__)
 
@@ -47,20 +47,21 @@ def run_protocol(protocol_id, user=None, executed_by=None):
 
     # Determine the username for the task
     username = user.username if user else "system"
+    user_id = str(user.id) if user else None
 
-    # Send task to Celery via RabbitMQ
-    execute_protocol_run.delay(
-        str(protocol_run.id),
-        str(protocol.id),
-        username
+    # Send task to Celery via RabbitMQ with protocol UUID
+    run_test_protocol.apply_async(
+        args=[str(protocol_run.id), str(protocol.id), username],
+        kwargs={'user_id': user_id},
+        queue='protocol_queue'
     )
 
-    logger.info(f"Sent message to RabbitMQ for protocol run: {protocol_run.id}")
+    logger.info(f"Sent message to RabbitMQ for protocol run: {protocol_run.id}, protocol: {protocol.id}")
 
     return protocol_run
 
 
-def run_test_suite(suite_id, user=None):
+def run_suite(suite_id, user=None):
     """
     Run all active protocols in a test suite.
 
@@ -72,6 +73,45 @@ def run_test_suite(suite_id, user=None):
         list: The created protocol run objects
     """
     logger.info(f"Running test suite with ID: {suite_id}")
+
+    # Get the test suite
+    try:
+        test_suite = TestSuite.objects.get(id=suite_id)
+    except TestSuite.DoesNotExist:
+        logger.error(f"Test suite with ID {suite_id} not found")
+        raise ValueError(f"Test suite with ID {suite_id} not found")
+
+    # Determine the username and user_id for the task
+    username = user.username if user else "system"
+    user_id = str(user.id) if user else None
+
+    # Send the entire suite to the suite queue
+    run_test_suite.apply_async(
+        args=[str(suite_id)],
+        kwargs={'user_id': user_id, 'username': username},
+        queue='suite_queue'
+    )
+
+    logger.info(f"Sent test suite {test_suite.id} to suite queue")
+
+    # For backward compatibility, return empty list
+    # (actual runs will be created by the task)
+    return []
+
+
+def run_protocols_in_suite(suite_id, user=None):
+    """
+    Individually run all active protocols in a test suite.
+    This is the original implementation that schedules each protocol separately.
+
+    Args:
+        suite_id: The UUID of the test suite
+        user: The user who is initiating the runs
+
+    Returns:
+        list: The created protocol run objects
+    """
+    logger.info(f"Running protocols in test suite with ID: {suite_id}")
 
     # Get the test suite
     try:
@@ -93,8 +133,8 @@ def run_test_suite(suite_id, user=None):
         try:
             protocol_run = run_protocol(protocol.id, user)
             protocol_runs.append(protocol_run)
-            logger.info(f"Scheduled protocol {protocol.name} in suite {test_suite.name}")
+            logger.info(f"Scheduled protocol {protocol.name} (ID: {protocol.id}) in suite {test_suite.name} (ID: {test_suite.id})")
         except Exception as e:
-            logger.error(f"Failed to schedule protocol {protocol.name}: {str(e)}")
+            logger.error(f"Failed to schedule protocol {protocol.name} (ID: {protocol.id}): {str(e)}")
 
     return protocol_runs

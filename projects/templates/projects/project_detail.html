@@ -2,7 +2,7 @@
 
 {% load static %}
 
-{% block title %}{{ project.name }}{% endblock %}
+{% block title %}{{ project.name }} - Project Details{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
@@ -15,90 +15,295 @@
         </a>
     </div>
 
-    <div class="bg-white rounded-lg shadow overflow-hidden">
-        <div class="px-6 py-5 border-b border-gray-200">
-            <div class="flex justify-between items-center">
-                <h1 class="text-2xl font-bold text-gray-800">{{ project.name }}</h1>
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">{{ project.name }}</h1>
+        <div class="flex space-x-2">
+            {% if user == project.owner %}
+            <a href="{% url 'project_update' project.id %}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Edit Project
+            </a>
+            {% endif %}
+            <a href="{% url 'testsuite:testsuite_create' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Create Test Suite
+            </a>
+        </div>
+    </div>
 
-                {% if user == project.owner %}
-                <div class="flex space-x-2">
-                    <a href="/projects/{{ project.pk }}/update" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                        Edit
-                    </a>
-                </div>
-                {% endif %}
+    <!-- Project Info Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-lg font-medium text-gray-800 mb-2">Project Details</h2>
+            <div class="text-sm text-gray-600">
+                <p class="mb-2"><span class="font-medium">Owner:</span> {{ project.owner.username }}</p>
+                <p class="mb-2"><span class="font-medium">Created:</span> {{ project.created_at|date:"F j, Y" }}</p>
+                <p><span class="font-medium">Last Updated:</span> {{ project.updated_at|date:"F j, Y" }}</p>
             </div>
         </div>
 
-        <div class="px-6 py-5">
-            <div class="mb-6">
-                <h2 class="text-lg font-medium text-gray-800 mb-2">Description</h2>
-                <p class="text-gray-600">{{ project.description }}</p>
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-lg font-medium text-gray-800 mb-2">Test Suites</h2>
+            <div class="flex items-center justify-between">
+                <div class="text-3xl font-bold text-blue-600">{{ project.test_suite.count }}</div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
             </div>
+            <p class="text-sm text-gray-600 mt-2">Total test suites in this project</p>
+        </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <h2 class="text-lg font-medium text-gray-800 mb-2">Project Details</h2>
-                    <div class="bg-gray-50 rounded-lg p-4">
-                        <div class="grid grid-cols-1 gap-4">
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Owner:</span>
-                                <span class="text-gray-900 font-medium">{{ project.owner.username }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Created:</span>
-                                <span class="text-gray-900">{{ project.created_at|date:"F j, Y" }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Last Updated:</span>
-                                <span class="text-gray-900">{{ project.updated_at|date:"F j, Y" }}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-lg font-medium text-gray-800 mb-2">Environment Variables</h2>
+            <div class="flex items-center justify-between">
+                <div class="text-3xl font-bold text-green-600">{{ project.environments.count }}</div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+            </div>
+            <p class="text-sm text-gray-600 mt-2">Environment variables configured</p>
+        </div>
+    </div>
 
-                <div>
-                    <h2 class="text-lg font-medium text-gray-800 mb-2">Team Members</h2>
-                    <div class="bg-gray-50 rounded-lg p-4">
-                        <div class="space-y-4">
-                            {% for member in project.members.all %}
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center">
-                                    <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center mr-2">
-                                        {% if member.profile_image %}
-                                            <img src="{{ member.profile_image.url }}" alt="{{ member.username }}" class="h-8 w-8 rounded-full">
-                                        {% else %}
-                                            <span class="text-xs font-medium">{{ member.username|make_list|first|upper }}</span>
-                                        {% endif %}
+    <!-- Project Description -->
+    <div class="bg-white p-6 rounded-lg shadow mb-8">
+        <h2 class="text-lg font-medium text-gray-800 mb-4">Description</h2>
+        <div class="text-gray-600">
+            {% if project.description %}
+                <p>{{ project.description }}</p>
+            {% else %}
+                <p class="text-gray-400 italic">No description provided</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Test Suites Section -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+            <h2 class="text-lg font-medium text-gray-800">Test Suites</h2>
+            <a href="{% url 'testsuite:testsuite_create' %}" class="text-sm text-blue-600 hover:text-blue-800 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Add Test Suite
+            </a>
+        </div>
+
+        {% if project.test_suite.all %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3">Test Suite Name</th>
+                            <th scope="col" class="px-6 py-3">Protocols</th>
+                            <th scope="col" class="px-6 py-3">Created</th>
+                            <th scope="col" class="px-6 py-3">Last Run</th>
+                            <th scope="col" class="px-6 py-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for testsuite in project.test_suite.all %}
+                            <tr class="bg-white border-b hover:bg-gray-50">
+                                <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                                    <a href="{% url 'testsuite:testsuite_detail' testsuite.id %}" class="text-blue-600 hover:underline">
+                                        {{ testsuite.name }}
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                                            {{ testsuite.protocols.count }}
+                                        </span>
                                     </div>
-                                    <div class="text-sm font-medium text-gray-900">{{ member.username }}</div>
-                                </div>
-                                {% if user == project.owner %}
-                                <button type="button" class="text-red-600 hover:text-red-800">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
-                                {% endif %}
-                            </div>
-                            {% empty %}
-                            <p class="text-gray-500 text-center py-2">No team members yet.</p>
-                            {% endfor %}
+                                </td>
+                                <td class="px-6 py-4">{{ testsuite.created_at|date:"M d, Y" }}</td>
+                                <td class="px-6 py-4">
+                                    {% with last_run=testsuite.get_latest_run %}
+                                        {% if last_run %}
+                                            {{ last_run.started_at|date:"M d, Y" }}
+                                        {% else %}
+                                            <span class="text-gray-400">Never</span>
+                                        {% endif %}
+                                    {% endwith %}
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex space-x-2">
+                                        <a href="{% url 'testsuite:testsuite_detail' testsuite.id %}"
+                                           class="font-medium text-blue-600 hover:underline">View</a>
+                                        <a href="{% url 'testsuite:testsuite_update' testsuite.id %}"
+                                           class="font-medium text-green-600 hover:underline">Edit</a>
+                                        <a href="{% url 'testsuite:suite_protocol_create' testsuite.id %}"
+                                           class="font-medium text-indigo-600 hover:underline">Add Protocol</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="py-8 px-6 text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mx-auto text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <h3 class="text-base font-medium text-gray-900 mb-1">No test suites yet</h3>
+                <p class="text-gray-500 mb-4">Get started by creating your first test suite for this project.</p>
+                <a href="{% url 'testsuite:testsuite_create' %}"
+                   class="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 -ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Create Test Suite
+                </a>
+            </div>
+        {% endif %}
+    </div>
 
-                            {% if user == project.owner %}
-                            <button type="button" class="mt-4 w-full bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded-lg text-sm flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                </svg>
-                                Add Team Member
-                            </button>
-                            {% endif %}
+    <!-- Environment Variables Section -->
+    <div class="bg-white rounded-lg shadow mt-8">
+        <div class="border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+            <h2 class="text-lg font-medium text-gray-800">Environment Variables</h2>
+            <a href="{% url 'environments:environment_create' %}" class="text-sm text-blue-600 hover:text-blue-800 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Add Environment Variable
+            </a>
+        </div>
+
+        {% if project.environments.all %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3">Key</th>
+                            <th scope="col" class="px-6 py-3">Value</th>
+                            <th scope="col" class="px-6 py-3">Type</th>
+                            <th scope="col" class="px-6 py-3">Status</th>
+                            <th scope="col" class="px-6 py-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for env in project.environments.all %}
+                            <tr class="bg-white border-b hover:bg-gray-50">
+                                <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                                    {{ env.key }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    {% if env.variable_type == 'secret' %}
+                                        <span class="text-gray-500">••••••••</span>
+                                    {% else %}
+                                        {{ env.display_value|truncatechars:30 }}
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                    {% if env.variable_type == 'secret' %}
+                                        bg-red-100 text-red-800
+                                    {% elif env.variable_type == 'json' %}
+                                        bg-purple-100 text-purple-800
+                                    {% elif env.variable_type == 'boolean' %}
+                                        bg-green-100 text-green-800
+                                    {% elif env.variable_type == 'number' %}
+                                        bg-blue-100 text-blue-800
+                                    {% else %}
+                                        bg-gray-100 text-gray-800
+                                    {% endif %}">
+                                        {{ env.get_variable_type_display }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                        {% if env.is_enabled %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                                        {{ env.is_enabled|yesno:"Enabled,Disabled" }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex space-x-2">
+                                        <a href="{% url 'environments:environment_detail' env.id %}"
+                                           class="font-medium text-blue-600 hover:underline">View</a>
+                                        <a href="{% url 'environments:environment_update' env.id %}"
+                                           class="font-medium text-green-600 hover:underline">Edit</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="py-8 px-6 text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mx-auto text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <h3 class="text-base font-medium text-gray-900 mb-1">No environment variables yet</h3>
+                <p class="text-gray-500 mb-4">Add environment variables to store configuration securely.</p>
+                <a href="{% url 'environments:environment_create' %}"
+                   class="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 -ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Add Environment Variable
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Recent Activity Section -->
+    <div class="bg-white rounded-lg shadow mt-8">
+        <div class="border-b border-gray-200 px-6 py-4">
+            <h2 class="text-lg font-medium text-gray-800">Recent Activity</h2>
+        </div>
+
+        <div class="p-6">
+            <!-- Activity log would go here -->
+            <div class="flex flex-col space-y-4">
+                {% for run in recent_runs %}
+                    <div class="flex items-start">
+                        <div class="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-gray-900">
+                                Protocol "{{ run.protocol.name }}" was executed
+                            </p>
+                            <p class="text-xs text-gray-500">
+                                {{ run.started_at|date:"M d, Y H:i" }} by {{ run.executed_by|default:"System" }}
+                            </p>
+                            <div class="mt-1">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                {% if run.result_status == 'pass' %}
+                                    bg-green-100 text-green-800
+                                {% elif run.result_status == 'fail' %}
+                                    bg-red-100 text-red-800
+                                {% elif run.result_status == 'error' %}
+                                    bg-yellow-100 text-yellow-800
+                                {% else %}
+                                    bg-gray-100 text-gray-800
+                                {% endif %}">
+                                    {{ run.result_status|default:"Unknown"|title }}
+                                </span>
+                            </div>
                         </div>
                     </div>
-                </div>
+                {% empty %}
+                    <div class="text-center py-8">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mx-auto text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <h3 class="text-base font-medium text-gray-900 mb-1">No recent activity</h3>
+                        <p class="text-gray-500">Activity will appear here once you start running test protocols.</p>
+                    </div>
+                {% endfor %}
             </div>
         </div>
     </div>

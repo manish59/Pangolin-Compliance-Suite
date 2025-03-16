@@ -71,12 +71,36 @@ services:
     ports:
       - "8000:8000"
 
-  # Celery Worker
-  celery:
+  # Celery Worker for Protocol Tasks
+  celery-protocol-worker:
     build:
       context: .
       dockerfile: Dockerfile
-    command: celery -A pangolin_compliance_suite worker -l info
+    command: celery -A pangolin_compliance_suite worker -l info -Q protocol_queue -n protocol_worker@%h
+    volumes:
+      - .:/app
+    env_file:
+      - ./.env
+    environment:
+      - DB_HOST=db
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - CELERY_BROKER_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672//
+      - DEBUG=${DEBUG}
+      - SECRET_KEY=${SECRET_KEY}
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  # Celery Worker for Suite Tasks
+  celery-suite-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A pangolin_compliance_suite worker -l info -Q suite_queue -n suite_worker@%h
     volumes:
       - .:/app
     env_file:
@@ -134,7 +158,8 @@ services:
     ports:
       - "5555:5555"
     depends_on:
-      - celery
+      - celery-protocol-worker
+      - celery-suite-worker
 
   # Nginx for serving static files and as a reverse proxy
   nginx:
