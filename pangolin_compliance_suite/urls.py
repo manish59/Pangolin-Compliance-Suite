@@ -27,6 +27,7 @@ urlpatterns = [
     path('projects/', include("projects.urls"), name="projects"),
     path('environments/', include("environments.urls"), name="environments"),
     path('test_suites/', include("test_protocols.urls"), name="test_protocols"),
+    path('dashboard/', include("dashboard.urls"), name="dashboard"),
 ]
 
 

@@ -9,6 +9,7 @@ urlpatterns = [
     path('new/', views.TestSuiteCreateView.as_view(), name='testsuite_create'),
     path('<uuid:pk>/', views.TestSuiteDetailView.as_view(), name='testsuite_detail'),
     path('<uuid:pk>/edit/', views.TestSuiteUpdateView.as_view(), name='testsuite_update'),
+    path('<uuid:pk>/run/', views.RunTestSuiteView.as_view(), name='testsuite_run'),
 
     # TestProtocol URLs
     path('protocols/', views.TestProtocolListView.as_view(), name='protocol_list'),
@@ -53,4 +54,31 @@ urlpatterns = [
     path('verifications/<uuid:pk>/', views.VerificationMethodDetailView.as_view(), name='verification_detail'),
     path('verifications/new/', views.VerificationMethodCreateView.as_view(), name='verification_create'),
     path('verifications/<uuid:pk>/edit/', views.VerificationMethodUpdateView.as_view(), name='verification_update'),
+
+    # List execution steps for a specific protocol
+    path('protocol/<uuid:protocol_id>/steps/', views.ExecutionStepListView.as_view(), name='step_list'),
+
+    # Create a new execution step for a protocol
+    path('protocol/<uuid:protocol_id>/steps/create/', views.ExecutionStepCreateView.as_view(), name='step_create'),
+
+    # View details of a specific execution step
+    path('steps/<uuid:pk>/', views.ExecutionStepDetailView.as_view(), name='step_detail'),
+
+    # Update an execution step
+    path('steps/<uuid:pk>/update/', views.ExecutionStepUpdateView.as_view(), name='step_update'),
+
+    # Delete an execution step
+    path('steps/<uuid:pk>/delete/', views.ExecutionStepDeleteView.as_view(), name='step_delete'),
+
+    # Reorder steps for a protocol
+    path('protocol/<uuid:protocol_id>/steps/reorder/', views.ExecutionStepReorderView.as_view(), name='step_reorder'),
+
+    # Clone an execution step
+    path('steps/<uuid:pk>/clone/', views.ExecutionStepCloneView.as_view(), name='step_clone'),
+
+    # View execution step results in a run
+    path('runs/<uuid:run_id>/steps/', views.RunExecutionStepsView.as_view(), name='run_steps'),
+
+    # Execute a specific step during a protocol run
+    path('runs/<uuid:run_id>/steps/<uuid:step_id>/execute/', views.ExecuteStepView.as_view(), name='execute_step'),
 ]

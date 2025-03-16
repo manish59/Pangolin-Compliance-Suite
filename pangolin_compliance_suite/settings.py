@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'test_protocols',
     'rest_framework',
     'authentication',
+    'dashboard',
 ]
 
 MIDDLEWARE = [
@@ -142,3 +143,17 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Add django-celery-results to installed apps
+INSTALLED_APPS += [
+    'django_celery_results',
+    'django_celery_beat',
+]
+
+# Celery Settings
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'amqp://guest:guest@rabbitmq:5672//')
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE

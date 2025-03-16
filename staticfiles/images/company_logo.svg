@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 300">
+  <!-- Background -->
+  <rect width="500" height="300" fill="#ffffff" rx="10" ry="10"/>
+
+  <!-- Main circular background -->
+  <circle cx="250" cy="150" r="100" fill="#f8f9fa"/>
+  <circle cx="250" cy="150" r="100" fill="none" stroke="#1a73e8" stroke-width="3" stroke-dasharray="2,2">
+    <animate attributeName="stroke-dashoffset" from="0" to="16" dur="3s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Server rack -->
+  <rect x="210" y="110" width="80" height="85" rx="4" ry="4" fill="#34495e"/>
+
+  <!-- Server units -->
+  <rect x="215" y="115" width="70" height="15" rx="2" ry="2" fill="#ecf0f1"/>
+  <rect x="215" y="135" width="70" height="15" rx="2" ry="2" fill="#ecf0f1"/>
+  <rect x="215" y="155" width="70" height="15" rx="2" ry="2" fill="#ecf0f1"/>
+  <rect x="215" y="175" width="70" height="15" rx="2" ry="2" fill="#ecf0f1"/>
+
+  <!-- Server lights -->
+  <circle cx="220" cy="122.5" r="2" fill="#27ae60">
+    <animate attributeName="fill" values="#27ae60;#2ecc71;#27ae60" dur="1s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="220" cy="142.5" r="2" fill="#27ae60">
+    <animate attributeName="fill" values="#27ae60;#2ecc71;#27ae60" dur="1.3s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="220" cy="162.5" r="2" fill="#27ae60">
+    <animate attributeName="fill" values="#27ae60;#2ecc71;#27ae60" dur="0.7s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="220" cy="182.5" r="2" fill="#27ae60">
+    <animate attributeName="fill" values="#27ae60;#2ecc71;#27ae60" dur="1.1s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Shield overlay -->
+  <path d="M250 85 L290 105 L290 145 L250 165 L210 145 L210 105 Z" fill="none" stroke="#2c3e50" stroke-width="3"/>
+
+  <!-- Checkmark in Shield -->
+  <path d="M235 135 L245 145 L265 115" fill="none" stroke="#27ae60" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Monitor screens around server -->
+  <rect x="320" y="120" width="40" height="30" rx="2" ry="2" fill="#2c3e50"/>
+  <rect x="323" y="123" width="34" height="24" rx="1" ry="1" fill="#3498db"/>
+  <rect x="323" y="123" width="34" height="6" fill="#2980b9"/>
+
+  <rect x="140" y="120" width="40" height="30" rx="2" ry="2" fill="#2c3e50"/>
+  <rect x="143" y="123" width="34" height="24" rx="1" ry="1" fill="#3498db"/>
+  <rect x="143" y="123" width="34" height="6" fill="#2980b9"/>
+
+  <!-- Data pulses -->
+  <path d="M180 135 L210 135" stroke="#3498db" stroke-width="2">
+    <animate attributeName="stroke-dasharray" values="1,20;20,1" dur="1.5s" repeatCount="indefinite"/>
+  </path>
+
+  <path d="M290 135 L320 135" stroke="#3498db" stroke-width="2">
+    <animate attributeName="stroke-dasharray" values="1,20;20,1" dur="1.5s" repeatCount="indefinite"/>
+  </path>
+
+  <!-- Scanning line over server -->
+  <line x1="210" y1="110" x2="290" y2="110" stroke="#27ae60" stroke-width="2">
+    <animate attributeName="y1" values="110;195;110" dur="3s" repeatCount="indefinite"/>
+    <animate attributeName="y2" values="110;195;110" dur="3s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.8;0;0.8" dur="3s" repeatCount="indefinite"/>
+  </line>
+
+  <!-- Company logo text positioned below the graphic -->
+  <text x="250" y="240" font-family="Arial, sans-serif" font-weight="bold" font-size="20" text-anchor="middle" fill="#2c3e50">CCMF</text>
+<text x="250" y="265" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#7f8c8d">Continuous Compliance &amp; Monitoring Framework</text>
+</svg>

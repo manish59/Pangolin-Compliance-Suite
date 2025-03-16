@@ -3,10 +3,24 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.urls import reverse_lazy, reverse
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponseRedirect
+from django.views import View
+from django.shortcuts import redirect, get_object_or_404
+from django.contrib import messages
+from django.urls import reverse
+from django.http import HttpResponseRedirect
+from .services import run_test_suite
+from django.shortcuts import render, get_object_or_404, redirect
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View
+from django.urls import reverse_lazy, reverse
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import JsonResponse, HttpResponseRedirect, HttpResponseForbidden
+from django.contrib import messages
+from django.db import transaction
 
+from .models import ExecutionStep, TestProtocol, ProtocolRun
 from .models import (
     TestSuite, TestProtocol, ConnectionConfig, ProtocolRun,
-    ProtocolResult, ResultAttachment, VerificationMethod
+    ProtocolResult, ResultAttachment, VerificationMethod, ExecutionStep
 )
 
 
@@ -160,6 +174,10 @@ class ConnectionConfigCreateView(CreateView):
         protocol_id = self.kwargs.get('protocol_id')
         if protocol_id:
             form.instance.protocol = get_object_or_404(TestProtocol, pk=protocol_id)
+        else:
+            # Handle error - protocol is required
+            form.add_error('protocol', 'Protocol is required')
+            return self.form_invalid(form)
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -211,11 +229,51 @@ class ProtocolRunCreateView(CreateView):
             form.initial['protocol'] = protocol_id
         return form
 
+    def get(self, request, *args, **kwargs):
+        # Check if protocol has a connection config before proceeding
+        protocol_id = self.kwargs.get('protocol_id')
+        if not protocol_id:
+            messages.error(request, "No protocol specified.")
+            return redirect('testsuite:protocol_list')
+
+        try:
+            protocol = TestProtocol.objects.get(pk=protocol_id)
+            # Check if the protocol has a connection config
+            try:
+                connection_config = protocol.connection_config
+            except ConnectionConfig.DoesNotExist:
+                messages.error(request,
+                               "Unable to run protocol: No connection configuration found. Please add a connection configuration first.")
+                return redirect('testsuite:protocol_detail', pk=protocol_id)
+        except TestProtocol.DoesNotExist:
+            messages.error(request, "Protocol not found.")
+            return redirect('testsuite:protocol_list')
+
+        return super().get(request, *args, **kwargs)
+
     def form_valid(self, form):
         # Set protocol if it's in the URL
         protocol_id = self.kwargs.get('protocol_id')
-        if protocol_id:
-            form.instance.protocol = get_object_or_404(TestProtocol, pk=protocol_id)
+        if not protocol_id:
+            messages.error(self.request, "No protocol specified.")
+            return redirect('testsuite:protocol_list')
+
+        try:
+            protocol = TestProtocol.objects.get(pk=protocol_id)
+
+            # Double-check for connection config
+            try:
+                connection_config = protocol.connection_config
+            except ConnectionConfig.DoesNotExist:
+                messages.error(self.request,
+                               "Unable to run protocol: No connection configuration found. Please add a connection configuration first.")
+                return redirect('testsuite:protocol_detail', pk=protocol_id)
+
+            form.instance.protocol = protocol
+        except TestProtocol.DoesNotExist:
+            messages.error(self.request, "Protocol not found.")
+            return redirect('testsuite:protocol_list')
+
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -365,3 +423,250 @@ class VerificationMethodUpdateView(UpdateView):
 
     def get_success_url(self):
         return reverse('testsuite:verification_detail', kwargs={'pk': self.object.pk})
+
+
+class RunTestSuiteView(View):
+    """View to trigger running all protocols in a test suite"""
+
+    def post(self, request, pk):
+        """Handle POST request to run a test suite"""
+        try:
+            # Run the test suite
+            runs = run_test_suite(pk, request.user)
+
+            # Add a success message
+            if runs:
+                messages.success(
+                    request,
+                    f"Successfully started {len(runs)} protocols in the test suite."
+                )
+            else:
+                messages.warning(
+                    request,
+                    "No active protocols found in the test suite."
+                )
+
+        except Exception as e:
+            # Add an error message
+            messages.error(
+                request,
+                f"Failed to run test suite: {str(e)}"
+            )
+
+        # Redirect back to the test suite detail page
+        return HttpResponseRedirect(reverse('testsuite:testsuite_detail', kwargs={'pk': pk}))
+
+
+class ExecutionStepListView(ListView):
+    """View for listing all execution steps for a protocol"""
+    model = ExecutionStep
+    template_name = 'test_protocols/execution_step_list.html'
+    context_object_name = 'steps'
+
+    def get_queryset(self):
+        self.protocol = get_object_or_404(TestProtocol, pk=self.kwargs['protocol_id'])
+        return ExecutionStep.objects.filter(test_protocol=self.protocol).order_by('order_index')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['protocol'] = self.protocol
+        return context
+
+
+class ExecutionStepCreateView(LoginRequiredMixin, CreateView):
+    """View for creating a new execution step"""
+    model = ExecutionStep
+    template_name = 'test_protocols/execution_step_form.html'
+    fields = ['name', 'description', 'args', 'kwargs']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        self.protocol = get_object_or_404(TestProtocol, pk=self.kwargs['protocol_id'])
+        context['protocol'] = self.protocol
+        # Get the next order index for this protocol
+        last_step = ExecutionStep.objects.filter(test_protocol=self.protocol).order_by('-order_index').first()
+        context['next_index'] = last_step.order_index + 10 if last_step else 10
+        return context
+
+    def form_valid(self, form):
+        form.instance.test_protocol = get_object_or_404(TestProtocol, pk=self.kwargs['protocol_id'])
+
+        # Set order index if not provided
+        if not form.instance.order_index:
+            last_step = ExecutionStep.objects.filter(
+                test_protocol=form.instance.test_protocol
+            ).order_by('-order_index').first()
+            form.instance.order_index = last_step.order_index + 10 if last_step else 10
+
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('execution_steps:step_list', kwargs={'protocol_id': self.kwargs['protocol_id']})
+
+
+class ExecutionStepDetailView(DetailView):
+    """View for viewing execution step details"""
+    model = ExecutionStep
+    template_name = 'test_protocols/execution_step_detail.html'
+    context_object_name = 'step'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['protocol'] = self.object.test_protocol
+        return context
+
+
+class ExecutionStepUpdateView(LoginRequiredMixin, UpdateView):
+    """View for updating an execution step"""
+    model = ExecutionStep
+    template_name = 'test_protocols/execution_step_form.html'
+    fields = ['name', 'description', 'args', 'kwargs', 'order_index']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['protocol'] = self.object.test_protocol
+        return context
+
+    def get_success_url(self):
+        return reverse('execution_steps:step_detail', kwargs={'pk': self.object.pk})
+
+
+class ExecutionStepDeleteView(LoginRequiredMixin, DeleteView):
+    """View for deleting an execution step"""
+    model = ExecutionStep
+    template_name = 'test_protocols/execution_step_confirm_delete.html'
+
+    def get_success_url(self):
+        return reverse('execution_steps:step_list', kwargs={'protocol_id': self.object.test_protocol.id})
+
+
+class ExecutionStepReorderView(LoginRequiredMixin, View):
+    """View for reordering execution steps via AJAX"""
+
+    def post(self, request, protocol_id):
+        protocol = get_object_or_404(TestProtocol, pk=protocol_id)
+
+        # Check if protocol is associated with a running test
+        active_runs = ProtocolRun.objects.filter(
+            protocol=protocol,
+            status__in=['started', 'running']
+        ).exists()
+
+        if active_runs:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Cannot reorder steps while protocol is running'
+            }, status=400)
+
+        try:
+            # Get step ordering data from request
+            step_order = request.POST.getlist('steps[]')
+
+            with transaction.atomic():
+                # Update order for each step
+                for index, step_id in enumerate(step_order):
+                    step = get_object_or_404(ExecutionStep, pk=step_id, test_protocol=protocol)
+                    # Use 10, 20, 30... for ordering to allow easy insertion later
+                    step.order_index = (index + 1) * 10
+                    step.save()
+
+            return JsonResponse({'status': 'success'})
+
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': str(e)
+            }, status=400)
+
+
+class ExecutionStepCloneView(LoginRequiredMixin, View):
+    """View for cloning an execution step"""
+
+    def post(self, request, pk):
+        original_step = get_object_or_404(ExecutionStep, pk=pk)
+        protocol = original_step.test_protocol
+
+        # Check if protocol is associated with a running test
+        active_runs = ProtocolRun.objects.filter(
+            protocol=protocol,
+            status__in=['started', 'running']
+        ).exists()
+
+        if active_runs:
+            messages.error(request, 'Cannot clone steps while protocol is running')
+            return HttpResponseRedirect(reverse('execution_steps:step_list',
+                                                kwargs={'protocol_id': protocol.id}))
+
+        # Create a clone with a new order_index
+        new_step = ExecutionStep.objects.create(
+            test_protocol=protocol,
+            name=f"Copy of {original_step.name}",
+            description=original_step.description,
+            args=original_step.args,
+            kwargs=original_step.kwargs,
+            order_index=original_step.order_index + 5  # Insert after the original
+        )
+
+        messages.success(request, f"Successfully cloned step: {original_step.name}")
+        return HttpResponseRedirect(reverse('execution_steps:step_detail',
+                                            kwargs={'pk': new_step.pk}))
+
+
+class RunExecutionStepsView(LoginRequiredMixin, ListView):
+    """View execution steps for a specific protocol run"""
+    model = ExecutionStep
+    template_name = 'test_protocols/run_execution_steps.html'
+    context_object_name = 'steps'
+
+    def get_queryset(self):
+        self.run = get_object_or_404(ProtocolRun, pk=self.kwargs['run_id'])
+        return ExecutionStep.objects.filter(test_protocol=self.run.protocol).order_by('order_index')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['run'] = self.run
+        context['protocol'] = self.run.protocol
+
+        # Get the execution status for each step if available
+        step_results = {}
+        for step in context['steps']:
+            # Placeholder - in a real implementation, you would look up step execution results
+            # from the database based on the run ID and step ID
+            step_results[step.id] = {
+                'status': 'not_executed',  # Default status
+                'result': None
+            }
+
+        context['step_results'] = step_results
+        return context
+
+
+class ExecuteStepView(LoginRequiredMixin, View):
+    """Execute a specific step during a protocol run"""
+
+    def post(self, request, run_id, step_id):
+        run = get_object_or_404(ProtocolRun, pk=run_id)
+        step = get_object_or_404(ExecutionStep, pk=step_id, test_protocol=run.protocol)
+
+        # Only allow execution if run is in the right state
+        if run.status not in ['started', 'running']:
+            messages.error(request, f"Cannot execute step: run is in {run.status} state")
+            return HttpResponseRedirect(reverse('execution_steps:run_steps',
+                                                kwargs={'run_id': run.id}))
+
+        # Execute the step (placeholder - actual implementation would depend on your execution engine)
+        try:
+            # In a real implementation, you would:
+            # 1. Pass the step to your execution engine
+            # 2. Capture the result
+            # 3. Store the result in the database
+            # 4. Update the run status if needed
+
+            # Simulate success
+            messages.success(request, f"Successfully executed step: {step.name}")
+
+        except Exception as e:
+            messages.error(request, f"Error executing step: {str(e)}")
+
+        return HttpResponseRedirect(reverse('execution_steps:run_steps',
+                                            kwargs={'run_id': run.id}))

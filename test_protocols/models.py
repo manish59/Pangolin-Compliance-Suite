@@ -5,7 +5,6 @@ from environments.models import Environment
 from django.utils.translation import gettext_lazy as _
 
 
-
 class TestSuite(BaseModel):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)
@@ -116,6 +115,8 @@ class ProtocolRun(BaseModel):
 
     # Overall status
     STATUS_CHOICES = [
+        ('created', 'Created'),
+        ('started', 'Started'),
         ('running', 'Running'),
         ('completed', 'Completed'),
         ('failed', 'Failed'),
@@ -233,6 +234,7 @@ class ResultAttachment(BaseModel):
         verbose_name_plural = _("Result Attachments")
 
 
+
 VERIFICATION_METHOD_CHOICES = [
     # String verification methods
     ('string_exact_match', 'String Exact Match'),
@@ -326,10 +328,10 @@ class VerificationMethod(BaseModel):
     """
     A specific method of verification that can be applied to test results
     """
+    test_protocol = models.ForeignKey(TestProtocol, on_delete=models.CASCADE, related_name='verification_methods', default=None)
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)
     method_type = models.CharField(max_length=30, choices=VERIFICATION_METHOD_CHOICES)
-
     # For methods requiring a comparison operator
     supports_comparison = models.BooleanField(default=False)
     comparison_method = models.CharField(max_length=50, choices=COMPARISON_OPERATOR_CHOICES)
@@ -356,3 +358,24 @@ class VerificationMethod(BaseModel):
         verbose_name = _("Verification Method")
         verbose_name_plural = _("Verification Methods")
         ordering = ['-created_at']
+
+
+class ExecutionStep(BaseModel):
+    """
+    A single step in a test protocol execution
+    """
+    test_protocol = models.ForeignKey(TestProtocol, on_delete=models.CASCADE, related_name='steps')
+    args = models.JSONField(
+        default=list,
+        help_text=_("Positional arguments (args) as a JSON array")
+    )
+
+    # Keyword arguments (kwargs) stored as JSON object
+    kwargs = models.JSONField(
+        default=dict,
+        help_text=_("Keyword arguments (kwargs) as a JSON object")
+    )
+
+    class Meta:
+        verbose_name = _("Execution Step")
+        verbose_name_plural = _("Execution Steps")

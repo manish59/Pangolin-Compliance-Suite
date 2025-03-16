@@ -12,7 +12,8 @@ from .models import (
     ProtocolRun,
     ProtocolResult,
     ResultAttachment,
-    VerificationMethod
+    VerificationMethod,
+    ExecutionStep
 )
 
 
@@ -80,10 +81,37 @@ class ProtocolRunInline(admin.TabularInline):
         return False
 
 
+class ExecutionStepInline(admin.TabularInline):
+    """Inline admin for ExecutionStep within TestProtocol"""
+    model = ExecutionStep
+    extra = 1
+    fields = ('formatted_args', 'formatted_kwargs')
+    readonly_fields = ('formatted_args', 'formatted_kwargs')
+
+    def formatted_args(self, obj):
+        """Format args for better display"""
+        if not obj.args:
+            return "-"
+        return format_html('<pre>{}</pre>', ', '.join(str(arg) for arg in obj.args))
+
+    formatted_args.short_description = 'Arguments'
+
+    def formatted_kwargs(self, obj):
+        """Format kwargs for better display"""
+        if not obj.kwargs:
+            return "-"
+
+        formatted = "<br>".join([f"<b>{k}</b>: {v}" for k, v in obj.kwargs.items()])
+        return format_html('<div>{}</div>', formatted)
+
+    formatted_kwargs.short_description = 'Keyword Arguments'
+
+
 @admin.register(TestProtocol)
 class TestProtocolAdmin(admin.ModelAdmin):
     """Admin for TestProtocol model"""
-    list_display = ('name', 'suite', 'status', 'has_connection_config', 'last_run_status', 'order_index')
+    list_display = (
+    'name', 'suite', 'status', 'has_connection_config', 'has_execution_steps', 'last_run_status', 'order_index')
     list_filter = ('status', 'suite__project', 'suite')
     search_fields = ('name', 'description', 'suite__name')
     fieldsets = (
@@ -94,7 +122,7 @@ class TestProtocolAdmin(admin.ModelAdmin):
             'fields': ('order_index',)
         }),
     )
-    inlines = [ConnectionConfigInline, ProtocolRunInline]
+    inlines = [ConnectionConfigInline, ExecutionStepInline, ProtocolRunInline]
     actions = ['run_protocols']
 
     def has_connection_config(self, obj):
@@ -106,6 +134,13 @@ class TestProtocolAdmin(admin.ModelAdmin):
 
     has_connection_config.boolean = True
     has_connection_config.short_description = 'Connection'
+
+    def has_execution_steps(self, obj):
+        """Display whether this protocol has execution steps"""
+        return obj.steps.exists()
+
+    has_execution_steps.boolean = True
+    has_execution_steps.short_description = 'Has Steps'
 
     def last_run_status(self, obj):
         """Display the status of the last run"""
@@ -126,7 +161,7 @@ class TestProtocolAdmin(admin.ModelAdmin):
 
         return format_html(
             '<a href="{}" style="color: {};">{}</a>',
-            reverse('admin:your_app_protocolrun_change', args=[last_run.id]),
+            reverse('admin:test_protocols_protocolrun_change', args=[last_run.id]),
             color,
             status.capitalize()
         )
@@ -153,7 +188,6 @@ class TestProtocolAdmin(admin.ModelAdmin):
         )
 
     run_protocols.short_description = "Run selected protocols"
-
 
 @admin.register(ConnectionConfig)
 class ConnectionConfigAdmin(admin.ModelAdmin):
@@ -325,6 +359,9 @@ class VerificationMethodAdmin(admin.ModelAdmin):
     list_filter = ('method_type', 'supports_comparison', 'requires_expected_value')
     search_fields = ('name', 'description')
     fieldsets = (
+        ("Test Protocol Verification Method", {
+            'fields': ('test_protocol',)
+        }),
         (None, {
             'fields': ('name', 'description', 'method_type')
         }),
@@ -339,3 +376,67 @@ class VerificationMethodAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+
+class ExecutionStepInline(admin.TabularInline):
+    """Inline admin for ExecutionStep within TestProtocol"""
+    model = ExecutionStep
+    extra = 1
+    fields = ('formatted_args', 'formatted_kwargs')
+    readonly_fields = ('formatted_args', 'formatted_kwargs')
+
+    def formatted_args(self, obj):
+        """Format args for better display"""
+        if not obj.args:
+            return "-"
+        return format_html('<pre>{}</pre>', ', '.join(str(arg) for arg in obj.args))
+
+    formatted_args.short_description = 'Arguments'
+
+    def formatted_kwargs(self, obj):
+        """Format kwargs for better display"""
+        if not obj.kwargs:
+            return "-"
+
+        formatted = "<br>".join([f"<b>{k}</b>: {v}" for k, v in obj.kwargs.items()])
+        return format_html('<div>{}</div>', formatted)
+
+    formatted_kwargs.short_description = 'Keyword Arguments'
+
+
+@admin.register(ExecutionStep)
+class ExecutionStepAdmin(admin.ModelAdmin):
+    """Admin for ExecutionStep model"""
+    list_display = ('id', 'test_protocol', 'formatted_args_short', 'formatted_kwargs_short', 'created_at')
+    list_filter = ('test_protocol__suite',)
+    search_fields = ('test_protocol__name',)
+    raw_id_fields = ('test_protocol',)
+
+    fieldsets = (
+        (None, {
+            'fields': ('test_protocol',)
+        }),
+        (_('Execution Parameters'), {
+            'fields': ('args', 'kwargs'),
+            'description': 'Define positional and keyword arguments for this execution step'
+        }),
+    )
+
+    def formatted_args_short(self, obj):
+        """Format args for better display in list view"""
+        if not obj.args:
+            return "-"
+        args_str = ', '.join(str(arg) for arg in obj.args)
+        return args_str[:50] + '...' if len(args_str) > 50 else args_str
+
+    formatted_args_short.short_description = 'Arguments'
+
+    def formatted_kwargs_short(self, obj):
+        """Format kwargs for better display in list view"""
+        if not obj.kwargs:
+            return "-"
+
+        kwargs_str = ', '.join([f"{k}: {v}" for k, v in obj.kwargs.items()])
+        return kwargs_str[:50] + '...' if len(kwargs_str) > 50 else kwargs_str
+
+    formatted_kwargs_short.short_description = 'Keyword Arguments'

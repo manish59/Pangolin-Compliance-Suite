@@ -1,0 +1,187 @@
+{% extends 'test_protocols/base.html' %}
+
+{% block breadcrumbs %}
+<li>
+    <div class="flex items-center">
+        <svg class="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
+        </svg>
+        <a href="{% url 'testsuite:testsuite_detail' step.test_protocol.suite.id %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2 dark:text-gray-400 dark:hover:text-white">
+            {{ step.test_protocol.suite.name }}
+        </a>
+    </div>
+</li>
+<li>
+    <div class="flex items-center">
+        <svg class="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
+        </svg>
+        <a href="{% url 'testsuite:protocol_detail' step.test_protocol.id %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2 dark:text-gray-400 dark:hover:text-white">
+            {{ step.test_protocol.name }}
+        </a>
+    </div>
+</li>
+<li>
+    <div class="flex items-center">
+        <svg class="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
+        </svg>
+        <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2 dark:text-gray-400">Execution Step</span>
+    </div>
+</li>
+{% endblock %}
+
+{% block page_title %}Execution Step Details{% endblock %}
+
+{% block action_buttons %}
+<div class="flex justify-end space-x-2">
+    <a href="{% url 'testsuite:step_update' step.id %}" class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 active:bg-green-800 focus:outline-none focus:border-green-800 focus:ring focus:ring-green-200 disabled:opacity-25 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+        </svg>
+        Edit Step
+    </a>
+    <a href="{% url 'testsuite:protocol_detail' step.test_protocol.id %}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:border-blue-800 focus:ring focus:ring-blue-200 disabled:opacity-25 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+        Back to Protocol
+    </a>
+</div>
+{% endblock %}
+
+{% block main_content %}
+<div class="p-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">Step Details</h2>
+            <dl class="grid grid-cols-1 gap-x-4 gap-y-2">
+                <div class="sm:col-span-1">
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Protocol</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">
+                        <a href="{% url 'testsuite:protocol_detail' step.test_protocol.id %}" class="text-blue-600 dark:text-blue-400 hover:underline">
+                            {{ step.test_protocol.name }}
+                        </a>
+                    </dd>
+                </div>
+                <div class="sm:col-span-1">
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Created</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ step.created_at|date:"M d, Y H:i" }}</dd>
+                </div>
+                <div class="sm:col-span-1">
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Last Updated</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ step.updated_at|date:"M d, Y H:i" }}</dd>
+                </div>
+            </dl>
+        </div>
+
+        <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">Step Configuration</h2>
+            <dl class="grid grid-cols-1 gap-x-4 gap-y-2">
+                <div class="sm:col-span-1">
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Step ID</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ step.id }}</dd>
+                </div>
+                <!-- More information could be added here as needed -->
+            </dl>
+        </div>
+    </div>
+
+    <div class="mt-8">
+        <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">Execution Parameters</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
+                <div class="px-4 py-3 bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                    <h3 class="text-lg font-medium text-gray-800 dark:text-gray-200">Positional Arguments (args)</h3>
+                </div>
+                <div class="p-4">
+                    {% if step.args %}
+                        <div class="bg-gray-50 dark:bg-gray-700 rounded-md p-4 overflow-x-auto">
+                            <pre class="text-sm text-gray-800 dark:text-gray-200 font-mono">{{ step.args|pprint }}</pre>
+                        </div>
+                    {% else %}
+                        <p class="text-sm text-gray-500 dark:text-gray-400">No positional arguments defined.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
+                <div class="px-4 py-3 bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                    <h3 class="text-lg font-medium text-gray-800 dark:text-gray-200">Keyword Arguments (kwargs)</h3>
+                </div>
+                <div class="p-4">
+                    {% if step.kwargs %}
+                        <div class="bg-gray-50 dark:bg-gray-700 rounded-md p-4 overflow-x-auto">
+                            <pre class="text-sm text-gray-800 dark:text-gray-200 font-mono">{{ step.kwargs|pprint }}</pre>
+                        </div>
+                    {% else %}
+                        <p class="text-sm text-gray-500 dark:text-gray-400">No keyword arguments defined.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if step.runs.exists %}
+    <div class="mt-8">
+        <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">Execution History</h2>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                    <tr>
+                        <th scope="col" class="px-6 py-3">Run Date</th>
+                        <th scope="col" class="px-6 py-3">Status</th>
+                        <th scope="col" class="px-6 py-3">Duration</th>
+                        <th scope="col" class="px-6 py-3">Protocol Run</th>
+                        <th scope="col" class="px-6 py-3">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for run in step.runs.all|slice:":5" %}
+                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                        <td class="px-6 py-4">{{ run.started_at|date:"M d, Y H:i:s" }}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 text-xs font-medium
+                            {% if run.status == 'completed' %}
+                                bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
+                            {% elif run.status == 'running' %}
+                                bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300
+                            {% elif run.status == 'failed' or run.status == 'error' %}
+                                bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300
+                            {% else %}
+                                bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300
+                            {% endif %}
+                            rounded-full">
+                                {{ run.status|title }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if run.duration_seconds %}
+                                {{ run.duration_seconds }} sec
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4">
+                            <a href="{% url 'testsuite:run_detail' run.protocol_run.id %}" class="text-blue-600 dark:text-blue-400 hover:underline">
+                                {{ run.protocol_run.id|truncatechars:8 }}
+                            </a>
+                        </td>
+                        <td class="px-6 py-4 flex space-x-2">
+                            <a href="{% url 'testsuite:step_run_detail' run.id %}" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">View</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                        <td colspan="5" class="px-6 py-4 text-center">No execution history found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
