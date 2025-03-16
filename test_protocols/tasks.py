@@ -3,6 +3,7 @@ import time
 import logging
 import json
 from datetime import datetime
+from uuid import UUID
 
 from django.utils import timezone
 from test_protocols.models import (
@@ -261,7 +262,8 @@ def run_test_protocol(protocol_id, user_id=None):
     """
     try:
         # Get the protocol
-        protocol = TestProtocol.objects.get(id=protocol_id)
+        protocol_uuid = UUID(protocol_id)
+        protocol = TestProtocol.objects.get(pk=protocol_uuid)
 
         # Create a run record
         run = ProtocolRun.objects.create(
@@ -492,7 +494,8 @@ def run_test_suite(suite_id, user_id=None):
     """
     try:
         # Get the suite
-        suite = TestSuite.objects.get(id=suite_id)
+        suite_id_uuid = UUID(suite_id)
+        suite = TestSuite.objects.get(pk=suite_id_uuid)
 
         logger.info(f"Starting test suite: {suite.name} (ID: {suite_id})")
         start_time = time.time()

@@ -47,14 +47,9 @@ def run_protocol(protocol_id, user=None, executed_by=None):
 
     # Determine the username for the task
     username = user.username if user else "system"
-    user_id = str(user.id) if user else None
 
     # Send task to Celery via RabbitMQ with protocol UUID
-    run_test_protocol.apply_async(
-        args=[str(protocol_run.id), str(protocol.id), username],
-        kwargs={'user_id': user_id},
-        queue='protocol_queue'
-    )
+    run_test_protocol.delay(protocol_run.id, username)
 
     logger.info(f"Sent message to RabbitMQ for protocol run: {protocol_run.id}, protocol: {protocol.id}")
 
@@ -83,15 +78,9 @@ def run_suite(suite_id, user=None):
 
     # Determine the username and user_id for the task
     username = user.username if user else "system"
-    user_id = str(user.id) if user else None
 
     # Send the entire suite to the suite queue
-    run_test_suite.apply_async(
-        args=[str(suite_id)],
-        kwargs={'user_id': user_id, 'username': username},
-        queue='suite_queue'
-    )
-
+    run_test_suite.delay(test_suite.id, username)
     logger.info(f"Sent test suite {test_suite.id} to suite queue")
 
     # For backward compatibility, return empty list

@@ -8,7 +8,6 @@ from django.shortcuts import redirect, get_object_or_404
 from django.contrib import messages
 from django.urls import reverse
 from django.http import HttpResponseRedirect
-from .services import run_test_suite
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View
 from django.urls import reverse_lazy, reverse
@@ -25,6 +24,7 @@ from .models import (
     TestSuite, TestProtocol, ConnectionConfig, ProtocolRun,
     ProtocolResult, ResultAttachment, VerificationMethod, ExecutionStep
 )
+from test_protocols.services import run_protocol, run_suite
 
 
 # TestSuite Views
@@ -267,6 +267,18 @@ class ProtocolRunCreateView(CreateView):
             # Double-check for connection config
             try:
                 connection_config = protocol.connection_config
+                protocol_run = run_protocol(
+                    protocol_id=protocol_id,
+                    user=self.request.user,
+                    executed_by=form.cleaned_data.get('executed_by')
+                )
+
+                # Set self.object so get_success_url works correctly
+                self.object = protocol_run
+
+                messages.success(self.request, "Protocol run initiated successfully.")
+                return HttpResponseRedirect(self.get_success_url())
+
             except ConnectionConfig.DoesNotExist:
                 messages.error(self.request,
                                "Unable to run protocol: No connection configuration found. Please add a connection configuration first.")
@@ -435,7 +447,8 @@ class RunTestSuiteView(View):
         """Handle POST request to run a test suite"""
         try:
             # Run the test suite
-            runs = run_test_suite(pk, request.user)
+
+            runs = run_suite(pk, request.user)
 
             # Add a success message
             if runs:
