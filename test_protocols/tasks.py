@@ -12,7 +12,8 @@ from test_protocols.models import (
     ProtocolRun,
     ProtocolResult,
     ConnectionConfig,
-    VerificationMethod
+    VerificationMethod,
+    ExecutionStep,
 )
 
 # Import Pangolin SDK modules
@@ -264,7 +265,7 @@ def run_test_protocol(protocol_id, user_id=None):
         # Get the protocol
         protocol_uuid = UUID(protocol_id)
         protocol = TestProtocol.objects.get(pk=protocol_uuid)
-
+        executions = Exe
         # Create a run record
         run = ProtocolRun.objects.create(
             protocol=protocol,
@@ -298,80 +299,7 @@ def run_test_protocol(protocol_id, user_id=None):
                     raise ConnectionError(f"Failed to connect to {connection_config.config_type} service")
 
                 # Execute the test - this will depend on the connection type
-                if connection_config.config_type == 'database':
-                    # Example database test
-                    query = "SELECT 1 as test_value"
-                    if 'query' in connection_config.config_data:
-                        query = connection_config.config_data['query']
 
-                    test_results = connection.execute(query)
-                    result_text = f"Database query executed successfully. Results: {len(test_results)} rows"
-                    result_data = {"rows": test_results}
-
-                elif connection_config.config_type == 'api':
-                    # Example API test
-                    endpoint = ""
-                    method = "GET"
-                    params = {}
-                    data = {}
-                    headers = {}
-
-                    if 'endpoint' in connection_config.config_data:
-                        endpoint = connection_config.config_data['endpoint']
-                    if 'method' in connection_config.config_data:
-                        method = connection_config.config_data['method']
-                    if 'params' in connection_config.config_data:
-                        params = connection_config.config_data['params']
-                    if 'data' in connection_config.config_data:
-                        data = connection_config.config_data['data']
-                    if 'headers' in connection_config.config_data:
-                        headers = connection_config.config_data['headers']
-
-                    test_results = connection.execute(method=method, endpoint=endpoint, params=params, data=data,
-                                                      headers=headers)
-                    result_text = f"API test executed successfully. Status code: {test_results.get('status_code')}"
-                    result_data = test_results
-
-                elif connection_config.config_type == 'ssh':
-                    # Example SSH test
-                    command = "echo 'Hello, Pangolin!'"
-                    if 'command' in connection_config.config_data:
-                        command = connection_config.config_data['command']
-
-                    test_results = connection.execute(command)
-                    result_text = f"SSH command executed successfully. Output: {test_results}"
-                    result_data = {"output": test_results}
-
-                elif connection_config.config_type == 'kubernetes':
-                    # Example Kubernetes test
-                    resource_type = "pod"  # Default to pod
-                    action = "list"  # Default to list
-                    namespace = "default"
-
-                    if 'resource_type' in connection_config.config_data:
-                        resource_type = connection_config.config_data['resource_type']
-                    if 'action' in connection_config.config_data:
-                        action = connection_config.config_data['action']
-                    if 'namespace' in connection_config.config_data:
-                        namespace = connection_config.config_data['namespace']
-
-                    test_results = connection.execute(resource_type=resource_type, action=action, namespace=namespace)
-                    result_text = f"Kubernetes operation executed successfully"
-                    result_data = test_results
-
-                elif connection_config.config_type == 'aws':
-                    # Example AWS test
-                    operation = "list_buckets"  # Default operation for S3
-                    service_params = {}
-
-                    if 'operation' in connection_config.config_data:
-                        operation = connection_config.config_data['operation']
-                    if 'params' in connection_config.config_data:
-                        service_params = connection_config.config_data['params']
-
-                    test_results = connection.execute(operation=operation, **service_params)
-                    result_text = f"AWS operation executed successfully"
-                    result_data = test_results
 
                 # Apply verification methods if configured
                 verification_methods = protocol.verification_methods.filter(test_protocol=protocol)

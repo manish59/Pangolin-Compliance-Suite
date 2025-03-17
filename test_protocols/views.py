@@ -447,14 +447,13 @@ class RunTestSuiteView(View):
         """Handle POST request to run a test suite"""
         try:
             # Run the test suite
-
-            runs = run_suite(pk, request.user)
-
-            # Add a success message
-            if runs:
+            suite = TestSuite.objects.get(pk=pk)
+            protocols = suite.get_ordered_protocols()
+            if protocols:
+                run_suite(pk, request.user)
                 messages.success(
                     request,
-                    f"Successfully started {len(runs)} protocols in the test suite."
+                    f"Successfully started {len(protocols)} protocols in the test suite."
                 )
             else:
                 messages.warning(

@@ -22,7 +22,7 @@ class TestSuite(BaseModel):
         Returns:
             QuerySet: Ordered protocols
         """
-        return self.protocols.all().order_by('order_index', 'name')
+        return self.protocols.filter(status="active").order_by('order_index', 'name')
 
 
 class TestProtocol(BaseModel):

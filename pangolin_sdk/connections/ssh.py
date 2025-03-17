@@ -142,7 +142,7 @@ class SSHConnection(BaseConnection[Tuple[Any, Any]]):
             if not args:
                 raise ValueError("No command provided for execution")
 
-            command = args[0]
+            command = kwargs.get("command") or args[0]
             self._logger.info(f"Executing command: {command}")
 
             # Execute command and capture streams
