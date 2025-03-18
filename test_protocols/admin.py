@@ -4,14 +4,18 @@ from django.utils.html import format_html
 from django.urls import reverse
 from django.http import JsonResponse
 from django.contrib import messages
+# Add this to your existing admin.py file
+from django.contrib import admin
+from django.utils.html import format_html
+from django.utils.safestring import mark_safe
+import json
 
+from .models import VerificationResult
 from .models import (
     TestSuite,
     TestProtocol,
     ConnectionConfig,
     ProtocolRun,
-    ProtocolResult,
-    ResultAttachment,
     VerificationMethod,
     ExecutionStep
 )
@@ -225,13 +229,6 @@ class ConnectionConfigAdmin(admin.ModelAdmin):
     test_connection_button.short_description = 'Test'
 
 
-class ResultAttachmentInline(admin.TabularInline):
-    """Inline admin for ResultAttachment within ProtocolResult"""
-    model = ResultAttachment
-    extra = 1
-    fields = ('name', 'file', 'content_type', 'description')
-
-
 @admin.register(ProtocolRun)
 class ProtocolRunAdmin(admin.ModelAdmin):
     """Admin for ProtocolRun model"""
@@ -279,79 +276,6 @@ class ProtocolRunAdmin(admin.ModelAdmin):
         return False
 
 
-@admin.register(ProtocolResult)
-class ProtocolResultAdmin(admin.ModelAdmin):
-    """Admin for ProtocolResult model"""
-    list_display = ('id', 'run_protocol', 'success', 'has_error', 'created_at')
-    list_filter = ('success', 'run__protocol__suite', 'run__status')
-    search_fields = ('run__protocol__name', 'error_message')
-    readonly_fields = ('run', 'created_at', 'updated_at', 'formatted_result_data')
-    date_hierarchy = 'created_at'
-    inlines = [ResultAttachmentInline]
-
-    fieldsets = (
-        (None, {
-            'fields': ('run', 'success')
-        }),
-        (_('Result Data'), {
-            'fields': ('formatted_result_data',),
-            'classes': ('wide',)
-        }),
-        (_('Result Text'), {
-            'fields': ('result_text',),
-            'classes': ('wide',)
-        }),
-        (_('Error Information'), {
-            'fields': ('error_message',),
-            'classes': ('collapse',)
-        }),
-        (_('Timestamps'), {
-            'fields': ('created_at', 'updated_at'),
-            'classes': ('collapse',)
-        }),
-    )
-
-    def run_protocol(self, obj):
-        """Display the protocol name for this result"""
-        return obj.run.protocol.name
-
-    run_protocol.short_description = 'Protocol'
-
-    def has_error(self, obj):
-        """Display whether this result has an error message"""
-        return bool(obj.error_message)
-
-    has_error.boolean = True
-    has_error.short_description = 'Has Error'
-
-    def formatted_result_data(self, obj):
-        """Format the JSON data for better display"""
-        if not obj.result_data:
-            return '-'
-
-        import json
-        try:
-            formatted = json.dumps(obj.result_data, indent=2)
-            return format_html('<pre>{}</pre>', formatted)
-        except Exception:
-            return str(obj.result_data)
-
-    formatted_result_data.short_description = 'Result Data'
-
-    def has_add_permission(self, request):
-        """Disable adding results directly from admin"""
-        return False
-
-
-@admin.register(ResultAttachment)
-class ResultAttachmentAdmin(admin.ModelAdmin):
-    """Admin for ResultAttachment model"""
-    list_display = ('name', 'result', 'content_type', 'created_at')
-    list_filter = ('content_type', 'created_at')
-    search_fields = ('name', 'description', 'result__run__protocol__name')
-    readonly_fields = ('created_at', 'updated_at')
-
-
 @admin.register(VerificationMethod)
 class VerificationMethodAdmin(admin.ModelAdmin):
     """Admin for VerificationMethod model"""
@@ -360,7 +284,7 @@ class VerificationMethodAdmin(admin.ModelAdmin):
     search_fields = ('name', 'description')
     fieldsets = (
         ("Test Protocol Verification Method", {
-            'fields': ('test_protocol',)
+            'fields': ('execution_step',)
         }),
         (None, {
             'fields': ('name', 'description', 'method_type')
@@ -414,7 +338,7 @@ class ExecutionStepAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (None, {
-            'fields': ('test_protocol',)
+            'fields': ('test_protocol','name')
         }),
         (_('Execution Parameters'), {
             'fields': ('args', 'kwargs'),
@@ -440,3 +364,141 @@ class ExecutionStepAdmin(admin.ModelAdmin):
         return kwargs_str[:50] + '...' if len(kwargs_str) > 50 else kwargs_str
 
     formatted_kwargs_short.short_description = 'Keyword Arguments'
+
+
+
+@admin.register(VerificationResult)
+class VerificationResultAdmin(admin.ModelAdmin):
+    """Admin for VerificationResult model"""
+    list_display = ('id', 'verification_step', 'success_status', 'verification_time_display', 'method_type_display',
+                    'truncated_message')
+    list_filter = ('success', 'status', 'verification_step__method_type', 'verification_time')
+    search_fields = ('verification_step__name', 'message', 'error_message')
+    readonly_fields = (
+    'verification_time', 'formatted_result_data', 'formatted_actual_value', 'formatted_expected_value')
+    fieldsets = (
+        (None, {
+            'fields': ('verification_step', 'success', 'status')
+        }),
+        ('Verification Details', {
+            'fields': ('message', 'formatted_actual_value', 'formatted_expected_value')
+        }),
+        ('Error Information', {
+            'fields': ('error_message', 'error_stack_trace'),
+            'classes': ('collapse',)
+        }),
+        ('Result Data', {
+            'fields': ('formatted_result_data',),
+            'classes': ('collapse',)
+        }),
+        ('Timestamps', {
+            'fields': ('verification_time',),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def success_status(self, obj):
+        """Display success status with color"""
+        if obj.success:
+            return format_html('<span style="color: green; font-weight: bold;">✓ PASS</span>')
+        else:
+            return format_html('<span style="color: red; font-weight: bold;">✗ FAIL</span>')
+
+    success_status.short_description = 'Result'
+
+    def verification_time_display(self, obj):
+        """Format verification time for display"""
+        return obj.verification_time.strftime("%Y-%m-%d %H:%M:%S")
+
+    verification_time_display.short_description = 'Time'
+    verification_time_display.admin_order_field = 'verification_time'
+
+    def method_type_display(self, obj):
+        """Display verification method type with styling"""
+        method_type = obj.verification_step.method_type if obj.verification_step else "Unknown"
+
+        # Define color mapping for different method types
+        colors = {
+            'string': 'green',
+            'numeric': 'blue',
+            'dict': 'purple',
+            'list': 'orange',
+            'api': 'teal',
+            'db': 'indigo',
+            'ssh': 'red',
+            's3': 'brown',
+        }
+
+        # Determine color based on method_type prefix
+        color = 'gray'
+        for prefix, prefix_color in colors.items():
+            if method_type.startswith(prefix):
+                color = prefix_color
+                break
+
+        return format_html(
+            '<span style="color: {}; font-weight: bold;">{}</span>',
+            color,
+            method_type
+        )
+
+    method_type_display.short_description = 'Method Type'
+
+    def truncated_message(self, obj):
+        """Truncate message for display in list view"""
+        if not obj.message:
+            return "-"
+        if len(obj.message) > 50:
+            return obj.message[:47] + "..."
+        return obj.message
+
+    truncated_message.short_description = 'Message'
+
+    def formatted_result_data(self, obj):
+        """Format result data as pretty-printed JSON"""
+        if not obj.result_data:
+            return "-"
+
+        try:
+            # If it's a string representation of JSON, parse it first
+            if isinstance(obj.result_data, str):
+                data = json.loads(obj.result_data)
+            else:
+                data = obj.result_data
+
+            formatted_json = json.dumps(data, indent=2)
+            return mark_safe(f'<pre style="max-height: 300px; overflow: auto;">{formatted_json}</pre>')
+        except Exception as e:
+            return f"Error formatting JSON: {str(e)}"
+
+    formatted_result_data.short_description = 'Result Data'
+
+    def formatted_actual_value(self, obj):
+        """Format actual value for display"""
+        if obj.actual_value is None:
+            return "-"
+
+        try:
+            if isinstance(obj.actual_value, (dict, list)):
+                formatted_value = json.dumps(obj.actual_value, indent=2)
+                return mark_safe(f'<pre style="max-height: 200px; overflow: auto;">{formatted_value}</pre>')
+            return str(obj.actual_value)
+        except Exception:
+            return str(obj.actual_value)
+
+    formatted_actual_value.short_description = 'Actual Value'
+
+    def formatted_expected_value(self, obj):
+        """Format expected value for display"""
+        if obj.expected_value is None:
+            return "-"
+
+        try:
+            if isinstance(obj.expected_value, (dict, list)):
+                formatted_value = json.dumps(obj.expected_value, indent=2)
+                return mark_safe(f'<pre style="max-height: 200px; overflow: auto;">{formatted_value}</pre>')
+            return str(obj.expected_value)
+        except Exception:
+            return str(obj.expected_value)
+
+    formatted_expected_value.short_description = 'Expected Value'

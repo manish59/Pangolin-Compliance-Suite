@@ -7,7 +7,6 @@ from engine.models import BaseModel
 from projects.models import Project
 from utils.encryption import encrypt_value, decrypt_value
 
-# Variable types
 VARIABLE_TYPES = [
     ('text', 'Text'),
     ('number', 'Number'),
@@ -15,6 +14,7 @@ VARIABLE_TYPES = [
     ('secret', 'Secret'),  # This type will be encrypted
     ('json', 'JSON'),
     ('url', 'URL'),
+    ('file', 'File'),  # New file type
 ]
 
 
@@ -62,6 +62,23 @@ class Environment(BaseModel):
         default=False,
         help_text="Whether this value is currently encrypted"
     )
+    file_content = models.BinaryField(
+        blank=True,
+        null=True,
+        help_text="Binary content of uploaded file"
+    )
+    file_name = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="Original filename of uploaded file"
+    )
+    file_type = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="MIME type of uploaded file"
+    )
 
     class Meta:
         ordering = ['key']
@@ -79,6 +96,10 @@ class Environment(BaseModel):
         """
         Get a displayable value - decrypt if needed and mask secrets
         """
+        # For file type, show filename
+        if self.variable_type == 'file':
+            return self.file_name or "No file uploaded"
+
         # For secret type, return a masked value
         if self.variable_type == 'secret':
             if self.value:
@@ -88,10 +109,22 @@ class Environment(BaseModel):
         # For other types, return the actual value
         return self.get_actual_value()
 
+    def set_file_content(self, file_obj):
+        """Set file content from a file object"""
+        if file_obj:
+            content = file_obj.read()
+            self.file_content = content
+            self.file_name = file_obj.name
+            self.file_type = getattr(file_obj, 'content_type', None)
+
     def get_actual_value(self):
         """
         Get the actual value, decrypting if needed
         """
+        # For file type, return file content
+        if self.variable_type == 'file':
+            return self.file_content
+
         # If encrypted, decrypt the value
         if self._is_encrypted:
             try:
@@ -163,6 +196,13 @@ class Environment(BaseModel):
         """
         Set the value, encrypting if needed
         """
+        # For file type, handle separately
+        if self.variable_type == 'file':
+            # If value is a file object, use set_file_content
+            if hasattr(value, 'read'):
+                self.set_file_content(value)
+            return
+
         # Convert to string if not already
         if not isinstance(value, str):
             value = str(value)

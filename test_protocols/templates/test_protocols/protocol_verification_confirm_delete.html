@@ -83,6 +83,16 @@
                         <dd class="col-span-2 text-gray-900 dark:text-gray-300">{{ verification.get_method_type_display }}</dd>
                     </div>
                     <div class="grid grid-cols-3 gap-4 py-2 border-b border-gray-200 dark:border-gray-600">
+                        <dt class="font-medium text-gray-500 dark:text-gray-400">Execution Step:</dt>
+                        <dd class="col-span-2 text-gray-900 dark:text-gray-300">
+                            {% if verification.execution_step %}
+                                {{ verification.execution_step.name|default:"Execution Step" }}
+                            {% else %}
+                                Not assigned
+                            {% endif %}
+                        </dd>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4 py-2 border-b border-gray-200 dark:border-gray-600">
                         <dt class="font-medium text-gray-500 dark:text-gray-400">Created:</dt>
                         <dd class="col-span-2 text-gray-900 dark:text-gray-300">{{ verification.created_at|date:"M d, Y H:i" }}</dd>
                     </div>

@@ -21,8 +21,7 @@ from .models import (
 )
 from .models import ExecutionStep, TestProtocol, ProtocolRun
 from .models import (
-    TestSuite, TestProtocol, ConnectionConfig, ProtocolRun,
-    ProtocolResult, ResultAttachment, VerificationMethod, ExecutionStep
+    TestSuite, TestProtocol, ConnectionConfig, ProtocolRun, VerificationMethod, ExecutionStep
 )
 from test_protocols.services import run_protocol, run_suite
 
@@ -210,12 +209,43 @@ class ProtocolRunDetailView(DetailView):
     template_name = 'test_protocols/run_detail.html'
     context_object_name = 'run'
 
+    def get_queryset(self):
+        # Use prefetch_related and select_related to efficiently load all related data
+        queryset = ProtocolRun.objects.select_related(
+            'protocol',  # Load the protocol
+            'protocol__suite',  # Load the suite
+        ).prefetch_related(
+            'protocol__steps',  # Load all execution steps
+            'protocol__steps__verification_methods',  # Load verification methods for each step
+        )
+        return queryset
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        try:
-            context['result'] = self.object.result
-        except ProtocolResult.DoesNotExist:
-            context['result'] = None
+
+        # Get all verification results related to this run's protocol's execution steps
+        from test_protocols.models import VerificationResult
+
+        # Get all execution steps for this protocol
+        execution_steps = self.object.protocol.steps.all()
+
+        # Get all verification methods associated with these steps
+        verification_methods = []
+        for step in execution_steps:
+            verification_methods.extend(step.verification_methods.all())
+
+        # Get verification results for these methods
+        verification_results = VerificationResult.objects.filter(
+            verification_step__in=verification_methods
+        ).select_related('verification_step')
+
+        # Create a dict mapping verification_method_id to result for easy lookup in template
+        verification_results_dict = {vr.verification_step_id: vr for vr in verification_results}
+        context['verification_results_dict'] = verification_results_dict
+
+        # Add execution steps to context
+        context['execution_steps'] = execution_steps
+
         return context
 
 
@@ -303,105 +333,6 @@ class ProtocolRunUpdateView(UpdateView):
 
     def get_success_url(self):
         return reverse('testsuite:run_detail', kwargs={'pk': self.object.pk})
-
-
-# ProtocolResult Views
-class ProtocolResultListView(ListView):
-    model = ProtocolResult
-    template_name = 'test_protocols/result_list.html'
-    context_object_name = 'results'
-    paginate_by = 10
-
-
-class ProtocolResultDetailView(DetailView):
-    model = ProtocolResult
-    template_name = 'test_protocols/result_detail.html'
-    context_object_name = 'result'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['attachments'] = self.object.attachments.all()
-        return context
-
-
-class ProtocolResultCreateView(CreateView):
-    model = ProtocolResult
-    template_name = 'test_protocols/result_form.html'
-    fields = ['success', 'result_data', 'result_text', 'error_message']
-
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class)
-        # Pre-select run if passed in URL
-        run_id = self.kwargs.get('run_id')
-        if run_id:
-            form.initial['run'] = run_id
-        return form
-
-    def form_valid(self, form):
-        # Set run if it's in the URL
-        run_id = self.kwargs.get('run_id')
-        if run_id:
-            form.instance.run = get_object_or_404(ProtocolRun, pk=run_id)
-        return super().form_valid(form)
-
-    def get_success_url(self):
-        return reverse('testsuite:result_detail', kwargs={'pk': self.object.pk})
-
-
-class ProtocolResultUpdateView(UpdateView):
-    model = ProtocolResult
-    template_name = 'test_protocols/result_form.html'
-    fields = ['run', 'success', 'result_data', 'result_text', 'error_message']
-
-    def get_success_url(self):
-        return reverse('testsuite:result_detail', kwargs={'pk': self.object.pk})
-
-
-# ResultAttachment Views
-class ResultAttachmentListView(ListView):
-    model = ResultAttachment
-    template_name = 'test_protocols/attachment_list.html'
-    context_object_name = 'attachments'
-    paginate_by = 10
-
-
-class ResultAttachmentDetailView(DetailView):
-    model = ResultAttachment
-    template_name = 'test_protocols/attachment_detail.html'
-    context_object_name = 'attachment'
-
-
-class ResultAttachmentCreateView(CreateView):
-    model = ResultAttachment
-    template_name = 'test_protocols/attachment_form.html'
-    fields = ['name', 'description', 'file', 'content_type']
-
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class)
-        # Pre-select result if passed in URL
-        result_id = self.kwargs.get('result_id')
-        if result_id:
-            form.initial['result'] = result_id
-        return form
-
-    def form_valid(self, form):
-        # Set result if it's in the URL
-        result_id = self.kwargs.get('result_id')
-        if result_id:
-            form.instance.result = get_object_or_404(ProtocolResult, pk=result_id)
-        return super().form_valid(form)
-
-    def get_success_url(self):
-        return reverse('testsuite:attachment_detail', kwargs={'pk': self.object.pk})
-
-
-class ResultAttachmentUpdateView(UpdateView):
-    model = ResultAttachment
-    template_name = 'test_protocols/attachment_form.html'
-    fields = ['result', 'name', 'description', 'file', 'content_type']
-
-    def get_success_url(self):
-        return reverse('testsuite:attachment_detail', kwargs={'pk': self.object.pk})
 
 
 # VerificationMethod Views
@@ -492,25 +423,21 @@ class ExecutionStepCreateView(LoginRequiredMixin, CreateView):
     """View for creating a new execution step"""
     model = ExecutionStep
     template_name = 'test_protocols/execution_step_form.html'
-    fields = ['args', 'kwargs']
+    fields = ['name', 'args', 'kwargs']  # This looks correct
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         self.protocol = get_object_or_404(TestProtocol, pk=self.kwargs['protocol_id'])
-        context['protocol'] = self.protocol
-        # Get the next order index for this protocol
-        last_step = ExecutionStep.objects.filter(test_protocol=self.protocol)
+        context['test_protocol'] = self.protocol  # Note: make sure this variable matches your template
+        context['protocol'] = self.protocol  # Keep both to ensure compatibility
         return context
 
     def form_valid(self, form):
         form.instance.test_protocol = get_object_or_404(TestProtocol, pk=self.kwargs['protocol_id'])
 
-        # Set order index if not provided
-        # if not form.instance.order_index:
-        #     last_step = ExecutionStep.objects.filter(
-        #         test_protocol=form.instance.test_protocol
-        #     ).order_by('-order_index').first()
-        #     form.instance.order_index = last_step.order_index + 10 if last_step else 10
+        # For debugging - print what's coming in through the form
+        print(f"Form data: {form.cleaned_data}")
+        print(f"Name value: {form.cleaned_data.get('name')}")
 
         return super().form_valid(form)
 
@@ -693,9 +620,9 @@ class ProtocolVerificationListView(ListView):
     context_object_name = 'verifications'
 
     def get_queryset(self):
-        # Filter verification methods for the specific protocol
+        # Filter verification methods for the specific protocol's execution steps
         self.protocol = get_object_or_404(TestProtocol, pk=self.kwargs['protocol_id'])
-        return VerificationMethod.objects.filter(test_protocol=self.protocol)
+        return VerificationMethod.objects.filter(execution_step__test_protocol=self.protocol)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -709,9 +636,9 @@ class ProtocolVerificationDetailView(DetailView):
     context_object_name = 'verification'
 
     def get_queryset(self):
-        # Ensure the verification method belongs to the specified protocol
+        # Ensure the verification method belongs to an execution step of the specified protocol
         self.protocol = get_object_or_404(TestProtocol, pk=self.kwargs['protocol_id'])
-        return VerificationMethod.objects.filter(test_protocol=self.protocol)
+        return VerificationMethod.objects.filter(execution_step__test_protocol=self.protocol)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -720,13 +647,20 @@ class ProtocolVerificationDetailView(DetailView):
         context['comparison_operator_choices'] = dict(COMPARISON_OPERATOR_CHOICES)
         return context
 
-
 class ProtocolVerificationCreateView(CreateView):
     model = VerificationMethod
     template_name = 'test_protocols/protocol_verification_form.html'
     fields = ['name', 'description', 'method_type', 'supports_comparison',
-              'comparison_method', 'config_schema', 'requires_expected_value',
-              'supports_dynamic_expected']
+              'comparison_method', 'execution_step', 'config_schema',
+              'requires_expected_value', 'supports_dynamic_expected',
+              'expected_result']
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # Limit execution step choices to those belonging to this protocol
+        protocol = get_object_or_404(TestProtocol, pk=self.kwargs['protocol_id'])
+        form.fields['execution_step'].queryset = ExecutionStep.objects.filter(test_protocol=protocol)
+        return form
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -736,11 +670,6 @@ class ProtocolVerificationCreateView(CreateView):
         context['comparison_operator_choices'] = COMPARISON_OPERATOR_CHOICES
         context['is_new'] = True
         return context
-
-    def form_valid(self, form):
-        # Automatically set the test_protocol field
-        form.instance.test_protocol = get_object_or_404(TestProtocol, pk=self.kwargs['protocol_id'])
-        return super().form_valid(form)
 
     def get_success_url(self):
         return reverse('testsuite:protocol_verification_detail', kwargs={
@@ -753,13 +682,21 @@ class ProtocolVerificationUpdateView(UpdateView):
     model = VerificationMethod
     template_name = 'test_protocols/protocol_verification_form.html'
     fields = ['name', 'description', 'method_type', 'supports_comparison',
-              'comparison_method', 'config_schema', 'requires_expected_value',
-              'supports_dynamic_expected']
+              'comparison_method', 'execution_step', 'config_schema',
+              'requires_expected_value', 'supports_dynamic_expected',
+              'expected_result']
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # Limit execution step choices to those belonging to this protocol
+        protocol = get_object_or_404(TestProtocol, pk=self.kwargs['protocol_id'])
+        form.fields['execution_step'].queryset = ExecutionStep.objects.filter(test_protocol=protocol)
+        return form
 
     def get_queryset(self):
-        # Ensure the verification method belongs to the specified protocol
+        # Ensure the verification method belongs to an execution step of the specified protocol
         self.protocol = get_object_or_404(TestProtocol, pk=self.kwargs['protocol_id'])
-        return VerificationMethod.objects.filter(test_protocol=self.protocol)
+        return VerificationMethod.objects.filter(execution_step__test_protocol=self.protocol)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -775,16 +712,15 @@ class ProtocolVerificationUpdateView(UpdateView):
             'pk': self.object.pk
         })
 
-
 class ProtocolVerificationDeleteView(DeleteView):
     model = VerificationMethod
     template_name = 'test_protocols/protocol_verification_confirm_delete.html'
     context_object_name = 'verification'
 
     def get_queryset(self):
-        # Ensure the verification method belongs to the specified protocol
+        # Ensure the verification method belongs to an execution step of the specified protocol
         self.protocol = get_object_or_404(TestProtocol, pk=self.kwargs['protocol_id'])
-        return VerificationMethod.objects.filter(test_protocol=self.protocol)
+        return VerificationMethod.objects.filter(execution_step__test_protocol=self.protocol)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

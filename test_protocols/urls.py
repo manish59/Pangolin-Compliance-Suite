@@ -34,21 +34,6 @@ urlpatterns = [
     path('runs/<uuid:pk>/edit/', views.ProtocolRunUpdateView.as_view(), name='run_update'),
     path('protocols/<uuid:protocol_id>/runs/new/', views.ProtocolRunCreateView.as_view(), name='protocol_run_create'),
 
-    # ProtocolResult URLs
-    path('results/', views.ProtocolResultListView.as_view(), name='result_list'),
-    path('results/<uuid:pk>/', views.ProtocolResultDetailView.as_view(), name='result_detail'),
-    path('results/new/', views.ProtocolResultCreateView.as_view(), name='result_create'),
-    path('results/<uuid:pk>/edit/', views.ProtocolResultUpdateView.as_view(), name='result_update'),
-    path('runs/<uuid:run_id>/results/new/', views.ProtocolResultCreateView.as_view(), name='run_result_create'),
-
-    # ResultAttachment URLs
-    path('attachments/', views.ResultAttachmentListView.as_view(), name='attachment_list'),
-    path('attachments/<uuid:pk>/', views.ResultAttachmentDetailView.as_view(), name='attachment_detail'),
-    path('attachments/new/', views.ResultAttachmentCreateView.as_view(), name='attachment_create'),
-    path('attachments/<uuid:pk>/edit/', views.ResultAttachmentUpdateView.as_view(), name='attachment_update'),
-    path('results/<uuid:result_id>/attachments/new/', views.ResultAttachmentCreateView.as_view(),
-         name='result_attachment_create'),
-
     # VerificationMethod URLs
     path('verifications/', views.VerificationMethodListView.as_view(), name='verification_list'),
     path('verifications/<uuid:pk>/', views.VerificationMethodDetailView.as_view(), name='verification_detail'),

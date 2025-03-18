@@ -159,82 +159,6 @@ class ProtocolRun(BaseModel):
         ordering = ['-started_at']
 
 
-class ProtocolResult(BaseModel):
-    """
-    A single unified result for a protocol run
-    """
-    # One-to-one relationship with ProtocolRun
-    run = models.OneToOneField(
-        ProtocolRun,
-        on_delete=models.CASCADE,
-        related_name='result'
-    )
-
-    # Success flag
-    success = models.BooleanField(default=False)
-
-    # JSON data for structured results
-    result_data = models.JSONField(
-        blank=True,
-        null=True,
-        help_text=_("Structured result data in JSON format")
-    )
-
-    # Text results for when JSON isn't appropriate
-    result_text = models.TextField(
-        blank=True,
-        null=True,
-        help_text=_("Unstructured result text")
-    )
-
-    # Binary data (if needed)
-    result_binary = models.BinaryField(
-        blank=True,
-        null=True,
-        help_text=_("Binary result data")
-    )
-    error_message = models.TextField(blank=True, null=True)
-    def __str__(self):
-        return f"Result for {self.run.protocol.name} Run"
-
-    class Meta:
-        verbose_name = _("Protocol Result")
-        verbose_name_plural = _("Protocol Results")
-
-
-
-class ResultAttachment(BaseModel):
-    """
-    File or data attachments for a protocol result
-    """
-    result = models.ForeignKey(
-        ProtocolResult,
-        on_delete=models.CASCADE,
-        related_name='attachments'
-    )
-
-    name = models.CharField(max_length=255)
-    description = models.TextField(blank=True, null=True)
-
-    # File attachment
-    file = models.FileField(
-        upload_to='protocol_results/attachments/%Y/%m/%d/',
-        blank=True,
-        null=True
-    )
-
-    # Content type
-    content_type = models.CharField(max_length=100, blank=True, null=True)
-
-    def __str__(self):
-        return f"{self.name} - {self.result}"
-
-    class Meta:
-        verbose_name = _("Result Attachment")
-        verbose_name_plural = _("Result Attachments")
-
-
-
 VERIFICATION_METHOD_CHOICES = [
     # String verification methods
     ('string_exact_match', 'String Exact Match'),
@@ -323,18 +247,43 @@ RESULT_STATUS_CHOICES = [
     ('skipped', 'Skipped'),
 ]
 
+class ExecutionStep(BaseModel):
+    """
+    A single step in a test protocol execution
+    """
+    name= models.CharField(max_length=100, default=None, null=True, blank=True)
+    test_protocol = models.ForeignKey(TestProtocol, on_delete=models.CASCADE, related_name='steps')
+    args = models.JSONField(
+        default=list,
+        help_text=_("Positional arguments (args) as a JSON array")
+    )
 
+    # Keyword arguments (kwargs) stored as JSON object
+    kwargs = models.JSONField(
+        default=dict,
+        help_text=_("Keyword arguments (kwargs) as a JSON object")
+    )
+
+    class Meta:
+        verbose_name = _("Execution Step")
+        verbose_name_plural = _("Execution Steps")
+
+    def __str__(self):
+        return f"{self.name}- {self.test_protocol}"
+    def __repr__(self):
+        return f"{self.name}- {self.test_protocol}"
 class VerificationMethod(BaseModel):
     """
     A specific method of verification that can be applied to test results
     """
-    test_protocol = models.ForeignKey(TestProtocol, on_delete=models.CASCADE, related_name='verification_methods', default=None)
+    execution_step = models.ForeignKey(ExecutionStep, on_delete=models.CASCADE, related_name='verification_methods', default=None, null=True, blank=True)
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)
     method_type = models.CharField(max_length=30, choices=VERIFICATION_METHOD_CHOICES)
     # For methods requiring a comparison operator
     supports_comparison = models.BooleanField(default=False)
     comparison_method = models.CharField(max_length=50, choices=COMPARISON_OPERATOR_CHOICES)
+    expected_result = models.JSONField(default=dict)
     # Additional configuration for this verification method
     config_schema = models.JSONField(
         default=dict,
@@ -354,28 +303,127 @@ class VerificationMethod(BaseModel):
     def __str__(self):
         return f"{self.name}"
 
+    def verify(self, actual_value, expected_result=None, config_schema=None):
+        """
+        Verify the actual value against expected value using the defined verification method.
+
+        Args:
+            actual_value: The value to verify
+            expected_value: The expected value to verify against (default: None, will use self.expected_result)
+
+        Returns:
+            dict: A dictionary containing:
+                - success (bool): Whether verification passed
+                - message (str): Explanation of the result
+                - actual_value: The actual value that was verified
+                - expected_value: The expected value used in verification
+                - method: The verification method used
+        """
+        from test_protocols.verifiers import VerificationFactory
+
+
+        # Create the appropriate verifier based on method type
+        verifier = VerificationFactory.create_verifier(self.method_type)
+        expected_value = expected_result.get("result")
+        # Execute verification
+        try:
+            result = verifier.verify(
+                actual_value=actual_value,
+                expected_value=expected_value,
+                comparison_method=self.comparison_method if self.supports_comparison else None,
+                config=self.config_schema
+            )
+            return result
+        except Exception as e:
+            return {
+                'success': False,
+                'message': f'Verification error: {str(e)}',
+                'actual_value': actual_value,
+                'expected_value': expected_value,
+                'method': self.method_type,
+                'error': str(e)
+            }
+
     class Meta:
         verbose_name = _("Verification Method")
         verbose_name_plural = _("Verification Methods")
         ordering = ['-created_at']
 
 
-class ExecutionStep(BaseModel):
+class VerificationResult(BaseModel):
     """
-    A single step in a test protocol execution
+    Stores the result of applying a verification method to an execution result.
+    Links the verification step with the actual outcome of the verification.
     """
-    test_protocol = models.ForeignKey(TestProtocol, on_delete=models.CASCADE, related_name='steps')
-    args = models.JSONField(
-        default=list,
-        help_text=_("Positional arguments (args) as a JSON array")
+    # Link to the verification step and execution result
+    verification_step = models.ForeignKey(
+        VerificationMethod,
+        on_delete=models.CASCADE,
+        related_name='results',
+        help_text="The verification step that was performed"
     )
 
-    # Keyword arguments (kwargs) stored as JSON object
-    kwargs = models.JSONField(
+    # Timestamp information
+    verification_time = models.DateTimeField(
+        auto_now_add=True,
+        help_text="When this verification was performed"
+    )
+
+    # Verification outcome
+    success = models.BooleanField(
+        default=False,
+        help_text="Whether the verification passed or failed"
+    )
+    status = models.CharField(
+        max_length=50,
+        choices=[
+            ('pass', 'Pass'),
+            ('fail', 'Fail'),
+            ('error', 'Error'),
+            ('skipped', 'Skipped'),
+            ('not_applicable', 'Not Applicable')
+        ],
+        default='fail',
+        help_text="Detailed status of the verification"
+    )
+
+    # Verification data
+    actual_value = models.JSONField(
+        null=True,
+        help_text="The actual value that was verified"
+    )
+    expected_value = models.JSONField(
+        null=True,
+        help_text="The expected value used for verification"
+    )
+    message = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Human-readable explanation of the verification result"
+    )
+
+    # Error information (if verification failed due to an error)
+    error_message = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Error message if verification process encountered an error"
+    )
+    error_stack_trace = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Stack trace from verification error"
+    )
+
+    # Detailed result data
+    result_data = models.JSONField(
         default=dict,
-        help_text=_("Keyword arguments (kwargs) as a JSON object")
+        help_text="Complete verification result data returned by the verifier"
     )
 
     class Meta:
-        verbose_name = _("Execution Step")
-        verbose_name_plural = _("Execution Steps")
+        verbose_name = "Verification Result"
+        verbose_name_plural = "Verification Results"
+        ordering = ['verification_time']
+
+    def __str__(self):
+        return f"Verification of '{self.verification_step.name}' - {'Passed' if self.success else 'Failed'}"

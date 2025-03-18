@@ -79,6 +79,23 @@
 
         <div class="grid grid-cols-1 gap-6">
             <div>
+                <label for="id_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Execution Step Name <span class="text-red-500">*</span>
+                </label>
+                <div class="mt-1">
+                    <input type="text" name="name" id="id_name"
+                           class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                           placeholder="Enter a descriptive name for this step" value="{{ form.name.value|default:'' }}" required>
+                </div>
+                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    Provide a clear, descriptive name for this execution step (e.g., "Check Server Status" or "Verify Database Connection")
+                </p>
+                {% if form.name.errors %}
+                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.name.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
                 <label for="id_args" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Positional Arguments (args)
                 </label>

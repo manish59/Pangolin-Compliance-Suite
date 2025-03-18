@@ -1,16 +1,92 @@
-<!-- environments/templates/environments/environment_confirm_delete.html -->
 {% extends 'home/base.html' %}
 
+{% block title %}Delete Environment Variable - {{ object.key }}{% endblock %}
+
 {% block content %}
-<div class="container mx-auto px-4">
-    <h1 class="text-2xl font-bold mb-4">Delete Environment Variable</h1>
-    <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-        <p class="text-gray-700">Are you sure you want to delete "{{ object.key }}"?</p>
-        <form method="post" class="mt-6">
-            {% csrf_token %}
-            <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded">Delete</button>
-            <a href="{% url 'environments:environment_list' %}" class="bg-gray-500 text-white px-4 py-2 rounded">Cancel</a>
-        </form>
+<div class="container mx-auto px-4 py-6">
+    <div class="max-w-md mx-auto">
+        <div class="flex items-center mb-6">
+            <a href="{% url 'environments:environment_list' %}" class="text-gray-500 hover:text-gray-700 mr-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+            </a>
+            <h1 class="text-2xl font-bold text-gray-800">Delete Environment Variable</h1>
+        </div>
+
+        <div class="bg-white shadow-md rounded-lg overflow-hidden">
+            <div class="p-6">
+                <div class="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 mx-auto mb-4">
+                    <svg class="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                </div>
+
+                <div class="text-center mb-6">
+                    <h3 class="text-lg font-medium text-gray-900">Delete "{{ object.key }}"?</h3>
+                    <p class="text-sm text-gray-500 mt-1">
+                        This action cannot be undone.
+                    </p>
+                </div>
+
+                <div class="bg-gray-50 rounded-md p-4 mb-6">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-yellow-800">Warning</h3>
+                            <div class="mt-2 text-sm text-yellow-700">
+                                <p>Deleting this environment variable may affect services that depend on it.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 rounded-md p-4 mb-6">
+                    <h4 class="text-sm font-medium text-gray-900 mb-2">Variable Details</h4>
+                    <dl class="text-sm">
+                        <div class="grid grid-cols-3 gap-4 py-2 border-b border-gray-200">
+                            <dt class="font-medium text-gray-500">Key:</dt>
+                            <dd class="col-span-2 text-gray-900">{{ object.key }}</dd>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 py-2 border-b border-gray-200">
+                            <dt class="font-medium text-gray-500">Type:</dt>
+                            <dd class="col-span-2 text-gray-900">{{ object.get_variable_type_display }}</dd>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 py-2 border-b border-gray-200">
+                            <dt class="font-medium text-gray-500">Project:</dt>
+                            <dd class="col-span-2 text-gray-900">{{ object.project.name }}</dd>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 py-2">
+                            <dt class="font-medium text-gray-500">Status:</dt>
+                            <dd class="col-span-2 text-gray-900">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                    {% if object.is_enabled %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ object.is_enabled|yesno:"Enabled,Disabled" }}
+                                </span>
+                            </dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <a href="{% url 'environments:environment_list' %}"
+                           class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Cancel
+                        </a>
+                        <button type="submit"
+                               class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                            Delete Variable
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

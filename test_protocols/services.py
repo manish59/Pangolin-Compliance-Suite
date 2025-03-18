@@ -3,7 +3,7 @@ import logging
 from django.utils import timezone
 from django.contrib.auth.models import User
 
-from test_protocols.models import ProtocolRun, TestProtocol, ProtocolResult, TestSuite
+from test_protocols.models import ProtocolRun, TestProtocol, TestSuite
 from test_protocols.tasks import run_test_protocol, run_test_suite
 
 logger = logging.getLogger(__name__)

@@ -95,6 +95,18 @@
                     </dd>
                 </div>
                 <div class="sm:col-span-1">
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Execution Step</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">
+                        {% if verification.execution_step %}
+                            <a href="{% url 'testsuite:step_detail' verification.execution_step.id %}" class="text-blue-600 dark:text-blue-400 hover:underline">
+                                {{ verification.execution_step.name|default:"Step" }}
+                            </a>
+                        {% else %}
+                            Not assigned
+                        {% endif %}
+                    </dd>
+                </div>
+                <div class="sm:col-span-1">
                     <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Created</dt>
                     <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ verification.created_at|date:"M d, Y H:i" }}</dd>
                 </div>
@@ -155,8 +167,20 @@
             </dl>
         </div>
 
-        {% comment %} Continued in part 2 {% endcomment %}
-    <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+        <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">Expected Result</h2>
+            <div class="mt-2">
+                {% if verification.expected_result %}
+                    <div class="bg-white dark:bg-gray-800 rounded-md p-3 overflow-x-auto">
+                        <pre class="text-xs text-gray-900 dark:text-gray-300 font-mono">{{ verification.expected_result|pprint }}</pre>
+                    </div>
+                {% else %}
+                    <p class="text-sm text-gray-500 dark:text-gray-400">No expected result defined.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
             <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">Configuration Schema</h2>
             <div class="mt-2">
                 {% if verification.config_schema %}
@@ -168,125 +192,125 @@
                 {% endif %}
             </div>
         </div>
+    </div>
 
-        <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-            <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">Usage Information</h2>
-            <div class="mt-2">
-                <p class="text-sm text-gray-700 dark:text-gray-300 mb-4">
-                    This verification method is used to validate test results for <strong>{{ protocol.name }}</strong> protocol.
-                </p>
+    <div class="mt-8">
+        <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">Usage Information</h2>
+        <div class="mt-2">
+            <p class="text-sm text-gray-700 dark:text-gray-300 mb-4">
+                This verification method is used to validate test results for <strong>{{ protocol.name }}</strong> protocol.
+            </p>
 
-                {% if verification.method_type == 'string_exact_match' or verification.method_type == 'string_contains' %}
-                    <div class="bg-blue-50 dark:bg-blue-900 border-l-4 border-blue-400 p-4 mb-4">
-                        <div class="flex">
-                            <div class="flex-shrink-0">
-                                <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-sm text-blue-700 dark:text-blue-300">
-                                    This method performs text comparison operations. Make sure your test outputs return string values.
-                                </p>
-                            </div>
+            {% if verification.method_type == 'string_exact_match' or verification.method_type == 'string_contains' %}
+                <div class="bg-blue-50 dark:bg-blue-900 border-l-4 border-blue-400 p-4 mb-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-blue-700 dark:text-blue-300">
+                                This method performs text comparison operations. Make sure your test outputs return string values.
+                            </p>
                         </div>
                     </div>
-                {% elif 'numeric' in verification.method_type %}
-                    <div class="bg-blue-50 dark:bg-blue-900 border-l-4 border-blue-400 p-4 mb-4">
-                        <div class="flex">
-                            <div class="flex-shrink-0">
-                                <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-sm text-blue-700 dark:text-blue-300">
-                                    This method performs numeric comparisons. Test results should return numeric values.
-                                </p>
-                            </div>
+                </div>
+            {% elif 'numeric' in verification.method_type %}
+                <div class="bg-blue-50 dark:bg-blue-900 border-l-4 border-blue-400 p-4 mb-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-blue-700 dark:text-blue-300">
+                                This method performs numeric comparisons. Test results should return numeric values.
+                            </p>
                         </div>
                     </div>
-                {% elif 'api' in verification.method_type %}
-                    <div class="bg-blue-50 dark:bg-blue-900 border-l-4 border-blue-400 p-4 mb-4">
-                        <div class="flex">
-                            <div class="flex-shrink-0">
-                                <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-sm text-blue-700 dark:text-blue-300">
-                                    This method validates API responses. Use with API connection configs.
-                                </p>
-                            </div>
+                </div>
+            {% elif 'api' in verification.method_type %}
+                <div class="bg-blue-50 dark:bg-blue-900 border-l-4 border-blue-400 p-4 mb-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-blue-700 dark:text-blue-300">
+                                This method validates API responses. Use with API connection configs.
+                            </p>
                         </div>
                     </div>
-                {% elif 'db' in verification.method_type %}
-                    <div class="bg-blue-50 dark:bg-blue-900 border-l-4 border-blue-400 p-4 mb-4">
-                        <div class="flex">
-                            <div class="flex-shrink-0">
-                                <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-sm text-blue-700 dark:text-blue-300">
-                                    This method validates database query results. Use with database connection configs.
-                                </p>
-                            </div>
+                </div>
+            {% elif 'db' in verification.method_type %}
+                <div class="bg-blue-50 dark:bg-blue-900 border-l-4 border-blue-400 p-4 mb-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-blue-700 dark:text-blue-300">
+                                This method validates database query results. Use with database connection configs.
+                            </p>
                         </div>
                     </div>
-                {% elif 'ssh' in verification.method_type %}
-                    <div class="bg-blue-50 dark:bg-blue-900 border-l-4 border-blue-400 p-4 mb-4">
-                        <div class="flex">
-                            <div class="flex-shrink-0">
-                                <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-sm text-blue-700 dark:text-blue-300">
-                                    This method validates SSH command outputs. Use with SSH connection configs.
-                                </p>
-                            </div>
+                </div>
+            {% elif 'ssh' in verification.method_type %}
+                <div class="bg-blue-50 dark:bg-blue-900 border-l-4 border-blue-400 p-4 mb-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-blue-700 dark:text-blue-300">
+                                This method validates SSH command outputs. Use with SSH connection configs.
+                            </p>
                         </div>
                     </div>
-                {% elif 's3' in verification.method_type %}
-                    <div class="bg-blue-50 dark:bg-blue-900 border-l-4 border-blue-400 p-4 mb-4">
-                        <div class="flex">
-                            <div class="flex-shrink-0">
-                                <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-sm text-blue-700 dark:text-blue-300">
-                                    This method validates AWS S3 operations. Use with AWS connection configs.
-                                </p>
-                            </div>
+                </div>
+            {% elif 's3' in verification.method_type %}
+                <div class="bg-blue-50 dark:bg-blue-900 border-l-4 border-blue-400 p-4 mb-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-blue-700 dark:text-blue-300">
+                                This method validates AWS S3 operations. Use with AWS connection configs.
+                            </p>
                         </div>
                     </div>
-                {% endif %}
+                </div>
+            {% endif %}
 
-                <div class="mt-4">
-                    <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Implementation Example</h3>
-                    <div class="bg-gray-100 dark:bg-gray-800 p-3 rounded">
-                        <pre class="text-xs text-gray-900 dark:text-gray-300 font-mono">
+            <div class="mt-4">
+                <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Implementation Example</h3>
+                <div class="bg-gray-100 dark:bg-gray-800 p-3 rounded">
+                    <pre class="text-xs text-gray-900 dark:text-gray-300 font-mono">
 # Example usage with test results
-result = run_test()  # Your test produces a result
+result = run_execution_step()  # Execution step returns a result
 verification = VerificationMethod.objects.get(id='{{ verification.id }}')
 
-# Apply verification method
+# Apply verification method to the result from the execution step
 success = apply_verification(
     verification=verification,
     actual_value=result,
-    expected_value="expected output",  # If required by the verification method
+    expected_value={{ verification.expected_result|default:"expected output" }},  # If required by the verification method
 )
 
 # Record verification status
 record_verification_result(success=success)
-                        </pre>
-                    </div>
+                    </pre>
                 </div>
             </div>
         </div>

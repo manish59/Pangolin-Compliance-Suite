@@ -10,5 +10,6 @@ urlpatterns = [
     path('<uuid:pk>/', views.EnvironmentDetailView.as_view(), name='environment_detail'),
     path('<uuid:pk>/update/', views.EnvironmentUpdateView.as_view(), name='environment_update'),
     path('<uuid:pk>/delete/', views.EnvironmentDeleteView.as_view(), name='environment_delete'),
-    # path('<uuid:pk>/toggle/', views.EnvironmentDeleteView.as_view(), name='environment_delete'),
+    path('<uuid:pk>/toggle/', views.EnvironmentToggleView.as_view(), name='environment_toggle'),
+    path('<uuid:pk>/download/', views.download_environment_file, name='environment_download'),
 ]

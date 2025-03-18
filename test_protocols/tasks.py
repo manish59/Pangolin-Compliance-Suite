@@ -10,10 +10,10 @@ from test_protocols.models import (
     TestProtocol,
     TestSuite,
     ProtocolRun,
-    ProtocolResult,
     ConnectionConfig,
     VerificationMethod,
     ExecutionStep,
+    VerificationResult,
 )
 
 # Import Pangolin SDK modules
@@ -249,13 +249,13 @@ def create_connection(connection_config):
 
 
 @shared_task(queue='protocol_queue')
-def run_test_protocol(protocol_id, user_id=None):
+def run_test_protocol(protocol_run_id, user_id=None):
     """
     Runs a single test protocol.
     This task is processed by the protocol worker.
 
     Args:
-        protocol_id: UUID of the TestProtocol to run
+        protocol_run_id: UUID of the TestProtocol to run
         user_id: Optional user ID who initiated the run
 
     Returns:
@@ -263,17 +263,17 @@ def run_test_protocol(protocol_id, user_id=None):
     """
     try:
         # Get the protocol
-        protocol_uuid = UUID(protocol_id)
-        protocol = TestProtocol.objects.get(pk=protocol_uuid)
-        executions = Exe
+        protocol_run_uuid = UUID(str(protocol_run_id))
+        protocol_run = ProtocolRun.objects.get(pk=protocol_run_uuid)
+        execution_steps = ExecutionStep.objects.filter(
+            test_protocol=protocol_run.protocol
+        ).prefetch_related('verification_methods')
+        # verification_methods = VerificationMethod.objects.filter(test_protocol=protocol, e)
         # Create a run record
-        run = ProtocolRun.objects.create(
-            protocol=protocol,
-            status='running',
-            executed_by=f"User {user_id}" if user_id else "System"
-        )
+        protocol_run.status = 'running'
+        protocol_run.save()
 
-        logger.info(f"Starting test protocol run: {protocol.name} (ID: {protocol_id})")
+        logger.info(f"Starting test protocol run: {protocol_run.protocol.name} (ID: {protocol_run.pk})")
         start_time = time.time()
 
         # Initialize variables to store execution results
@@ -287,7 +287,7 @@ def run_test_protocol(protocol_id, user_id=None):
         try:
             # Check if protocol has a connection configuration
             try:
-                connection_config = protocol.connection_config
+                connection_config = protocol_run.protocol.connection_config
 
                 # Create connection object from the configuration
                 connection = create_connection(connection_config)
@@ -299,31 +299,34 @@ def run_test_protocol(protocol_id, user_id=None):
                     raise ConnectionError(f"Failed to connect to {connection_config.config_type} service")
 
                 # Execute the test - this will depend on the connection type
-
-
-                # Apply verification methods if configured
-                verification_methods = protocol.verification_methods.filter(test_protocol=protocol)
-                if verification_methods.exists():
-                    verification_results = []
-                    for verification in verification_methods:
-                        # Apply verification method - simplified for example
-                        verification_result = {
-                            "name": verification.name,
-                            "method": verification.method_type,
-                            "success": True,  # Default success
-                            "message": "Verification passed"
-                        }
-
-                        # TODO: Implement actual verification logic based on method_type
-
-                        verification_results.append(verification_result)
-
-                    result_data["verifications"] = verification_results
-                    all_verifications_passed = all(vr["success"] for vr in verification_results)
-                    success = all_verifications_passed
+                verification_results = []
+                for execution in execution_steps:
+                    # Execute the step
+                    connection.execute(*execution.args, **execution.kwargs)
+                    # Apply verification methods if configured
+                    last_result = connection.get_last_result()
+                    verification_methods = execution.verification_methods.all()
+                    for method in verification_methods:
+                        expected_result = method.expected_result
+                        config_schema = method.config_schema
+                        result = method.verify(last_result, expected_result, config_schema)
+                        VerificationResult.objects.create(
+                            verification_step=method,
+                            success= True if result['success'] else False,
+                            status=result['message'],
+                            actual_value=result['actual_value'],
+                            expected_value=result['expected_value'],
+                            message = result['message'],
+                            error_message = result.get('error', ''),
+                            result_data = json.dumps(result)
+                        )
+                        verification_results.append(result)
+                all_verifications_passed = all(vr["success"] for vr in verification_results)
+                if all_verifications_passed:
+                    success = True
                 else:
                     # Without verifications, just mark as success if we got this far
-                    success = True
+                    success = False
 
             except ConnectionError as e:
                 # Handle connection errors
@@ -350,56 +353,38 @@ def run_test_protocol(protocol_id, user_id=None):
         # Calculate duration
         end_time = time.time()
         duration = end_time - start_time
-
-        # Create a result record
-        result = ProtocolResult.objects.create(
-            run=run,
-            success=success,
-            result_data=result_data,
-            result_text=result_text,
-            error_message=error_message
-        )
-
         # Update the run record
-        run.status = 'completed'
-        run.result_status = 'pass' if success else 'fail'
-        run.completed_at = timezone.now()
-        run.duration_seconds = duration
-        run.error_message = error_message
-        run.save()
+        protocol_run.status = 'completed'
+        protocol_run.result_status = 'pass' if success else 'fail'
+        protocol_run.completed_at = timezone.now()
+        protocol_run.duration_seconds = duration
+        protocol_run.error_message = error_message
+        protocol_run.save()
 
-        logger.info(f"Completed test protocol run: {protocol.name} in {duration:.2f}s - Success: {success}")
+        logger.info(f"Completed test protocol run: {protocol_run.protocol.name} in {duration:.2f}s - Success: {success}")
 
         return {
-            'protocol_id': str(protocol_id),
-            'run_id': str(run.id),
+            'protocol_id': str(protocol_run.protocol.pk),
+            'run_id': str(protocol_run.pk),
             'success': success,
             'duration': duration,
             'error_message': error_message
         }
 
     except Exception as e:
-        logger.error(f"Error running test protocol {protocol_id}: {str(e)}")
+        logger.error(f"Error running test protocol {protocol_run.protocol.pk}: {str(e)}")
 
         # If we already created a run record, update it with the error
         try:
             if 'run' in locals():
-                run.status = 'error'
-                run.result_status = 'error'
-                run.error_message = str(e)
-                run.completed_at = timezone.now()
+                protocol_run.status = 'error'
+                protocol_run.result_status = 'error'
+                protocol_run.error_message = str(e)
+                protocol_run.completed_at = timezone.now()
                 if 'start_time' in locals():
-                    run.duration_seconds = time.time() - start_time
-                run.save()
+                    protocol_run.duration_seconds = time.time() - start_time
+                protocol_run.save()
 
-                # Create error result if needed
-                if not hasattr(run, 'result'):
-                    ProtocolResult.objects.create(
-                        run=run,
-                        success=False,
-                        error_message=str(e),
-                        result_text=f"Error: {str(e)}"
-                    )
         except Exception as inner_e:
             logger.error(f"Error updating run record: {str(inner_e)}")
 

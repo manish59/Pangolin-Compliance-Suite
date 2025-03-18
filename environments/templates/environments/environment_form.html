@@ -2,7 +2,7 @@
 
 {% block title %}
     {% if form.instance.id %}
-       Create Environment Variable - {{ form.instance.key }}
+        Edit Environment Variable - {{ form.instance.key }}
     {% else %}
         Add Environment Variable
     {% endif %}
@@ -12,7 +12,7 @@
 <div class="container mx-auto px-4 py-6">
     <div class="max-w-3xl mx-auto">
         <div class="flex items-center mb-8">
-            <a href="/environments/{{ project.pk }}/" class="text-gray-500 hover:text-gray-700 mr-3">
+            <a href="{% url 'environments:environment_list' %}" class="text-gray-500 hover:text-gray-700 mr-3">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
                 </svg>
@@ -27,18 +27,24 @@
         </div>
 
         <div class="bg-white shadow-md rounded-lg overflow-hidden p-8">
-            <form method="post" class="space-y-8">
+            <form method="post" enctype="multipart/form-data" class="space-y-8">
                 {% csrf_token %}
 
-                <div>
-                        <label for="Project" class="block text-sm font-medium text-gray-700 mb-2 px-1">
+                {% if form.non_field_errors %}
+                <div class="bg-red-100 border border-red-200 text-red-700 px-5 py-4 rounded-md relative mb-6" role="alert">
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+
+                <div class="grid grid-cols-1 gap-8">
+                    <div>
+                        <label for="{{ form.project.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2 px-1">
                             Project <span class="text-red-500">*</span>
                         </label>
                         <div class="mt-1">
-                            <select name="project" id="project"
+                            <select name="{{ form.project.name }}" id="{{ form.project.id_for_label }}"
                                    class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md py-2 px-3
-                                         {% if form.variable_type.errors %}border-red-300{% endif %}"
-                                   onchange="toggleJsonEditor(this.value)">
+                                         {% if form.project.errors %}border-red-300{% endif %}">
                                 {% for project in projects %}
                                 <option value="{{ project.pk }}"
                                 {% if form.project.value == project.pk %}selected{% endif %}>
@@ -47,19 +53,11 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        {% if form.variable_type.errors %}
-                        <p class="mt-2 text-sm text-red-600 px-1">{{ form.variable_type.errors }}</p>
-                        {% else %}
-                        <p class="mt-2 text-sm text-gray-500 px-1">Choose 'Secret' for sensitive information that needs encryption</p>
+                        {% if form.project.errors %}
+                        <p class="mt-2 text-sm text-red-600 px-1">{{ form.project.errors }}</p>
                         {% endif %}
                     </div>
-                {% if form.non_field_errors %}
-                <div class="bg-red-100 border border-red-200 text-red-700 px-5 py-4 rounded-md relative mb-6" role="alert">
-                    {{ form.non_field_errors }}
-                </div>
-                {% endif %}
 
-                <div class="grid grid-cols-1 gap-8">
                     <div>
                         <label for="{{ form.key.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2 px-1">
                             Key <span class="text-red-500">*</span>
@@ -85,7 +83,7 @@
                             <select name="{{ form.variable_type.name }}" id="{{ form.variable_type.id_for_label }}"
                                    class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md py-2 px-3
                                          {% if form.variable_type.errors %}border-red-300{% endif %}"
-                                   onchange="toggleJsonEditor(this.value)">
+                                   onchange="toggleFields(this.value)">
                                 {% for value, label in form.variable_type.field.choices %}
                                 <option value="{{ value }}"
                                     {% if form.variable_type.value == value %}selected{% endif %}>
@@ -102,16 +100,33 @@
                     </div>
 
                     <div id="value-field">
-                        <label for="{{ form.value.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2 px-1">
+                        <label for="{{ form.raw_value.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2 px-1">
                             Value <span class="text-red-500">*</span>
                         </label>
                         <div class="mt-1">
-                            <textarea name="{{ form.value.name }}" id="{{ form.value.id_for_label }}" rows="3"
+                            <textarea name="{{ form.raw_value.name }}" id="{{ form.raw_value.id_for_label }}" rows="3"
                                      class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md py-2 px-3
-                                           {% if form.value.errors %}border-red-300{% endif %}">{{ form.value.value|default:'' }}</textarea>
+                                           {% if form.raw_value.errors %}border-red-300{% endif %}">{{ form.raw_value.value|default:'' }}</textarea>
                         </div>
-                        {% if form.value.errors %}
-                        <p class="mt-2 text-sm text-red-600 px-1">{{ form.value.errors }}</p>
+                        {% if form.raw_value.errors %}
+                        <p class="mt-2 text-sm text-red-600 px-1">{{ form.raw_value.errors }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div id="file-field" class="hidden">
+                        <label for="{{ form.uploaded_file.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2 px-1">
+                            File <span class="text-red-500">*</span>
+                        </label>
+                        <div class="mt-1">
+                            <input type="file" name="{{ form.uploaded_file.name }}" id="{{ form.uploaded_file.id_for_label }}"
+                                   class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md py-2 px-3
+                                         {% if form.uploaded_file.errors %}border-red-300{% endif %}">
+                        </div>
+                        {% if form.instance.id and form.instance.variable_type == 'file' and form.instance.file_name %}
+                        <p class="mt-2 text-sm text-gray-500 px-1">Current file: {{ form.instance.file_name }}</p>
+                        {% endif %}
+                        {% if form.uploaded_file.errors %}
+                        <p class="mt-2 text-sm text-red-600 px-1">{{ form.uploaded_file.errors }}</p>
                         {% endif %}
                     </div>
 
@@ -158,7 +173,7 @@
                 </div>
 
                 <div class="flex justify-end space-x-4 pt-8">
-                    <a href="/environments/{{ project.pk }}/"
+                    <a href="{% url 'environments:environment_list' %}"
                        class="inline-flex justify-center py-2 px-5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         Cancel
                     </a>
@@ -173,20 +188,28 @@
 </div>
 
 {% block extra_js %}
-<!-- Include JSON Editor if you're using it -->
+<!-- Include JSON Editor library -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.7.4/jsoneditor.min.css" rel="stylesheet" type="text/css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.7.4/jsoneditor.min.js"></script>
 
 <script>
     let jsonEditor = null;
 
-    function toggleJsonEditor(valueType) {
+    function toggleFields(valueType) {
         const valueField = document.getElementById('value-field');
+        const fileField = document.getElementById('file-field');
         const jsonEditorDiv = document.getElementById('json-editor');
 
-        // If JSON type selected, show the JSON editor
-        if (valueType === 'json') {
-            valueField.classList.add('hidden');
+        // Hide all fields first
+        valueField.classList.add('hidden');
+        fileField.classList.add('hidden');
+        jsonEditorDiv.classList.add('hidden');
+
+        // Show appropriate field based on type
+        if (valueType === 'file') {
+            fileField.classList.remove('hidden');
+        } else if (valueType === 'json') {
+            valueField.classList.remove('hidden');
             jsonEditorDiv.classList.remove('hidden');
 
             // Initialize JSON editor if it doesn't exist yet
@@ -199,7 +222,7 @@
                         // Update the textarea with JSON value when editor changes
                         try {
                             const json = jsonEditor.get();
-                            document.getElementById('{{ form.value.id_for_label }}').value = JSON.stringify(json);
+                            document.getElementById('{{ form.raw_value.id_for_label }}').value = JSON.stringify(json);
                         } catch (err) {
                             console.error('Error updating JSON value:', err);
                         }
@@ -209,7 +232,7 @@
 
                 // Try to load existing value as JSON
                 try {
-                    const currentValue = document.getElementById('{{ form.value.id_for_label }}').value;
+                    const currentValue = document.getElementById('{{ form.raw_value.id_for_label }}').value;
                     if (currentValue) {
                         jsonEditor.set(JSON.parse(currentValue));
                     } else {
@@ -222,13 +245,12 @@
             }
         } else {
             valueField.classList.remove('hidden');
-            jsonEditorDiv.classList.add('hidden');
         }
     }
 
     // Call the function on page load to set initial state
     document.addEventListener('DOMContentLoaded', function() {
-        toggleJsonEditor(document.getElementById('{{ form.variable_type.id_for_label }}').value);
+        toggleFields(document.getElementById('{{ form.variable_type.id_for_label }}').value);
     });
 </script>
 {% endblock %}

@@ -35,7 +35,7 @@
 
 {% block action_buttons %}
 <div class="flex justify-end space-x-2">
-    <a href="{% url 'testsuite:protocol_verification_create' protocol.id %}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:border-blue-800 focus:ring focus:ring-blue-200 disabled:opacity-25 transition">
+    <a href="{% url 'testsuite:protocol_verification_create' protocol.id %}" class="inline-flex items-center px-4 py-2 bg-amber-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-amber-700 active:bg-amber-800 focus:outline-none focus:border-amber-800 focus:ring focus:ring-amber-200 disabled:opacity-25 transition">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         </svg>
@@ -51,60 +51,64 @@
             <tr>
                 <th scope="col" class="px-6 py-3">Name</th>
                 <th scope="col" class="px-6 py-3">Method Type</th>
+                <th scope="col" class="px-6 py-3">Execution Step</th>
                 <th scope="col" class="px-6 py-3">Comparison</th>
-                <th scope="col" class="px-6 py-3">Requires Expected Value</th>
-                <th scope="col" class="px-6 py-3">Created</th>
+                <th scope="col" class="px-6 py-3">Expected Value</th>
                 <th scope="col" class="px-6 py-3">Actions</th>
             </tr>
         </thead>
         <tbody>
-            {% for verification in verifications %}
+            {% for method in verifications %}
             <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                 <td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">
-                    <a href="{% url 'testsuite:protocol_verification_detail' protocol.id verification.id %}" class="text-blue-600 dark:text-blue-400 hover:underline">
-                        {{ verification.name }}
+                    <a href="{% url 'testsuite:protocol_verification_detail' protocol.id method.id %}" class="text-blue-600 dark:text-blue-400 hover:underline">
+                        {{ method.name }}
                     </a>
                 </td>
                 <td class="px-6 py-4">
                     <span class="px-2 py-1 text-xs font-medium
-                    {% if 'string' in verification.method_type %}
+                    {% if 'string' in method.method_type %}
                         bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
-                    {% elif 'numeric' in verification.method_type %}
+                    {% elif 'numeric' in method.method_type %}
                         bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300
-                    {% elif 'api' in verification.method_type %}
+                    {% elif 'api' in method.method_type %}
                         bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300
-                    {% elif 'db' in verification.method_type %}
+                    {% elif 'db' in method.method_type %}
                         bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300
-                    {% elif 'ssh' in verification.method_type %}
-                        bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300
-                    {% elif 's3' in verification.method_type %}
-                        bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300
                     {% else %}
                         bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300
                     {% endif %}
                     rounded-full">
-                        {{ verification.get_method_type_display }}
+                        {{ method.get_method_type_display }}
                     </span>
                 </td>
                 <td class="px-6 py-4">
-                    {% if verification.supports_comparison %}
-                        {{ verification.get_comparison_method_display }}
+                    {% if method.execution_step %}
+                        <a href="{% url 'testsuite:step_detail' method.execution_step.id %}" class="text-blue-600 dark:text-blue-400 hover:underline">
+                            {{ method.execution_step.name|default:"Step" }}
+                        </a>
                     {% else %}
                         <span class="text-gray-400">None</span>
                     {% endif %}
                 </td>
                 <td class="px-6 py-4">
-                    {% if verification.requires_expected_value %}
-                        <span class="text-green-600">Yes</span>
+                    {% if method.supports_comparison %}
+                        {{ method.get_comparison_method_display }}
                     {% else %}
-                        <span class="text-gray-500">No</span>
+                        <span class="text-gray-400">None</span>
                     {% endif %}
                 </td>
-                <td class="px-6 py-4">{{ verification.created_at|date:"M d, Y" }}</td>
+                <td class="px-6 py-4">
+                    {% if method.requires_expected_value %}
+                        <span class="text-green-600 dark:text-green-400">Required</span>
+                    {% else %}
+                        <span class="text-gray-500">Not Required</span>
+                    {% endif %}
+                </td>
                 <td class="px-6 py-4 flex space-x-2">
-                    <a href="{% url 'testsuite:protocol_verification_detail' protocol.id verification.id %}" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">View</a>
-                    <a href="{% url 'testsuite:protocol_verification_edit' protocol.id verification.id %}" class="font-medium text-green-600 dark:text-green-500 hover:underline">Edit</a>
-                    <a href="{% url 'testsuite:protocol_verification_delete' protocol.id verification.id %}" class="font-medium text-red-600 dark:text-red-500 hover:underline">Delete</a>
+                    <a href="{% url 'testsuite:protocol_verification_detail' protocol.id method.id %}" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">View</a>
+                    <a href="{% url 'testsuite:protocol_verification_edit' protocol.id method.id %}" class="font-medium text-green-600 dark:text-green-500 hover:underline">Edit</a>
+                    <a href="{% url 'testsuite:protocol_verification_delete' protocol.id method.id %}" class="font-medium text-red-600 dark:text-red-500 hover:underline">Delete</a>
                 </td>
             </tr>
             {% empty %}

@@ -1,4 +1,5 @@
 {% extends 'test_protocols/base.html' %}
+{% load custom_filters %}
 
 {% block breadcrumbs %}
 <li>
@@ -35,26 +36,26 @@
 
 {% block action_buttons %}
 <div class="flex justify-end space-x-2">
-    {% if not result %}
-    <a href="{% url 'testsuite:run_result_create' run.id %}" class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 active:bg-green-800 focus:outline-none focus:border-green-800 focus:ring focus:ring-green-200 disabled:opacity-25 transition">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-        </svg>
-        Add Results
-    </a>
-    {% endif %}
     <a href="{% url 'testsuite:protocol_detail' run.protocol.id %}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:border-blue-800 focus:ring focus:ring-blue-200 disabled:opacity-25 transition">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
         </svg>
         Back to Protocol
     </a>
+
+    <a href="{% url 'testsuite:protocol_run_create' run.protocol.id %}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:border-indigo-800 focus:ring focus:ring-indigo-200 disabled:opacity-25 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Run Again
+    </a>
 </div>
 {% endblock %}
 
 {% block main_content %}
 <div class="p-6">
-{% if messages %}
+    {% if messages %}
     <div class="mb-6">
         {% for message in messages %}
         <div class="p-4 mb-4 rounded-md {% if message.tags == 'success' %}bg-green-100 text-green-700{% elif message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-blue-100 text-blue-700{% endif %}">
@@ -63,238 +64,406 @@
         {% endfor %}
     </div>
     {% endif %}
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-            <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">Run Details</h2>
-            <dl class="grid grid-cols-1 gap-x-4 gap-y-2">
-                <div class="sm:col-span-1">
-                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Protocol</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">
-                        <a href="{% url 'testsuite:protocol_detail' run.protocol.id %}" class="text-blue-600 dark:text-blue-400 hover:underline">
-                            {{ run.protocol.name }}
-                        </a>
-                    </dd>
-                </div>
-                <div class="sm:col-span-1">
-                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Status</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">
-                        <span class="px-2 py-1 text-xs font-medium
-                        {% if run.status == 'completed' %}
-                            bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
-                        {% elif run.status == 'running' %}
-                            bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300
-                        {% elif run.status == 'failed' or run.status == 'error' %}
-                            bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300
-                        {% else %}
-                            bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300
-                        {% endif %}
-                        rounded-full">
-                            {{ run.status|title }}
-                        </span>
-                    </dd>
-                </div>
-                <div class="sm:col-span-1">
-                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Result</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">
-                        {% if run.result_status %}
-                        <span class="px-2 py-1 text-xs font-medium
-                        {% if run.result_status == 'pass' %}
-                            bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
-                        {% elif run.result_status == 'fail' %}
-                            bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300
-                        {% elif run.result_status == 'error' %}
-                            bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300
-                        {% else %}
-                            bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300
-                        {% endif %}
-                        rounded-full">
-                            {{ run.result_status|title }}
-                        </span>
-                        {% else %}
-                        <span class="text-gray-500 dark:text-gray-400">Not Set</span>
-                        {% endif %}
-                    </dd>
-                </div>
-                <div class="sm:col-span-1">
-                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Started</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ run.started_at|date:"M d, Y H:i:s" }}</dd>
-                </div>
-                <div class="sm:col-span-1">
-                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Completed</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ run.completed_at|date:"M d, Y H:i:s"|default:"Not completed" }}</dd>
-                </div>
-                <div class="sm:col-span-1">
-                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Duration</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">
-                        {% if run.duration_seconds %}
-                        {{ run.duration_seconds }} seconds
-                        {% else %}
-                        <span class="text-gray-500 dark:text-gray-400">N/A</span>
-                        {% endif %}
-                    </dd>
-                </div>
-                <div class="sm:col-span-1">
-                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Executed By</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ run.executed_by|default:"System" }}</dd>
-                </div>
 
-                {% if run.error_message %}
-                <div class="sm:col-span-2 mt-2">
-                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Error Message</dt>
-                    <dd class="mt-1 p-2 bg-red-50 dark:bg-red-900 text-red-800 dark:text-red-200 text-sm rounded">
-                        {{ run.error_message }}
-                    </dd>
+    <!-- Run Status Card -->
+    <div class="mb-6 rounded-lg shadow-md overflow-hidden">
+        <div class="p-4 {% if run.result_status == 'pass' %}bg-green-100 text-green-800{% elif run.result_status == 'fail' %}bg-red-100 text-red-800{% elif run.status == 'running' %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+            <div class="flex items-center">
+                {% if run.result_status == 'pass' %}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                    <h2 class="text-xl font-bold">Success</h2>
+                    <p>Protocol execution completed successfully</p>
+                </div>
+                {% elif run.result_status == 'fail' %}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                    <h2 class="text-xl font-bold">Failed</h2>
+                    <p>Protocol execution failed</p>
+                </div>
+                {% elif run.status == 'running' %}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mr-3 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <div>
+                    <h2 class="text-xl font-bold">Running</h2>
+                    <p>Protocol execution in progress</p>
+                </div>
+                {% else %}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                    <h2 class="text-xl font-bold">{{ run.status|title }}</h2>
+                    <p>Current status: {{ run.status|title }}</p>
                 </div>
                 {% endif %}
-            </dl>
-        </div>
-
-        <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-            <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">Connection Information</h2>
-            {% if run.protocol.connection_config %}
-            <dl class="grid grid-cols-1 gap-x-4 gap-y-2">
-                <div class="sm:col-span-1">
-                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Connection Type</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">
-                        <span class="px-2 py-1 text-xs font-medium
-                        {% if run.protocol.connection_config.config_type == 'database' %}
-                            bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300
-                        {% elif run.protocol.connection_config.config_type == 'api' %}
-                            bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
-                        {% elif run.protocol.connection_config.config_type == 'ssh' %}
-                            bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300
-                        {% elif run.protocol.connection_config.config_type == 'kubernetes' %}
-                            bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300
-                        {% elif run.protocol.connection_config.config_type == 'aws' %}
-                            bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300
-                        {% elif run.protocol.connection_config.config_type == 'azure' %}
-                            bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300
-                        {% endif %}
-                        rounded-full">
-                            {{ run.protocol.connection_config.config_type|title }}
-                        </span>
-                    </dd>
-                </div>
-                <div class="sm:col-span-1">
-                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Host</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ run.protocol.connection_config.host|default:"Not specified" }}</dd>
-                </div>
-                <div class="sm:col-span-1">
-                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Port</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ run.protocol.connection_config.port|default:"Not specified" }}</dd>
-                </div>
-                <div class="sm:col-span-2 mt-2">
-                    <a href="{% url 'testsuite:connection_detail' run.protocol.connection_config.id %}" class="text-blue-600 dark:text-blue-400 hover:underline text-sm">
-                        View full connection details →
-                    </a>
-                </div>
-            </dl>
-            {% else %}
-            <div class="text-center p-4">
-                <p class="text-gray-500 dark:text-gray-400">No connection configuration found for this protocol.</p>
             </div>
-            {% endif %}
         </div>
     </div>
 
-    <!-- Result Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Run Information -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md">
+            <div class="p-4 border-b border-gray-200 dark:border-gray-600">
+                <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Run Information</h2>
+            </div>
+            <div class="p-4">
+                <dl class="grid grid-cols-1 gap-x-4 gap-y-4">
+                    <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Protocol</dt>
+                        <dd class="mt-1 text-sm text-gray-900 dark:text-white">
+                            <a href="{% url 'testsuite:protocol_detail' run.protocol.id %}" class="text-blue-600 dark:text-blue-400 hover:underline">
+                                {{ run.protocol.name }}
+                            </a>
+                        </dd>
+                    </div>
+                    <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Run Status</dt>
+                        <dd class="mt-1 text-sm text-gray-900 dark:text-white">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full
+                                {% if run.status == 'completed' %}
+                                    bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
+                                {% elif run.status == 'running' %}
+                                    bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300
+                                {% elif run.status == 'failed' %}
+                                    bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300
+                                {% elif run.status == 'error' %}
+                                    bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300
+                                {% else %}
+                                    bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300
+                                {% endif %}">
+                                {{ run.status|title }}
+                            </span>
+                        </dd>
+                    </div>
+                    <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Result Status</dt>
+                        <dd class="mt-1 text-sm text-gray-900 dark:text-white">
+                            {% if run.result_status %}
+                            <span class="px-2 py-1 text-xs font-medium rounded-full
+                                {% if run.result_status == 'pass' %}
+                                    bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
+                                {% elif run.result_status == 'fail' %}
+                                    bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300
+                                {% elif run.result_status == 'error' %}
+                                    bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300
+                                {% else %}
+                                    bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300
+                                {% endif %}">
+                                {{ run.result_status|title }}
+                            </span>
+                            {% else %}
+                            <span class="text-gray-500 dark:text-gray-400">Not Available</span>
+                            {% endif %}
+                        </dd>
+                    </div>
+                    <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Started At</dt>
+                        <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ run.started_at|date:"M d, Y H:i:s" }}</dd>
+                    </div>
+                    <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Completed At</dt>
+                        <dd class="mt-1 text-sm text-gray-900 dark:text-white">
+                            {% if run.completed_at %}
+                                {{ run.completed_at|date:"M d, Y H:i:s" }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </dd>
+                    </div>
+                    <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Duration</dt>
+                        <dd class="mt-1 text-sm text-gray-900 dark:text-white">
+                            {% if run.duration_seconds %}
+                                {% if run.duration_seconds < 60 %}
+                                    {{ run.duration_seconds|floatformat:1 }} sec
+                                {% else %}
+                                    {% with minutes=run.duration_seconds|divisibleby:60|floatformat:0 %}
+                                    {% with seconds=run.duration_seconds|remainder:60|floatformat:0 %}
+                                        {{ minutes }} min {{ seconds }} sec
+                                    {% endwith %}
+                                    {% endwith %}
+                                {% endif %}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </dd>
+                    </div>
+                    <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Executed By</dt>
+                        <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ run.executed_by|default:"-" }}</dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Connection Information -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md">
+            <div class="p-4 border-b border-gray-200 dark:border-gray-600">
+                <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Connection Information</h2>
+            </div>
+            <div class="p-4">
+                {% if run.protocol.connection_config %}
+                    <dl class="grid grid-cols-1 gap-x-4 gap-y-4">
+                        <div class="sm:col-span-1">
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Connection Type</dt>
+                            <dd class="mt-1 text-sm text-gray-900 dark:text-white">
+                                <span class="px-2 py-1 text-xs font-medium
+                                {% if run.protocol.connection_config.config_type == 'database' %}
+                                    bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300
+                                {% elif run.protocol.connection_config.config_type == 'api' %}
+                                    bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
+                                {% elif run.protocol.connection_config.config_type == 'ssh' %}
+                                    bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300
+                                {% elif run.protocol.connection_config.config_type == 'kubernetes' %}
+                                    bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300
+                                {% elif run.protocol.connection_config.config_type == 'aws' %}
+                                    bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300
+                                {% elif run.protocol.connection_config.config_type == 'azure' %}
+                                    bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300
+                                {% endif %}
+                                rounded-full">
+                                    {{ run.protocol.connection_config.config_type|title }}
+                                </span>
+                            </dd>
+                        </div>
+                        <div class="sm:col-span-1">
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Host</dt>
+                            <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ run.protocol.connection_config.host|default:"Not specified" }}</dd>
+                        </div>
+                        <div class="sm:col-span-1">
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Port</dt>
+                            <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ run.protocol.connection_config.port|default:"Not specified" }}</dd>
+                        </div>
+                        <div class="sm:col-span-1">
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Timeout</dt>
+                            <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ run.protocol.connection_config.timeout_seconds }} seconds</dd>
+                        </div>
+                        <div class="sm:col-span-1">
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Retry Attempts</dt>
+                            <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ run.protocol.connection_config.retry_attempts }}</dd>
+                        </div>
+                        <div class="sm:col-span-2 mt-2">
+                            <a href="{% url 'testsuite:connection_detail' run.protocol.connection_config.id %}" class="text-blue-600 dark:text-blue-400 hover:underline text-sm">
+                                View full connection details →
+                            </a>
+                        </div>
+                    </dl>
+                {% else %}
+                    <div class="text-center py-6">
+                        <p class="text-gray-500 dark:text-gray-400">No connection configuration found for this protocol.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Execution Steps and Verification Results -->
     <div class="mt-8">
-        <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">Run Results</h2>
+        <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">Execution Steps & Verification Results</h2>
 
-        {% if result %}
-        <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-            <div class="flex justify-between items-center mb-4">
-                <div class="flex items-center">
-                    <span class="text-lg font-medium text-gray-900 dark:text-white">Result Details</span>
-                    <span class="ml-3 px-2.5 py-1 rounded-full text-xs font-medium
-                        {% if result.success %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
-                        {% else %}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300{% endif %}">
-                        {{ result.success|yesno:"Passed,Failed" }}
-                    </span>
-                </div>
-                <a href="{% url 'testsuite:result_detail' result.id %}" class="text-blue-600 dark:text-blue-400 hover:underline text-sm">
-                    View full result →
-                </a>
-            </div>
+        {% if execution_steps %}
+            <div class="space-y-6">
+                {% for step in execution_steps %}
+                <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
+                    <!-- Step Header -->
+                    <div class="px-4 py-3 bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 flex justify-between items-center">
+                        <h3 class="text-md font-medium text-gray-800 dark:text-white">
+                            Step {% if step.name %}{{ step.name }}{% else %}{{ forloop.counter }}{% endif %}
+                        </h3>
+                        <a href="{% url 'testsuite:step_detail' step.id %}" class="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                            View Step Details
+                        </a>
+                    </div>
 
-            <!-- Result data visualization -->
-            {% if result.result_data %}
-            <div class="mb-4">
-                <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Structured Result Data</h3>
-                <div class="bg-white dark:bg-gray-800 p-3 rounded-md overflow-x-auto max-h-96">
-                    <pre class="text-xs text-gray-900 dark:text-gray-300 whitespace-pre-wrap">{{ result.result_data|pprint }}</pre>
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Result text -->
-            {% if result.result_text %}
-            <div class="mb-4">
-                <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Result Text</h3>
-                <div class="bg-white dark:bg-gray-800 p-3 rounded-md overflow-x-auto max-h-96">
-                    <pre class="text-xs text-gray-900 dark:text-gray-300 whitespace-pre-wrap">{{ result.result_text }}</pre>
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Error message -->
-            {% if result.error_message %}
-            <div class="mb-4">
-                <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Error Details</h3>
-                <div class="bg-red-50 dark:bg-red-900 p-3 rounded-md overflow-x-auto">
-                    <pre class="text-xs text-red-800 dark:text-red-200 whitespace-pre-wrap">{{ result.error_message }}</pre>
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Attachments -->
-            {% if result.attachments.exists %}
-            <div>
-                <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Attachments</h3>
-                <ul class="divide-y divide-gray-200 dark:divide-gray-700">
-                    {% for attachment in result.attachments.all %}
-                    <li class="py-2">
-                        <div class="flex items-center">
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                    {{ attachment.name }}
-                                </p>
-                                <p class="text-sm text-gray-500 dark:text-gray-400 truncate">
-                                    {{ attachment.content_type|default:"Unknown type" }}
-                                </p>
+                    <div class="p-4">
+                        <!-- Step Execution Details -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Arguments</h4>
+                                <div class="bg-gray-50 dark:bg-gray-700 p-2 rounded">
+                                    <pre class="text-xs text-gray-800 dark:text-gray-200 overflow-auto">{{ step.args|pprint }}</pre>
+                                </div>
                             </div>
                             <div>
-                                {% if attachment.file %}
-                                <a href="{{ attachment.file.url }}" class="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-600 bg-blue-100 rounded-md hover:bg-blue-200">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                    </svg>
-                                    Download
-                                </a>
-                                {% endif %}
+                                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Keyword Arguments</h4>
+                                <div class="bg-gray-50 dark:bg-gray-700 p-2 rounded">
+                                    <pre class="text-xs text-gray-800 dark:text-gray-200 overflow-auto">{{ step.kwargs|pprint }}</pre>
+                                </div>
                             </div>
                         </div>
-                    </li>
-                    {% endfor %}
-                </ul>
+
+                        <!-- Verification Methods and Results -->
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Verification Results</h4>
+
+                            {% with verification_methods=step.verification_methods.all %}
+                                {% if verification_methods %}
+                                    <div class="overflow-x-auto">
+                                        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                                <tr>
+                                                    <th scope="col" class="px-4 py-2">Verification</th>
+                                                    <th scope="col" class="px-4 py-2">Type</th>
+                                                    <th scope="col" class="px-4 py-2">Status</th>
+                                                    <th scope="col" class="px-4 py-2">Expected</th>
+                                                    <th scope="col" class="px-4 py-2">Actual</th>
+                                                    <th scope="col" class="px-4 py-2">Details</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for method in verification_methods %}
+                                                    <!-- Verification result row -->
+                                                    {% with result=verification_results_dict|get_item:method.id %}
+                                                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                                        <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">
+                                                            {{ method.name }}
+                                                        </td>
+                                                        <td class="px-4 py-3">
+                                                            <span class="px-2 py-1 text-xs font-medium
+                                                            {% if 'string' in method.method_type %}
+                                                                bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
+                                                            {% elif 'numeric' in method.method_type %}
+                                                                bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300
+                                                            {% elif 'api' in method.method_type %}
+                                                                bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300
+                                                            {% elif 'db' in method.method_type %}
+                                                                bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300
+                                                            {% else %}
+                                                                bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300
+                                                            {% endif %}
+                                                            rounded-full">
+                                                                {{ method.get_method_type_display }}
+                                                            </span>
+                                                        </td>
+                                                        <td class="px-4 py-3">
+                                                            {% if result %}
+                                                                <span class="px-2 py-1 text-xs font-medium
+                                                                {% if result.success %}
+                                                                    bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
+                                                                {% else %}
+                                                                    bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300
+                                                                {% endif %}
+                                                                rounded-full">
+                                                                    {{ result.status|title }}
+                                                                </span>
+                                                            {% else %}
+                                                                <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 rounded-full">
+                                                                    No Result
+                                                                </span>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td class="px-4 py-3">
+                                                            {% if result %}
+                                                                <div class="max-w-xs truncate">{{ result.expected_value|pprint|truncatechars:30 }}</div>
+                                                            {% else %}
+                                                                <div class="max-w-xs truncate">{{ method.expected_result|pprint|truncatechars:30 }}</div>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td class="px-4 py-3">
+                                                            {% if result %}
+                                                                <div class="max-w-xs truncate">{{ result.actual_value|pprint|truncatechars:30 }}</div>
+                                                            {% else %}
+                                                                <div class="max-w-xs truncate text-gray-400">-</div>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td class="px-4 py-3">
+                                                            {% if result %}
+                                                                <button type="button"
+                                                                        onclick="toggleDetails('result-{{ result.id }}')"
+                                                                        class="text-blue-600 dark:text-blue-500 hover:underline text-sm flex items-center">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                    </svg>
+                                                                    Details
+                                                                </button>
+                                                            {% else %}
+                                                                -
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+
+                                                    <!-- Hidden result details -->
+                                                    {% if result %}
+                                                    <tr id="result-{{ result.id }}" class="hidden bg-gray-50 dark:bg-gray-700">
+                                                        <td colspan="6" class="px-4 py-3">
+                                                            <div class="grid grid-cols-1 gap-2">
+                                                                <div>
+                                                                    <h5 class="text-xs font-medium text-gray-700 dark:text-gray-300">Message:</h5>
+                                                                    <p class="text-xs text-gray-800 dark:text-gray-200">{{ result.message|default:"No message" }}</p>
+                                                                </div>
+                                                                {% if result.error_message %}
+                                                                <div>
+                                                                    <h5 class="text-xs font-medium text-red-700 dark:text-red-300">Error:</h5>
+                                                                    <p class="text-xs text-red-800 dark:text-red-200">{{ result.error_message }}</p>
+                                                                </div>
+                                                                {% endif %}
+                                                                {% if result.result_data %}
+                                                                <div>
+                                                                    <h5 class="text-xs font-medium text-gray-700 dark:text-gray-300">Result Data:</h5>
+                                                                    <div class="bg-white dark:bg-gray-800 p-2 rounded">
+                                                                        <pre class="text-xs text-gray-800 dark:text-gray-200 overflow-auto">{{ result.result_data|pprint }}</pre>
+                                                                    </div>
+                                                                </div>
+                                                                {% endif %}
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    {% endif %}
+                                                    {% endwith %}
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                {% else %}
+                                    <p class="text-sm text-gray-500 dark:text-gray-400 p-3 bg-gray-50 dark:bg-gray-700 rounded">No verification methods defined for this step.</p>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
             </div>
-            {% else %}
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">No attachments available.</p>
-            {% endif %}
-        </div>
         {% else %}
-        <div class="bg-white dark:bg-gray-800 p-6 text-center border border-gray-200 dark:border-gray-700 rounded-lg">
-            <p class="text-gray-500 dark:text-gray-400">No results have been recorded for this run.</p>
-            {% if run.status != 'running' %}
-            <a href="{% url 'testsuite:run_result_create' run.id %}" class="inline-flex items-center mt-4 px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 active:bg-green-800 focus:outline-none focus:border-green-800 focus:ring focus:ring-green-200 disabled:opacity-25 transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-                Add Results
-            </a>
-            {% endif %}
-        </div>
+            <div class="bg-white dark:bg-gray-800 p-6 text-center border border-gray-200 dark:border-gray-700 rounded-lg">
+                <p class="text-gray-500 dark:text-gray-400">No execution steps found for this protocol.</p>
+            </div>
         {% endif %}
     </div>
+
+    <!-- Error Message Section (if available) -->
+    {% if run.error_message %}
+    <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+        <div class="p-4 border-b border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900">
+            <h2 class="text-lg font-semibold text-red-800 dark:text-red-300">Error Message</h2>
+        </div>
+        <div class="p-4 bg-red-50 dark:bg-red-900">
+            <div class="bg-white dark:bg-gray-800 rounded-lg p-4 overflow-auto max-h-96 border border-red-200 dark:border-red-800">
+                <pre class="text-sm text-red-800 dark:text-red-300 whitespace-pre-wrap">{{ run.error_message }}</pre>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
+
+<!-- JavaScript for toggling result details -->
+{% block extra_js %}
+<script>
+    function toggleDetails(id) {
+        const element = document.getElementById(id);
+        if (element) {
+            if (element.classList.contains('hidden')) {
+                element.classList.remove('hidden');
+            } else {
+                element.classList.add('hidden');
+            }
+        }
+    }
+</script>
+{% endblock %}
 {% endblock %}

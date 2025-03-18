@@ -109,6 +109,32 @@
             </div>
 
             <div>
+                <label for="{{ form.execution_step.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Execution Step <span class="text-red-500">*</span>
+                </label>
+                <div class="mt-1">
+                    <select name="{{ form.execution_step.name }}" id="{{ form.execution_step.id_for_label }}"
+                            class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                            required>
+                        <option value="">Select an execution step</option>
+                        {% for choice in form.execution_step.field.queryset %}
+                            <option value="{{ choice.id }}" {% if form.execution_step.value|stringformat:"s" == choice.id|stringformat:"s" %}selected{% endif %}>
+                                {{ choice.name|default:"Step" }} (Created: {{ choice.created_at|date:"M d, Y" }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% if form.execution_step.errors %}
+                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.execution_step.errors.0 }}</p>
+                {% endif %}
+                {% if not form.execution_step.field.queryset.exists %}
+                <p class="mt-2 text-sm text-yellow-600 dark:text-yellow-500">
+                    No execution steps available. <a href="{% url 'testsuite:protocol_step_create' protocol.id %}" class="underline">Create an execution step</a> first.
+                </p>
+                {% endif %}
+            </div>
+
+            <div>
                 <div class="flex items-center">
                     <input type="checkbox" name="{{ form.supports_comparison.name }}" id="{{ form.supports_comparison.id_for_label }}"
                            class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
@@ -173,6 +199,22 @@
             {% if form.description.errors %}
             <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.description.errors.0 }}</p>
             {% endif %}
+        </div>
+
+        <div>
+            <label for="{{ form.expected_result.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Expected Result (JSON)
+            </label>
+            <div class="mt-1">
+                <textarea name="{{ form.expected_result.name }}" id="{{ form.expected_result.id_for_label }}" rows="3"
+                         class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md font-mono">{{ form.expected_result.value|default:'{}' }}</textarea>
+            </div>
+            {% if form.expected_result.errors %}
+            <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.expected_result.errors.0 }}</p>
+            {% endif %}
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Define the expected result for verification in JSON format.
+            </p>
         </div>
 
         <div>
