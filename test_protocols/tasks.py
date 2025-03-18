@@ -407,7 +407,7 @@ def run_test_suite(suite_id, user_id=None):
     """
     try:
         # Get the suite
-        suite_id_uuid = UUID(suite_id)
+        suite_id_uuid = UUID(str(suite_id))
         suite = TestSuite.objects.get(pk=suite_id_uuid)
 
         logger.info(f"Starting test suite: {suite.name} (ID: {suite_id})")
@@ -429,7 +429,12 @@ def run_test_suite(suite_id, user_id=None):
         for protocol in protocols:
             try:
                 # Call the function directly (still goes through Celery's task system)
-                protocol_result = run_test_protocol(str(protocol.id), user_id)
+                protocol_run = ProtocolRun.objects.create(
+                    protocol=protocol,
+                    status='pending',
+                    executed_by=user_id
+                )
+                protocol_result = run_test_protocol(str(protocol_run.id), user_id)
 
                 # Track success/failure
                 if protocol_result['success']:
