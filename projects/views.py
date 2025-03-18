@@ -3,7 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
 from django.shortcuts import reverse
 from .models import Project
-
+from test_protocols.models import TestProtocol
 
 class ProjectListView(ListView):
     model = Project
@@ -22,6 +22,13 @@ class ProjectListView(ListView):
 class ProjectDetailView(DetailView):
     model = Project
     template_name = 'projects/project_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add protocol object to context
+        # For example, get the most recent protocol:
+        context['protocol'] = TestProtocol.objects.first()  # Or some other query logic
+        return context
 
 
 class ProjectCreateView(CreateView):
