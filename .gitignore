@@ -143,3 +143,5 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 .env
+
+__pycache__/
