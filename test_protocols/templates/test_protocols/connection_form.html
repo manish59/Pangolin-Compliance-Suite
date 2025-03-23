@@ -90,95 +90,6 @@
                 <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.config_type.errors.0 }}</p>
                 {% endif %}
             </div>
-
-            <div>
-                <label for="{{ form.host.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Host
-                </label>
-                <div class="mt-1">
-                    <input type="text" name="{{ form.host.name }}" id="{{ form.host.id_for_label }}"
-                           class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
-                           placeholder="Enter host name or IP" value="{{ form.host.value|default:'' }}">
-                </div>
-                {% if form.host.errors %}
-                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.host.errors.0 }}</p>
-                {% endif %}
-            </div>
-
-            <div>
-                <label for="{{ form.port.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Port
-                </label>
-                <div class="mt-1">
-                    <input type="number" name="{{ form.port.name }}" id="{{ form.port.id_for_label }}"
-                           class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
-                           placeholder="Enter port number" value="{{ form.port.value|default:'' }}">
-                </div>
-                {% if form.port.errors %}
-                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.port.errors.0 }}</p>
-                {% endif %}
-            </div>
-
-            <div>
-                <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Username Environment Variable
-                </label>
-                <div class="mt-1">
-                    <select name="{{ form.username.name }}" id="{{ form.username.id_for_label }}"
-                            class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
-                        <option value="">Select environment variable</option>
-                        {% for choice in form.username.field.queryset %}
-                            <option value="{{ choice.id }}" {% if form.username.value|stringformat:"s" == choice.id|stringformat:"s" %}selected{% endif %}>
-                                {{ choice }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                {% if form.username.errors %}
-                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.username.errors.0 }}</p>
-                {% endif %}
-            </div>
-
-            <div>
-                <label for="{{ form.password.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Password Environment Variable
-                </label>
-                <div class="mt-1">
-                    <select name="{{ form.password.name }}" id="{{ form.password.id_for_label }}"
-                            class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
-                        <option value="">Select environment variable</option>
-                        {% for choice in form.password.field.queryset %}
-                            <option value="{{ choice.id }}" {% if form.password.value|stringformat:"s" == choice.id|stringformat:"s" %}selected{% endif %}>
-                                {{ choice }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                {% if form.password.errors %}
-                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.password.errors.0 }}</p>
-                {% endif %}
-            </div>
-
-            <div>
-                <label for="{{ form.secret_key.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Secret Key Environment Variable
-                </label>
-                <div class="mt-1">
-                    <select name="{{ form.secret_key.name }}" id="{{ form.secret_key.id_for_label }}"
-                            class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
-                        <option value="">Select environment variable</option>
-                        {% for choice in form.secret_key.field.queryset %}
-                            <option value="{{ choice.id }}" {% if form.secret_key.value|stringformat:"s" == choice.id|stringformat:"s" %}selected{% endif %}>
-                                {{ choice }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                {% if form.secret_key.errors %}
-                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.secret_key.errors.0 }}</p>
-                {% endif %}
-            </div>
-
             <div>
                 <label for="{{ form.timeout_seconds.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Timeout (seconds) <span class="text-red-500">*</span>
@@ -207,25 +118,6 @@
                 {% endif %}
             </div>
         </div>
-
-        <div>
-            <label for="{{ form.config_data.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Additional Configuration (JSON)
-            </label>
-            <div class="mt-1">
-                <textarea name="{{ form.config_data.name }}" id="{{ form.config_data.id_for_label }}" rows="5"
-                        class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md font-mono"
-                        placeholder='{"key": "value"}'
-                        >{{ form.config_data.value|default:'{}' }}</textarea>
-            </div>
-            {% if form.config_data.errors %}
-            <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.config_data.errors.0 }}</p>
-            {% endif %}
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                Enter additional configuration parameters as a JSON object.
-            </p>
-        </div>
-
         <div class="flex justify-end space-x-3">
             {% if form.initial.protocol %}
             <a href="{% url 'testsuite:protocol_detail' form.initial.protocol %}"
