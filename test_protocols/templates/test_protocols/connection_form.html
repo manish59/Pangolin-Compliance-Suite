@@ -1,4 +1,12 @@
 {% extends 'test_protocols/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<!-- Monaco Editor CSS -->
+<link rel="stylesheet" href="{% static 'css/monaco-editor.min.css' %}">
+<!-- Custom YAML Editor CSS -->
+<link rel="stylesheet" href="{% static 'css/yaml_editor.css' %}">
+{% endblock %}
 
 {% block breadcrumbs %}
 <li>
@@ -118,20 +126,30 @@
                 {% endif %}
             </div>
         </div>
+
+        <!-- YAML Editor for config_data -->
+        <div class="mt-6">
+            {% include "test_protocols/yaml_editor.html" with field_name="config_data" initial_content=form.config_data.value label="Additional Configuration" help_text="Enter configuration data in YAML format. This will be used to configure the connection based on the selected type." required=False %}
+
+            {% if form.config_data.errors %}
+            <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.config_data.errors.0 }}</p>
+            {% endif %}
+        </div>
+
         <div class="flex justify-end space-x-3">
             {% if form.initial.protocol %}
             <a href="{% url 'testsuite:protocol_detail' form.initial.protocol %}"
-               class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+               class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600">
                 Cancel
             </a>
             {% else %}
             <a href="{% if object %}{% url 'testsuite:connection_detail' object.id %}{% else %}{% url 'testsuite:connection_list' %}{% endif %}"
-               class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+               class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600">
                 Cancel
             </a>
             {% endif %}
             <button type="submit"
-                   class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                   class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-800 dark:hover:bg-blue-900">
                 {% if object %}Update{% else %}Create{% endif %} Connection
             </button>
         </div>
