@@ -6,6 +6,18 @@
 <link rel="stylesheet" href="{% static 'css/monaco-editor.min.css' %}">
 <!-- Custom YAML Editor CSS -->
 <link rel="stylesheet" href="{% static 'css/yaml_editor.css' %}">
+<style>
+    .env-var-selector {
+        margin-bottom: 1rem;
+    }
+    .insert-btn {
+        transition: all 0.2s;
+    }
+    .insert-btn:hover {
+        background-color: #4f46e5;
+        transform: translateY(-1px);
+    }
+</style>
 {% endblock %}
 
 {% block breadcrumbs %}
@@ -86,7 +98,7 @@
                 <div class="mt-1">
                     <select name="{{ form.config_type.name }}" id="{{ form.config_type.id_for_label }}"
                             class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
-                            required>
+                            required onchange="updateConfigHints()">
                         {% for choice in form.config_type.field.choices %}
                             <option value="{{ choice.0 }}" {% if form.config_type.value == choice.0 %}selected{% endif %}>
                                 {{ choice.1 }}
@@ -98,6 +110,35 @@
                 <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.config_type.errors.0 }}</p>
                 {% endif %}
             </div>
+
+            <div>
+                <label for="{{ form.host.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Host
+                </label>
+                <div class="mt-1">
+                    <input type="text" name="{{ form.host.name }}" id="{{ form.host.id_for_label }}"
+                           class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                           placeholder="hostname or IP address" value="{{ form.host.value|default:'' }}">
+                </div>
+                {% if form.host.errors %}
+                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.host.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.port.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Port
+                </label>
+                <div class="mt-1">
+                    <input type="number" name="{{ form.port.name }}" id="{{ form.port.id_for_label }}"
+                           class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                           placeholder="port number" value="{{ form.port.value|default:'' }}">
+                </div>
+                {% if form.port.errors %}
+                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.port.errors.0 }}</p>
+                {% endif %}
+            </div>
+
             <div>
                 <label for="{{ form.timeout_seconds.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Timeout (seconds) <span class="text-red-500">*</span>
@@ -125,6 +166,95 @@
                 <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.retry_attempts.errors.0 }}</p>
                 {% endif %}
             </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+            <div>
+                <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Username Environment Variable
+                </label>
+                <div class="mt-1">
+                    <select name="{{ form.username.name }}" id="{{ form.username.id_for_label }}"
+                            class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
+                        <option value="">None</option>
+                        {% for choice in form.username.field.queryset %}
+                            <option value="{{ choice.id }}" {% if form.username.value|stringformat:"s" == choice.id|stringformat:"s" %}selected{% endif %}>
+                                {{ choice.key }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% if form.username.errors %}
+                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.username.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.password.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Password Environment Variable
+                </label>
+                <div class="mt-1">
+                    <select name="{{ form.password.name }}" id="{{ form.password.id_for_label }}"
+                            class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
+                        <option value="">None</option>
+                        {% for choice in form.password.field.queryset %}
+                            <option value="{{ choice.id }}" {% if form.password.value|stringformat:"s" == choice.id|stringformat:"s" %}selected{% endif %}>
+                                {{ choice.key }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% if form.password.errors %}
+                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.password.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.secret_key.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Secret Key Environment Variable
+                </label>
+                <div class="mt-1">
+                    <select name="{{ form.secret_key.name }}" id="{{ form.secret_key.id_for_label }}"
+                            class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
+                        <option value="">None</option>
+                        {% for choice in form.secret_key.field.queryset %}
+                            <option value="{{ choice.id }}" {% if form.secret_key.value|stringformat:"s" == choice.id|stringformat:"s" %}selected{% endif %}>
+                                {{ choice.key }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% if form.secret_key.errors %}
+                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.secret_key.errors.0 }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Environment Variable Selector for YAML Editor -->
+        <div class="env-var-selector mt-4">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Insert Environment Variable to Configuration
+            </label>
+            <div class="flex items-center space-x-2">
+                <select id="env_var_selector" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 flex-grow text-base px-4 py-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
+                    <option value="">Select an environment variable</option>
+                    {% for choice in form.username.field.queryset %}
+                        <option value="{{ choice.key }}">{{ choice.key }}</option>
+                    {% endfor %}
+                </select>
+                <button type="button" id="insert_env_var" class="insert-btn px-4 py-2 bg-indigo-600 text-white rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Insert
+                </button>
+            </div>
+            <p class="mt-1 text-xs text-gray-500">
+                Select and insert environment variables into your configuration
+            </p>
+        </div>
+
+        <!-- Configuration hints -->
+        <div id="config_hints" class="bg-blue-50 dark:bg-blue-900 p-4 rounded-md text-sm text-blue-800 dark:text-blue-200 mb-4 hidden">
+            <h3 class="font-medium mb-2">Configuration Hints</h3>
+            <div id="hint_content"></div>
         </div>
 
         <!-- YAML Editor for config_data -->
@@ -155,4 +285,151 @@
         </div>
     </form>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Environment variable insertion
+    const envVarSelector = document.getElementById('env_var_selector');
+    const insertButton = document.getElementById('insert_env_var');
+
+    insertButton.addEventListener('click', function() {
+        const selectedVar = envVarSelector.value;
+        if (!selectedVar) return;
+
+        // Get the editor instance from the container
+        const editorContainer = document.getElementById('config_data_editor');
+        if (editorContainer && editorContainer.editor) {
+            // Different handling based on editor type
+            if (editorContainer.editor.type === 'simple') {
+                // Simple textarea editor
+                const textarea = editorContainer.editor.element;
+                const cursorPos = textarea.selectionStart;
+                const textBefore = textarea.value.substring(0, cursorPos);
+                const textAfter = textarea.value.substring(cursorPos);
+
+                // Insert the environment variable reference
+                textarea.value = `${textBefore}${selectedVar}${textAfter}`;
+
+                // Update the linked hidden textarea
+                document.getElementById('config_data').value = textarea.value;
+
+                // Set cursor position after inserted text
+                textarea.focus();
+                textarea.selectionStart = textarea.selectionEnd = cursorPos + selectedVar.length;
+            } else if (typeof monaco !== 'undefined') {
+                // Monaco editor
+                const editor = editorContainer.editor;
+                const selection = editor.getSelection();
+                const id = { major: 1, minor: 1 };
+                const op = {
+                    identifier: id,
+                    range: selection,
+                    text: selectedVar,
+                    forceMoveMarkers: true
+                };
+                editor.executeEdits("env-var-insertion", [op]);
+                editor.focus();
+            }
+        }
+    });
+
+    // Initial update of config hints
+    updateConfigHints();
+});
+
+function updateConfigHints() {
+    const configType = document.getElementById('id_config_type').value;
+    const hintsDiv = document.getElementById('config_hints');
+    const hintsContent = document.getElementById('hint_content');
+
+    // Define hints for each connection type
+    const hints = {
+        'database': `
+            <p>For database connections, consider including:</p>
+            <ul class="list-disc ml-5 space-y-1 mt-2">
+                <li><code>database_type</code>: postgresql, mysql, oracle, mssql, sqlite</li>
+                <li><code>database</code>: Name of the database</li>
+                <li><code>options</code>: Additional connection options</li>
+            </ul>
+            <p class="mt-2">Example:</p>
+            <pre class="bg-blue-100 dark:bg-blue-950 p-2 rounded mt-1 text-xs">database_type: postgresql
+database: my_database
+options:
+  ssl: true</pre>
+        `,
+        'api': `
+            <p>For API connections, consider including:</p>
+            <ul class="list-disc ml-5 space-y-1 mt-2">
+                <li><code>auth_method</code>: none, basic, bearer, jwt, api_key, oauth2</li>
+                <li><code>api_key</code>: Your API key (for api_key auth)</li>
+                <li><code>api_key_name</code>: Name of the API key header/param</li>
+                <li><code>default_headers</code>: Default headers to send with requests</li>
+            </ul>
+            <p class="mt-2">Example:</p>
+            <pre class="bg-blue-100 dark:bg-blue-950 p-2 rounded mt-1 text-xs">auth_method: api_key
+api_key_name: X-API-Key
+api_key_location: header
+default_headers:
+  Accept: application/json</pre>
+        `,
+        'ssh': `
+            <p>For SSH connections, consider including:</p>
+            <ul class="list-disc ml-5 space-y-1 mt-2">
+                <li><code>auth_method</code>: password, publickey, agent</li>
+                <li><code>private_key</code>: Path to private key file (for publickey auth)</li>
+            </ul>
+            <p class="mt-2">Example:</p>
+            <pre class="bg-blue-100 dark:bg-blue-950 p-2 rounded mt-1 text-xs">auth_method: publickey
+private_key: /path/to/key</pre>
+        `,
+        'kubernetes': `
+            <p>For Kubernetes connections, consider including:</p>
+            <ul class="list-disc ml-5 space-y-1 mt-2">
+                <li><code>auth_method</code>: config, token, certificate, basic</li>
+                <li><code>kubeconfig_path</code>: Path to kubeconfig file</li>
+                <li><code>namespace</code>: Default namespace</li>
+                <li><code>verify_ssl</code>: Whether to verify SSL certs</li>
+            </ul>
+            <p class="mt-2">Example:</p>
+            <pre class="bg-blue-100 dark:bg-blue-950 p-2 rounded mt-1 text-xs">auth_method: config
+namespace: default
+verify_ssl: true</pre>
+        `,
+        'aws': `
+            <p>For AWS connections, consider including:</p>
+            <ul class="list-disc ml-5 space-y-1 mt-2">
+                <li><code>auth_method</code>: access_key, profile, instance_role</li>
+                <li><code>service</code>: s3, ec2, rds, lambda, dynamodb</li>
+                <li><code>region</code>: us-east-1, us-west-2, etc.</li>
+            </ul>
+            <p class="mt-2">Example:</p>
+            <pre class="bg-blue-100 dark:bg-blue-950 p-2 rounded mt-1 text-xs">auth_method: access_key
+service: s3
+region: us-east-1</pre>
+        `,
+        'azure': `
+            <p>For Azure connections, consider including:</p>
+            <ul class="list-disc ml-5 space-y-1 mt-2">
+                <li><code>auth_method</code>: service_principal, managed_identity</li>
+                <li><code>tenant_id</code>: Azure tenant ID</li>
+                <li><code>subscription_id</code>: Azure subscription ID</li>
+                <li><code>resource_group</code>: Resource group name</li>
+            </ul>
+            <p class="mt-2">Example:</p>
+            <pre class="bg-blue-100 dark:bg-blue-950 p-2 rounded mt-1 text-xs">auth_method: service_principal
+tenant_id: your-tenant-id
+subscription_id: your-subscription-id
+resource_group: my-resources</pre>
+        `
+    };
+
+    // Show appropriate hint based on selected connection type
+    if (hints[configType]) {
+        hintsContent.innerHTML = hints[configType];
+        hintsDiv.classList.remove('hidden');
+    } else {
+        hintsDiv.classList.add('hidden');
+    }
+}
+</script>
 {% endblock %}
