@@ -1,3 +1,5 @@
+import yaml
+import json
 from django.db import models
 from engine.models import BaseModel
 from projects.models import Project
@@ -60,43 +62,25 @@ class ConnectionConfig(BaseModel):
     ]
     protocol = models.OneToOneField(TestProtocol, on_delete=models.CASCADE, related_name='connection_config')
     config_type = models.CharField(max_length=20, choices=CONFIG_TYPE_CHOICES)
-    host = models.CharField(max_length=255, blank=True, null=True)
-    port = models.IntegerField(blank=True, null=True)
-    # Environment variables for sensitive data
-    username = models.ForeignKey(
-        Environment,
-        on_delete=models.SET_NULL,
-        related_name="username_configs",
-        blank=True,
-        null=True,
-        help_text="Environment variable for username"
-    )
-    password = models.ForeignKey(
-        Environment,
-        on_delete=models.SET_NULL,
-        related_name="password_configs",
-        blank=True,
-        null=True,
-        help_text="Environment variable for password"
-    )
-    secret_key = models.ForeignKey(
-        Environment,
-        on_delete=models.SET_NULL,
-        related_name="secret_key_configs",
-        blank=True,
-        null=True,
-        help_text="Environment variable for secret key/token"
-    )
-
     timeout_seconds = models.IntegerField(default=30, help_text="Connection timeout in seconds")
     retry_attempts = models.IntegerField(default=3, help_text="Number of retry attempts on failure")
-
     # JSON field for additional configuration
     config_data = models.JSONField(default=dict, help_text="Additional configuration parameters")
 
     def __str__(self):
         return f"Connection for {self.protocol.name}"
 
+    def save(self, *args, **kwargs):
+        """
+        convert the config_data field incoming str to JSON before saving.
+        """
+        if isinstance(self.config_data, str) and self.config_data.strip():
+            try:
+                config_data = yaml.safe_load(self.config_data)
+                self.config_data = config_data
+            except yaml.YAMLError as e:
+                raise ValueError(f"Error parsing config_data YAML: {str(e)}")
+        super().save(*args, **kwargs)
 
 class ProtocolRun(BaseModel):
     """

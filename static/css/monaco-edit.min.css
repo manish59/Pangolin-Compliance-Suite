@@ -1,0 +1,79 @@
+/* Monaco Editor minimal CSS */
+.monaco-editor {
+  position: relative;
+  overflow: hidden;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.monaco-editor .overflow-guard {
+  position: relative;
+  overflow: hidden;
+}
+
+.monaco-editor .monaco-scrollable-element {
+  overflow: hidden;
+}
+
+.monaco-editor .scrollbar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 10px;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.monaco-editor .slider {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 10px;
+  background: rgba(100, 100, 100, 0.4);
+}
+
+.monaco-editor .view-lines {
+  font-family: Consolas, "Courier New", monospace;
+  white-space: pre;
+}
+
+.monaco-editor .view-line {
+  position: absolute;
+  width: 100%;
+}
+
+.monaco-editor .view-overlays {
+  position: absolute;
+  top: 0;
+}
+
+/* Dark theme specifics */
+.monaco-editor.vs-dark {
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+}
+
+/* Light theme specifics */
+.monaco-editor.vs {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+/* High contrast theme */
+.monaco-editor.hc-black {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+/* Syntax highlighting - minimal set */
+.monaco-editor .token.comment { color: #6A9955; }
+.monaco-editor .token.string { color: #CE9178; }
+.monaco-editor .token.keyword { color: #569CD6; }
+.monaco-editor .token.number { color: #B5CEA8; }
+.monaco-editor .token.delimiter { color: #D4D4D4; }
+.monaco-editor.vs-dark .token.comment { color: #6A9955; }
+.monaco-editor.vs-dark .token.string { color: #CE9178; }
+.monaco-editor.vs-dark .token.keyword { color: #569CD6; }
+.monaco-editor.vs-dark .token.number { color: #B5CEA8; }
+.monaco-editor.vs-dark .token.delimiter { color: #D4D4D4; }

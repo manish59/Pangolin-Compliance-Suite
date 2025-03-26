@@ -196,15 +196,12 @@ class TestProtocolAdmin(admin.ModelAdmin):
 @admin.register(ConnectionConfig)
 class ConnectionConfigAdmin(admin.ModelAdmin):
     """Admin for ConnectionConfig model"""
-    list_display = ('protocol', 'config_type', 'host', 'port', 'test_connection_button')
+    list_display = ('protocol', 'config_type', 'test_connection_button')
     list_filter = ('config_type',)
-    search_fields = ('protocol__name', 'host')
+    search_fields = ('protocol__name',)
     fieldsets = (
         (None, {
             'fields': ('protocol', 'config_type')
-        }),
-        (_('Connection Details'), {
-            'fields': ('host', 'port', 'username', 'password', 'secret_key')
         }),
         (_('Connection Settings'), {
             'fields': ('timeout_seconds', 'retry_attempts')
@@ -214,7 +211,7 @@ class ConnectionConfigAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
-    raw_id_fields = ('protocol', 'username', 'password', 'secret_key')
+    raw_id_fields = ('protocol',)
 
     def test_connection_button(self, obj):
         """Display a button to test the connection"""

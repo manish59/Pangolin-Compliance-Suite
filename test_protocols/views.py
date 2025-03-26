@@ -19,6 +19,7 @@ from .models import (
     TestProtocol, VerificationMethod, VERIFICATION_METHOD_CHOICES,
     COMPARISON_OPERATOR_CHOICES
 )
+from environments.models import Environment
 from .models import ExecutionStep, TestProtocol, ProtocolRun
 from .models import (
     TestSuite, TestProtocol, ConnectionConfig, ProtocolRun, VerificationMethod, ExecutionStep
@@ -160,16 +161,30 @@ class ConnectionConfigDetailView(DetailView):
 class ConnectionConfigCreateView(CreateView):
     model = ConnectionConfig
     template_name = 'test_protocols/connection_form.html'
-    fields = ['config_type', 'host', 'port', 'username', 'password',
-              'secret_key', 'timeout_seconds', 'retry_attempts', 'config_data']
+    fields = ['protocol', 'config_type',
+               'timeout_seconds', 'retry_attempts', 'config_data']
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
         # Pre-select protocol if passed in URL
         protocol_id = self.kwargs.get('protocol_id')
+        test_protocol = TestProtocol.objects.get(pk=protocol_id)
+        environments = Environment.objects.filter(project=test_protocol.suite.project)
         if protocol_id:
             form.initial['protocol'] = protocol_id
         return form
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        protocol_id = self.kwargs.get('protocol_id')
+        if protocol_id:
+            try:
+                test_protocol = TestProtocol.objects.get(pk=protocol_id)
+                project = test_protocol.suite.project
+                context['environments'] = Environment.objects.filter(project=project)
+            except (TestProtocol.DoesNotExist, Environment.DoesNotExist):
+                context['environments'] = None
+        return context
 
     def form_valid(self, form):
         # Set protocol if it's in the URL
@@ -189,8 +204,24 @@ class ConnectionConfigCreateView(CreateView):
 class ConnectionConfigUpdateView(UpdateView):
     model = ConnectionConfig
     template_name = 'test_protocols/connection_form.html'
-    fields = ['protocol', 'config_type', 'host', 'port', 'username', 'password',
-              'secret_key', 'timeout_seconds', 'retry_attempts', 'config_data']
+    fields = ['protocol', 'config_type',
+               'timeout_seconds', 'retry_attempts', 'config_data']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        test_protocol = context['object'].protocol
+        if test_protocol:
+            try:
+                project = test_protocol.suite.project
+                context['environments'] = Environment.objects.filter(project=project)
+            except (TestProtocol.DoesNotExist, Environment.DoesNotExist):
+                context['environments'] = None
+        return context
+
+    def form_valid(self, form):
+        # Set protocol if it's in the URL
+        return super().form_valid(form)
+
 
     def get_success_url(self):
         return reverse('testsuite:connection_detail', kwargs={'pk': self.object.pk})
