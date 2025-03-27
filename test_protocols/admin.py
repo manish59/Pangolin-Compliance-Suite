@@ -338,7 +338,7 @@ class ExecutionStepAdmin(admin.ModelAdmin):
             'fields': ('test_protocol','name')
         }),
         (_('Execution Parameters'), {
-            'fields': ('kwargs'),
+            'fields': ('kwargs',),
             'description': 'Define positional and keyword arguments for this execution step'
         }),
     )

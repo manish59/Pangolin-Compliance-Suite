@@ -80,38 +80,12 @@
                 </div>
             </dl>
         </div>
-
-        <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-            <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">Step Configuration</h2>
-            <dl class="grid grid-cols-1 gap-x-4 gap-y-2">
-                <div class="sm:col-span-1">
-                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Step ID</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ step.id }}</dd>
-                </div>
-                <!-- More information could be added here as needed -->
-            </dl>
-        </div>
     </div>
 
     <div class="mt-8">
         <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">Execution Parameters</h2>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
-                <div class="px-4 py-3 bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
-                    <h3 class="text-lg font-medium text-gray-800 dark:text-gray-200">Positional Arguments (args)</h3>
-                </div>
-                <div class="p-4">
-                    {% if step.args %}
-                        <div class="bg-gray-50 dark:bg-gray-700 rounded-md p-4 overflow-x-auto">
-                            <pre class="text-sm text-gray-800 dark:text-gray-200 font-mono">{{ step.args|pprint }}</pre>
-                        </div>
-                    {% else %}
-                        <p class="text-sm text-gray-500 dark:text-gray-400">No positional arguments defined.</p>
-                    {% endif %}
-                </div>
-            </div>
-
             <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
                 <div class="px-4 py-3 bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
                     <h3 class="text-lg font-medium text-gray-800 dark:text-gray-200">Keyword Arguments (kwargs)</h3>

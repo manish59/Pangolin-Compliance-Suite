@@ -83,7 +83,6 @@ Execution Steps for {{ protocol.name }}
                 <tr>
                     <th scope="col" class="px-6 py-3">Created</th>
                     <th scope="col" class="px-6 py-3">Last Updated</th>
-                    <th scope="col" class="px-6 py-3">Arguments</th>
                     <th scope="col" class="px-6 py-3">Keyword Arguments</th>
                     <th scope="col" class="px-6 py-3">Actions</th>
                 </tr>
@@ -96,19 +95,6 @@ Execution Steps for {{ protocol.name }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         {{ step.updated_at|date:"M d, Y H:i" }}
-                    </td>
-                    <td class="px-6 py-4">
-                        <div class="max-w-xs truncate font-mono text-xs">
-                            {% if step.args %}
-                                {% if step.args|length > 0 %}
-                                    {{ step.args|pprint|truncatechars:40 }}
-                                {% else %}
-                                    <span class="text-gray-400">Empty array</span>
-                                {% endif %}
-                            {% else %}
-                                <span class="text-gray-400">No arguments</span>
-                            {% endif %}
-                        </div>
                     </td>
                     <td class="px-6 py-4">
                         <div class="max-w-xs truncate font-mono text-xs">

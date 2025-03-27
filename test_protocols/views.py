@@ -460,7 +460,7 @@ class ExecutionStepCreateView(LoginRequiredMixin, CreateView):
     """View for creating a new execution step"""
     model = ExecutionStep
     template_name = 'test_protocols/execution_step_form.html'
-    fields = ['name', 'args', 'kwargs']  # This looks correct
+    fields = ['name', 'kwargs']  # This looks correct
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -498,7 +498,7 @@ class ExecutionStepUpdateView(LoginRequiredMixin, UpdateView):
     """View for updating an execution step"""
     model = ExecutionStep
     template_name = 'test_protocols/execution_step_form.html'
-    fields = ['args', 'kwargs']
+    fields = ['kwargs']
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

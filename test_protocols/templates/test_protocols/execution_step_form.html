@@ -96,31 +96,16 @@
             </div>
 
             <div>
-                <label for="id_args" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Positional Arguments (args)
-                </label>
-                <div class="mt-1">
-                    <textarea name="args" id="id_args" rows="6"
-                             class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md font-mono"
-                             placeholder='["value1", "value2", 123]'>{{ form.args.value|default:"[]" }}</textarea>
-                </div>
-                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                    Provide positional arguments as a JSON array. Example: ["value1", "value2", 123]
-                </p>
-                {% if form.args.errors %}
-                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.args.errors.0 }}</p>
-                {% endif %}
-            </div>
-
-            <div>
                 <label for="id_kwargs" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Keyword Arguments (kwargs)
                 </label>
-                <div class="mt-1">
-                    <textarea name="kwargs" id="id_kwargs" rows="8"
-                             class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md font-mono"
-                             placeholder='{"param1": "value1", "param2": 123, "param3": true}'>{{ form.kwargs.value|default:"{}" }}</textarea>
-                </div>
+ <div class="mt-1">
+            {% include "test_protocols/yaml_editor.html" with field_name="kwargs" initial_content=form.config_data.value label="Additional Configuration" help_text="Enter configuration data in YAML format. This will be used to configure the connection based on the selected type." required=False %}
+
+            {% if form.config_data.errors %}
+            <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.config_data.errors.0 }}</p>
+            {% endif %}
+        </div>
                 <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
                     Provide keyword arguments as a JSON object. Example: {"param1": "value1", "param2": 123, "param3": true}
                 </p>
@@ -152,59 +137,4 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    // Add JSON validation functionality
-    document.addEventListener('DOMContentLoaded', function() {
-        const argsField = document.getElementById('id_args');
-        const kwargsField = document.getElementById('id_kwargs');
-
-        function validateJsonField(field) {
-            const value = field.value.trim();
-            if (!value) return true;
-
-            try {
-                JSON.parse(value);
-                field.classList.remove('border-red-500');
-                return true;
-            } catch (e) {
-                field.classList.add('border-red-500');
-                return false;
-            }
-        }
-
-        function formatJson(field) {
-            const value = field.value.trim();
-            if (!value) return;
-
-            try {
-                const parsed = JSON.parse(value);
-                field.value = JSON.stringify(parsed, null, 2);
-            } catch (e) {
-                console.log(e);
-            }
-        }
-
-        // Add event listeners for validation
-        argsField.addEventListener('blur', function() {
-            validateJsonField(argsField);
-            formatJson(argsField);
-        });
-
-        kwargsField.addEventListener('blur', function() {
-            validateJsonField(kwargsField);
-            formatJson(kwargsField);
-        });
-
-        // Add form submission validation
-        document.querySelector('form').addEventListener('submit', function(e) {
-            const argsValid = validateJsonField(argsField);
-            const kwargsValid = validateJsonField(kwargsField);
-
-            if (!argsValid || !kwargsValid) {
-                e.preventDefault();
-                alert('Please fix the JSON errors before submitting the form.');
-            }
-        });
-    });
-</script>
 {% endblock %}
