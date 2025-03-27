@@ -239,11 +239,6 @@ class ExecutionStep(BaseModel):
     """
     name= models.CharField(max_length=100, default=None, null=True, blank=True)
     test_protocol = models.ForeignKey(TestProtocol, on_delete=models.CASCADE, related_name='steps')
-    args = models.JSONField(
-        default=list,
-        help_text=_("Positional arguments (args) as a JSON array")
-    )
-
     # Keyword arguments (kwargs) stored as JSON object
     kwargs = models.JSONField(
         default=dict,
