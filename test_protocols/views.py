@@ -1,3 +1,4 @@
+import json
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.urls import reverse_lazy, reverse
@@ -8,6 +9,7 @@ from django.shortcuts import redirect, get_object_or_404
 from django.contrib import messages
 from django.urls import reverse
 from django.http import HttpResponseRedirect
+from django.utils.safestring import mark_safe
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View
 from django.urls import reverse_lazy, reverse
@@ -177,6 +179,7 @@ class ConnectionConfigCreateView(CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         protocol_id = self.kwargs.get('protocol_id')
+        context['field_name'] = 'config_data'
         if protocol_id:
             try:
                 test_protocol = TestProtocol.objects.get(pk=protocol_id)
@@ -210,18 +213,21 @@ class ConnectionConfigUpdateView(UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         test_protocol = context['object'].protocol
+        config_data = context['object'].config_data
         if test_protocol:
             try:
+                import  yaml
                 project = test_protocol.suite.project
                 context['environments'] = Environment.objects.filter(project=project)
+                if isinstance(config_data, str):
+                    value = json.loads(config_data)
+                    yaml_string = yaml.dump(value, default_flow_style=False,
+                                            indent=2,sort_keys=False)
+                    context['object'].config_data = mark_safe(yaml_string)
+                # context['object'].config_data = yaml.load(context['object'].config_data)
             except (TestProtocol.DoesNotExist, Environment.DoesNotExist):
                 context['environments'] = None
         return context
-
-    def form_valid(self, form):
-        # Set protocol if it's in the URL
-        return super().form_valid(form)
-
 
     def get_success_url(self):
         return reverse('testsuite:connection_detail', kwargs={'pk': self.object.pk})

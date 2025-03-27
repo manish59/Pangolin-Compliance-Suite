@@ -1,6 +1,7 @@
+import yaml
 from django import template
 from django.db.models import QuerySet
-
+from django.utils.safestring import mark_safe
 register = template.Library()
 
 
@@ -80,3 +81,40 @@ def divisibleby(value, arg):
         return int(float(value) // float(arg))
     except (ValueError, TypeError):
         return 0
+
+@register.filter
+def to_yaml(value, indent=2):
+    """
+    Convert a Python object (from JSON string or dict) to YAML formatted string.
+    Usage: {{ value|to_yaml }}
+    """
+    if isinstance(value, str):
+        # Try to parse as JSON first
+        import json
+        try:
+            value = json.loads(value)
+        except json.JSONDecodeError:
+            # If it's not valid JSON, return as is
+            pass
+
+    try:
+        # Convert to YAML
+        yaml_string = yaml.dump(
+            value,
+            default_flow_style=False,
+            indent=indent,
+            sort_keys=False
+        )
+        return mark_safe(yaml_string)
+    except Exception as e:
+        return f"Error converting to YAML: {str(e)}"
+
+
+@register.filter
+def pretty_yaml(value, indent=2):
+    """
+    Same as to_yaml but with <pre> tags for display in HTML.
+    Usage: {{ value|pretty_yaml }}
+    """
+    yaml_string = to_yaml(value, indent)
+    return mark_safe(f'<pre class="yaml-output">{yaml_string}</pre>')

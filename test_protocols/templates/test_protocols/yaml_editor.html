@@ -1,23 +1,20 @@
 {% comment %}
-Self-contained YAML Editor Component with built-in CSS and JavaScript
+Enhanced YAML Editor Component with built-in styling and functionality
 
 Usage:
 1. Include this template where you want the YAML editor to appear
-2. No external CSS or JS files are needed
-3. Pass the required parameters to customize the editor
+2. Pass the required parameters to customize the editor
 
 Example:
-{% include "components/yaml_editor.html" with
+{% include "test_protocols/yaml_editor.html" with
     field_name="config_data"
     initial_content=form.config_data.value
     label="Configuration"
     help_text="Enter YAML configuration data"
     required=True
-    font_size=16
 %}
 {% endcomment %}
-
-<div id="{{ field_name }}_container" class="yaml-editor-container" style="margin-bottom: 1.5rem;">
+<div id="{{ field_name }}_container" class="yaml-editor-container">
     <!-- Label for the editor -->
     <label for="{{ field_name }}_editor" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
         {{ label|default:"YAML Content" }}
@@ -30,292 +27,320 @@ Example:
         id="{{ field_name }}"
         style="display: none;"
         {% if required %}required{% endif %}
-    >{{ initial_content|default:"" }}</textarea>
+    >{{ initial_content }}</textarea>
 
-    <!-- The editor container div -->
-    <div
-        id="{{ field_name }}_editor"
-        style="width: 100%; min-height: 16rem; border: 1px solid #e5e7eb; border-radius: 0.375rem; overflow: hidden; font-family: 'Consolas', 'Monaco', 'Courier New', monospace;"
-        data-field-name="{{ field_name }}"
-    ></div>
+    <!-- Editor container with line numbers and textarea -->
+    <div class="editor-container" style="border: 1px solid #e5e7eb; border-radius: 0.375rem; overflow: hidden; height: 300px; margin-bottom: 1rem; background-color: #1e1e1e;">
+        <div class="editor-wrapper" style="display: flex; width: 100%; height: 100%;">
+            <div class="line-numbers" id="{{ field_name }}_line_numbers" style="width: 40px; text-align: right; padding: 15px 5px 15px 15px; background-color: #1e1e1e; color: #6e6e6e; font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace; font-size: 14px; line-height: 1.5; border-right: 1px solid #333; user-select: none; overflow: hidden;"></div>
+            <textarea
+                id="{{ field_name }}_editor"
+                style="width: 100%; height: 100%; font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace; font-size: 14px; padding: 15px; border: none; resize: none; outline: none; tab-size: 2; line-height: 1.5; background-color: #1e1e1e; color: #d4d4d4; overflow: auto; white-space: pre;"
+                spellcheck="false"
+                wrap="off"
+            >{{ initial_content }}</textarea>
+        </div>
+    </div>
 
-    <!-- Optional help text -->
-    {% if help_text %}
-    <p style="margin-top: 0.25rem; font-size: 0.75rem; color: #6b7280; font-style: italic;">
-        {{ help_text }}
-    </p>
-    {% endif %}
-
-    <!-- Validation message and buttons -->
-    <div style="display: flex; align-items: center; margin-top: 0.5rem; justify-content: space-between;">
-        <div id="{{ field_name }}_validation_message" style="min-height: 1.5rem; font-size: 0.75rem;"></div>
-        <div style="display: flex; gap: 0.5rem;">
-            <button
-                type="button"
-                id="{{ field_name }}_format"
-                style="padding: 0.25rem 0.5rem; font-size: 0.75rem; font-weight: 500; border-radius: 0.25rem; color: #1d4ed8; background-color: #dbeafe; transition: all 0.2s;"
-                onmouseover="this.style.backgroundColor='#bfdbfe'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 2px 4px rgba(0, 0, 0, 0.1)';"
-                onmouseout="this.style.backgroundColor='#dbeafe'; this.style.transform=''; this.style.boxShadow='';"
-            >
-                Format YAML
+    <!-- Validation message and action buttons -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <div>
+            <div id="{{ field_name }}_error_container" class="error" style="color: #e74c3c; padding: 8px; background-color: #fdecea; border-left: 4px solid #e74c3c; margin: 5px 0; display: none;"></div>
+            <div id="{{ field_name }}_success_container" class="success" style="color: #27ae60; padding: 8px; background-color: #e7fde8; border-left: 4px solid #2ecc71; margin: 5px 0; display: none;">YAML is valid</div>
+        </div>
+        <div class="toolbar" style="display: flex; gap: 8px;">
+            <button type="button" id="{{ field_name }}_format" class="px-3 py-1 text-xs font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800">
+                Format
             </button>
-            <button
-                type="button"
-                id="{{ field_name }}_validate"
-                style="padding: 0.25rem 0.5rem; font-size: 0.75rem; font-weight: 500; border-radius: 0.25rem; color: #047857; background-color: #d1fae5; transition: all 0.2s;"
-                onmouseover="this.style.backgroundColor='#a7f3d0'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 2px 4px rgba(0, 0, 0, 0.1)';"
-                onmouseout="this.style.backgroundColor='#d1fae5'; this.style.transform=''; this.style.boxShadow='';"
-            >
-                Validate
+            <button type="button" id="{{ field_name }}_beautify" class="px-3 py-1 text-xs font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200 dark:bg-green-900 dark:text-green-300 dark:hover:bg-green-800">
+                Beautify
+            </button>
+            <button type="button" id="{{ field_name }}_copy" class="px-3 py-1 text-xs font-medium rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">
+                Copy
+            </button>
+            <button type="button" id="{{ field_name }}_clear" class="px-3 py-1 text-xs font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 dark:bg-red-900 dark:text-red-300 dark:hover:bg-red-800">
+                Clear
             </button>
         </div>
     </div>
+
+    <!-- Optional help text -->
+    {% if help_text %}
+    <p class="text-xs text-gray-500 dark:text-gray-400 italic">
+        {{ help_text }}
+    </p>
+    {% endif %}
 </div>
 
 <script>
 (function() {
     // Immediately-invoked function expression to avoid polluting global scope
     const fieldName = "{{ field_name }}";
-    const fontSize = {{ font_size|default:14 }};
+    let validationTimer;
+    const VALIDATION_DELAY = 500; // ms
+    let lastValidJson = '{}'; // Store the last valid JSON
 
     // Initialize editor when DOM is loaded
     document.addEventListener('DOMContentLoaded', function() {
-        initializeYamlEditor(fieldName, fontSize);
+        initializeYamlEditor(fieldName);
     });
 
-    function initializeYamlEditor(fieldName, fontSize) {
-        // Load dependencies if needed
-        loadDependencies(function() {
-            // Try to create Monaco editor with fallback
-            createEditor(fieldName, fontSize);
-        });
-    }
+    function initializeYamlEditor(fieldName) {
+        const editor = document.getElementById(`${fieldName}_editor`);
+        const hiddenTextarea = document.getElementById(fieldName);
+        const lineNumbers = document.getElementById(`${fieldName}_line_numbers`);
+        const errorContainer = document.getElementById(`${fieldName}_error_container`);
+        const successContainer = document.getElementById(`${fieldName}_success_container`);
+        const formatBtn = document.getElementById(`${fieldName}_format`);
+        const beautifyBtn = document.getElementById(`${fieldName}_beautify`);
+        const copyBtn = document.getElementById(`${fieldName}_copy`);
+        const clearBtn = document.getElementById(`${fieldName}_clear`);
 
-    function loadDependencies(callback) {
-        // Load Monaco if not available
-        if (typeof monaco === 'undefined') {
-            // First check if require is available
-            if (typeof require === 'undefined') {
-                loadScript('https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.min.js', function() {
-                    require.config({
-                        paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' }
-                    });
+        // Load js-yaml library if not already loaded
+        if (typeof jsyaml === 'undefined') {
+            loadScript('https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js', function() {
+                setupEditor();
+            });
+        } else {
+            setupEditor();
+        }
 
-                    // Check for js-yaml
-                    if (typeof jsyaml === 'undefined') {
-                        loadScript('https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js', callback);
-                    } else {
-                        callback();
+        function setupEditor() {
+            // Initial setup
+            updateLineNumbers();
+            validateYaml();
+            setupFormSubmission();
+
+            // Update the hidden textarea with JSON data
+            function updateHiddenTextarea() {
+                try {
+                    const yamlContent = editor.value.trim();
+
+                    if (!yamlContent) {
+                        // For empty content, set empty JSON object
+                        hiddenTextarea.value = '{}';
+                        lastValidJson = '{}';
+                        return;
                     }
-                });
-            } else {
-                // Require exists, configure and load Monaco
-                require.config({
-                    paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' }
-                });
 
-                // Check for js-yaml
-                if (typeof jsyaml === 'undefined') {
-                    loadScript('https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js', callback);
-                } else {
-                    callback();
+                    // Parse YAML and convert to JSON string
+                    const parsedData = jsyaml.load(yamlContent);
+                    const jsonData = JSON.stringify(parsedData);
+                    hiddenTextarea.value = jsonData;
+                    lastValidJson = jsonData;
+                } catch (error) {
+                    // If conversion fails during editing, keep last valid JSON
+                    console.log("YAML parsing not yet complete, keeping last valid JSON");
+                    // Don't update hiddenTextarea here - keep the last valid value
                 }
             }
-        } else if (typeof jsyaml === 'undefined') {
-            // Monaco exists but js-yaml doesn't
-            loadScript('https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js', callback);
-        } else {
-            // Both dependencies are loaded
-            callback();
+
+            // Update line numbers
+            function updateLineNumbers() {
+                const linesCount = editor.value.split('\n').length;
+                let lineNumbersHtml = '';
+
+                for (let i = 1; i <= linesCount; i++) {
+                    lineNumbersHtml += i + '<br>';
+                }
+
+                lineNumbers.innerHTML = lineNumbersHtml;
+            }
+
+            // Validate YAML
+            function validateYaml() {
+                try {
+                    const yamlContent = editor.value;
+                    if (!yamlContent.trim()) {
+                        errorContainer.style.display = 'none';
+                        successContainer.style.display = 'none';
+                        return false;
+                    }
+
+                    jsyaml.load(yamlContent);
+                    errorContainer.style.display = 'none';
+                    successContainer.style.display = 'block';
+                    updateHiddenTextarea(); // Update JSON on successful validation
+                    return true;
+                } catch (error) {
+                    errorContainer.textContent = `Error: ${error.message}`;
+                    errorContainer.style.display = 'block';
+                    successContainer.style.display = 'none';
+                    return false;
+                }
+            }
+
+            // Setup form submission handler
+            function setupFormSubmission() {
+                const editorContainer = document.getElementById(`${fieldName}_container`);
+                if (!editorContainer) return;
+
+                // Find the parent form
+                let formElement = editorContainer;
+                while (formElement && formElement.tagName !== 'FORM') {
+                    formElement = formElement.parentElement;
+                }
+
+                if (!formElement) {
+                    console.error(`Could not find parent form for field "${fieldName}"`);
+                    return;
+                }
+
+                // Add submit event handler to the form
+                formElement.addEventListener('submit', function(event) {
+                    try {
+                        const yamlContent = editor.value.trim();
+
+                        if (!yamlContent) {
+                            hiddenTextarea.value = '{}';
+                            return; // Allow submission with empty object
+                        }
+
+                        // Final attempt to convert YAML to JSON before submission
+                        const parsedData = jsyaml.load(yamlContent);
+                        hiddenTextarea.value = JSON.stringify(parsedData);
+
+                    } catch (error) {
+                        // If YAML is invalid at submission time, prevent form submission
+                        event.preventDefault();
+
+                        // Show error message
+                        errorContainer.textContent = `Cannot submit: Invalid YAML: ${error.message}`;
+                        errorContainer.style.display = 'block';
+                        successContainer.style.display = 'none';
+
+                        // Scroll to the error
+                        editorContainer.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            }
+
+            // Format YAML
+            function formatYaml() {
+                try {
+                    const yamlContent = editor.value;
+                    const parsedYaml = jsyaml.load(yamlContent);
+                    editor.value = jsyaml.dump(parsedYaml);
+                    updateLineNumbers();
+                    validateYaml(); // This will also update the hidden textarea
+                } catch (error) {
+                    errorContainer.textContent = `Error: ${error.message}`;
+                    errorContainer.style.display = 'block';
+                    successContainer.style.display = 'none';
+                }
+            }
+
+            // Beautify YAML (sorted keys, proper indentation)
+            function beautifyYaml() {
+                try {
+                    const yamlContent = editor.value;
+                    const parsedYaml = jsyaml.load(yamlContent);
+                    editor.value = jsyaml.dump(parsedYaml, {
+                        indent: 2,
+                        lineWidth: -1, // No line wrapping
+                        noRefs: true,
+                        sortKeys: true
+                    });
+                    updateLineNumbers();
+                    validateYaml(); // This will also update the hidden textarea
+                } catch (error) {
+                    errorContainer.textContent = `Error: ${error.message}`;
+                    errorContainer.style.display = 'block';
+                    successContainer.style.display = 'none';
+                }
+            }
+
+            // Event listeners
+            editor.addEventListener('input', function() {
+                updateLineNumbers();
+
+                // Debounce validation
+                clearTimeout(validationTimer);
+                validationTimer = setTimeout(function() {
+                    if (validateYaml()) {
+                        // Only update the hidden textarea if YAML is valid
+                        updateHiddenTextarea();
+                    }
+                }, VALIDATION_DELAY);
+            });
+
+            editor.addEventListener('keydown', function(e) {
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+
+                    // Get cursor position
+                    const start = this.selectionStart;
+                    const end = this.selectionEnd;
+
+                    // Insert 2 spaces for indentation
+                    this.value = this.value.substring(0, start) + '  ' + this.value.substring(end);
+
+                    // Put cursor after the inserted spaces
+                    this.selectionStart = this.selectionEnd = start + 2;
+
+                    // Update line numbers and validate
+                    updateLineNumbers();
+                    clearTimeout(validationTimer);
+                    validationTimer = setTimeout(function() {
+                        if (validateYaml()) {
+                            updateHiddenTextarea();
+                        }
+                    }, VALIDATION_DELAY);
+                }
+            });
+
+            editor.addEventListener('scroll', function() {
+                lineNumbers.scrollTop = editor.scrollTop;
+            });
+
+            formatBtn.addEventListener('click', formatYaml);
+            beautifyBtn.addEventListener('click', beautifyYaml);
+
+            copyBtn.addEventListener('click', function() {
+                editor.select();
+                document.execCommand('copy');
+                // Visual feedback
+                copyBtn.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyBtn.textContent = 'Copy';
+                }, 1000);
+            });
+
+            clearBtn.addEventListener('click', function() {
+                editor.value = '';
+                hiddenTextarea.value = '{}'; // Set empty JSON object
+                lastValidJson = '{}';
+                updateLineNumbers();
+                errorContainer.style.display = 'none';
+                successContainer.style.display = 'none';
+            });
+
+            // Save the editor instance to the container for potential external access
+            const editorContainer = document.getElementById(`${fieldName}_container`);
+            if (editorContainer) {
+                editorContainer.editor = {
+                    type: 'yaml',
+                    element: editor,
+                    getValue: function() { return editor.value; },
+                    setValue: function(value) {
+                        editor.value = value;
+                        updateLineNumbers();
+                        validateYaml();
+                    }
+                };
+            }
         }
     }
 
+    // Helper function to load external scripts
     function loadScript(url, callback) {
         const script = document.createElement('script');
         script.src = url;
         script.onload = callback;
         script.onerror = function() {
             console.error('Failed to load script:', url);
-            // Try to create simple editor if script loading fails
-            createSimpleEditor(fieldName, fontSize);
         };
         document.head.appendChild(script);
-    }
-
-    function createEditor(fieldName, fontSize) {
-        // Set a timeout for Monaco loading
-        const timeout = setTimeout(function() {
-            console.warn('Monaco editor load timeout - falling back to simple editor');
-            createSimpleEditor(fieldName, fontSize);
-        }, 5000);
-
-        try {
-            // Try to load Monaco
-            require(['vs/editor/editor.main'], function() {
-                clearTimeout(timeout);
-
-                try {
-                    // Get elements
-                    const editorContainer = document.getElementById(`${fieldName}_editor`);
-                    const textarea = document.getElementById(fieldName);
-
-                    if (!editorContainer || !textarea) {
-                        throw new Error('Editor container or textarea not found');
-                    }
-
-                    // Create Monaco editor
-                    const editor = monaco.editor.create(editorContainer, {
-                        value: textarea.value || '{}',
-                        language: 'yaml',
-                        theme: document.documentElement.classList.contains('dark') ? 'vs-dark' : 'vs',
-                        automaticLayout: true,
-                        minimap: { enabled: false },
-                        lineNumbers: 'on',
-                        scrollBeyondLastLine: false,
-                        wordWrap: 'on',
-                        wrappingIndent: 'indent',
-                        tabSize: 2,
-                        readOnly: false,
-                        fontSize: fontSize,
-                        fontFamily: 'Consolas, "Courier New", monospace',
-                        fontWeight: 'normal',
-                        lineHeight: fontSize * 1.5
-                    });
-
-                    // Ensure editor is not readonly
-                    editor.updateOptions({ readOnly: false, tabIndex: 0 });
-
-                    // Focus editor
-                    setTimeout(() => { editor.focus(); }, 100);
-
-                    // Update textarea when editor content changes
-                    editor.onDidChangeModelContent(function() {
-                        textarea.value = editor.getValue();
-                    });
-
-                    // Setup format and validate buttons
-                    setupButtons(fieldName, editor);
-
-                    // Save the editor instance to the container
-                    editorContainer.editor = editor;
-
-                } catch (error) {
-                    console.error('Error creating Monaco editor:', error);
-                    createSimpleEditor(fieldName, fontSize);
-                }
-            }, function(error) {
-                clearTimeout(timeout);
-                console.error('Failed to load Monaco editor:', error);
-                createSimpleEditor(fieldName, fontSize);
-            });
-        } catch (error) {
-            clearTimeout(timeout);
-            console.error('Error initializing Monaco:', error);
-            createSimpleEditor(fieldName, fontSize);
-        }
-    }
-
-    function createSimpleEditor(fieldName, fontSize) {
-        console.log(`Setting up simple textarea editor for ${fieldName}`);
-
-        const editorContainer = document.getElementById(`${fieldName}_editor`);
-        const hiddenTextarea = document.getElementById(fieldName);
-
-        if (!editorContainer || !hiddenTextarea) {
-            console.error('Editor container or textarea not found');
-            return;
-        }
-
-        // Create a visible textarea
-        const visibleTextarea = document.createElement('textarea');
-        visibleTextarea.value = hiddenTextarea.value || '{}';
-        visibleTextarea.style.width = '100%';
-        visibleTextarea.style.height = '100%';
-        visibleTextarea.style.minHeight = '16rem';
-        visibleTextarea.style.padding = '0.5rem';
-        visibleTextarea.style.fontFamily = 'Consolas, "Courier New", monospace';
-        visibleTextarea.style.fontSize = `${fontSize}px`;
-        visibleTextarea.style.lineHeight = '1.5';
-        visibleTextarea.style.border = 'none';
-        visibleTextarea.style.outline = 'none';
-        visibleTextarea.style.resize = 'vertical';
-
-        // Sync changes to the hidden textarea
-        visibleTextarea.addEventListener('input', function() {
-            hiddenTextarea.value = visibleTextarea.value;
-        });
-
-        // Replace the editor container's content
-        editorContainer.innerHTML = '';
-        editorContainer.appendChild(visibleTextarea);
-
-        // Setup format and validate buttons
-        setupButtons(fieldName, {
-            getValue: function() { return visibleTextarea.value; },
-            setValue: function(value) {
-                visibleTextarea.value = value;
-                hiddenTextarea.value = value;
-            }
-        });
-
-        // Save the editor instance to the container
-        editorContainer.editor = {
-            type: 'simple',
-            element: visibleTextarea,
-            getValue: function() { return visibleTextarea.value; },
-            setValue: function(value) {
-                visibleTextarea.value = value;
-                hiddenTextarea.value = value;
-            }
-        };
-    }
-
-    function setupButtons(fieldName, editor) {
-        // Get the buttons and validation message element
-        const formatButton = document.getElementById(`${fieldName}_format`);
-        const validateButton = document.getElementById(`${fieldName}_validate`);
-        const validationMsg = document.getElementById(`${fieldName}_validation_message`);
-
-        // Setup format button
-        if (formatButton && typeof jsyaml !== 'undefined') {
-            formatButton.addEventListener('click', function() {
-                try {
-                    const content = editor.getValue();
-                    const parsedYaml = jsyaml.load(content);
-                    const formatted = jsyaml.dump(parsedYaml, {
-                        indent: 2,
-                        lineWidth: -1,
-                        noRefs: true,
-                        sortKeys: true
-                    });
-                    editor.setValue(formatted);
-                } catch (e) {
-                    if (validationMsg) {
-                        validationMsg.textContent = `Error formatting YAML: ${e.message}`;
-                        validationMsg.style.color = '#ef4444'; // Red
-                    }
-                }
-            });
-        }
-
-        // Setup validate button
-        if (validateButton && typeof jsyaml !== 'undefined') {
-            validateButton.addEventListener('click', function() {
-                try {
-                    jsyaml.load(editor.getValue());
-                    if (validationMsg) {
-                        validationMsg.textContent = 'YAML is valid';
-                        validationMsg.style.color = '#10b981'; // Green
-                        setTimeout(() => { validationMsg.textContent = ''; }, 3000);
-                    }
-                } catch (e) {
-                    if (validationMsg) {
-                        validationMsg.textContent = `YAML error: ${e.message}`;
-                        validationMsg.style.color = '#ef4444'; // Red
-                    }
-                }
-            });
-        }
     }
 })();
 </script>

@@ -2,10 +2,6 @@
 {% load static %}
 
 {% block extra_css %}
-<!-- Monaco Editor CSS -->
-<link rel="stylesheet" href="{% static 'css/monaco-editor.min.css' %}">
-<!-- Custom YAML Editor CSS -->
-<link rel="stylesheet" href="{% static 'css/yaml_editor.css' %}">
 <style>
     .env-var-selector {
         margin-bottom: 1rem;
@@ -150,7 +146,7 @@
                 <select id="env_var_selector" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 flex-grow text-base px-4 py-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
                     <option value="">Select an environment variable</option>
                     {% for choice in environments %}
-                        <option value="{{ choice.name }}">{{ choice.key }}</option>
+                        <option value="{{ choice.pk }}">{{ choice.project.name }} : {{ choice.key }}</option>
                     {% endfor %}
                 </select>
                 <button type="button" id="insert_env_var" class="insert-btn px-4 py-2 bg-indigo-600 text-white rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
@@ -198,55 +194,70 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Environment variable insertion
+// Directly add the event listener without waiting for DOMContentLoaded
+// Immediately executed function without waiting for DOM loaded
+(function() {
+    console.log("Script executing immediately");
+
+    // Get references to the elements
     const envVarSelector = document.getElementById('env_var_selector');
     const insertButton = document.getElementById('insert_env_var');
 
-    insertButton.addEventListener('click', function() {
-        const selectedVar = envVarSelector.value;
-        if (!selectedVar) return;
+    // Check if elements exist
+    if (envVarSelector && insertButton) {
+        insertButton.onclick = function(event) {
+            event.preventDefault();
+            console.log("Insert button clicked");
 
-        // Get the editor instance from the container
-        const editorContainer = document.getElementById('config_data_editor');
-        if (editorContainer && editorContainer.editor) {
-            // Different handling based on editor type
-            if (editorContainer.editor.type === 'simple') {
-                // Simple textarea editor
-                const textarea = editorContainer.editor.element;
-                const cursorPos = textarea.selectionStart;
-                const textBefore = textarea.value.substring(0, cursorPos);
-                const textAfter = textarea.value.substring(cursorPos);
-
-                // Insert the environment variable reference
-                textarea.value = `${textBefore}${selectedVar}${textAfter}`;
-
-                // Update the linked hidden textarea
-                document.getElementById('config_data').value = textarea.value;
-
-                // Set cursor position after inserted text
-                textarea.focus();
-                textarea.selectionStart = textarea.selectionEnd = cursorPos + selectedVar.length;
-            } else if (typeof monaco !== 'undefined') {
-                // Monaco editor
-                const editor = editorContainer.editor;
-                const selection = editor.getSelection();
-                const id = { major: 1, minor: 1 };
-                const op = {
-                    identifier: id,
-                    range: selection,
-                    text: selectedVar,
-                    forceMoveMarkers: true
-                };
-                editor.executeEdits("env-var-insertion", [op]);
-                editor.focus();
+            // Get the selected variable
+            const selectedVar = envVarSelector.value;
+            if (!selectedVar) {
+                console.log("No variable selected");
+                return;
             }
-        }
-    });
 
-    // Initial update of config hints
-    updateConfigHints();
-});
+            // Format with ${} syntax
+            const formattedVar = "${" + selectedVar + "}";
+            console.log("Formatted variable:", formattedVar);
+
+            // Find the editor textarea directly (no Monaco)
+            const editorTextarea = document.querySelector('#config_data_editor textarea');
+            const hiddenTextarea = document.getElementById('config_data');
+
+            console.log("Editor textarea found:", !!editorTextarea);
+            console.log("Hidden textarea found:", !!hiddenTextarea);
+
+            if (editorTextarea) {
+                // Insert at cursor position
+                const cursorPos = editorTextarea.selectionStart;
+                const textBefore = editorTextarea.value.substring(0, cursorPos);
+                const textAfter = editorTextarea.value.substring(cursorPos);
+
+                // Update visible textarea
+                editorTextarea.value = textBefore + formattedVar + textAfter;
+
+                // Update hidden textarea if it exists
+                if (hiddenTextarea) {
+                    hiddenTextarea.value = editorTextarea.value;
+                }
+
+                // Set focus back to the editor
+                editorTextarea.focus();
+                editorTextarea.selectionStart = editorTextarea.selectionEnd = cursorPos + formattedVar.length;
+
+                console.log("Variable inserted successfully");
+            } else {
+                console.log("Editor textarea not found");
+            }
+
+            return false; // Prevent default and stop propagation
+        };
+
+        console.log("Click handler assigned to insert button");
+    } else {
+        console.log("Required elements not found");
+    }
+})();
 
 function updateConfigHints() {
     const configType = document.getElementById('id_config_type').value;
