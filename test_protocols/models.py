@@ -80,6 +80,8 @@ class ConnectionConfig(BaseModel):
                 self.config_data = config_data
             except yaml.YAMLError as e:
                 raise ValueError(f"Error parsing config_data YAML: {str(e)}")
+        name = f"{self.config_type.upper()} - {self.protocol.name}"
+        self.config_data['name'] = name
         super().save(*args, **kwargs)
 
 class ProtocolRun(BaseModel):

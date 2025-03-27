@@ -6,7 +6,7 @@ establishing and managing connections across different services.
 
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, Optional
-
+from dataclasses import fields
 
 @dataclass(kw_only=True)
 class BaseConfig:
@@ -30,6 +30,24 @@ class BaseConfig:
     max_retries: int = 3
     retry_interval: int = 5
     retry_backoff: float = 1.5
+
+    @classmethod
+    def from_dict(cls, config_dict):
+        """
+        Create a configuration instance from a dictionary.
+
+        Args:
+            config_dict (dict): Dictionary with configuration values
+
+        Returns:
+            An instance of the configuration class
+        """
+        # Get valid field names for this class
+        valid_keys = {f.name for f in fields(cls)}
+        filtered_dict = {k: v for k, v in config_dict.items() if k in valid_keys}
+
+        # Create and return the instance
+        return cls(**filtered_dict)
 
     def get_info(self) -> Dict[str, Any]:
         """Convert the configuration to a dictionary.

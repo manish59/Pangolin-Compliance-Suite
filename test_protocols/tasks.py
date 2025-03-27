@@ -4,7 +4,6 @@ import logging
 import json
 from datetime import datetime
 from uuid import UUID
-
 from django.utils import timezone
 from test_protocols.models import (
     TestProtocol,
@@ -15,6 +14,7 @@ from test_protocols.models import (
     ExecutionStep,
     VerificationResult,
 )
+from environments.models import Environment
 
 # Import Pangolin SDK modules
 from pangolin_sdk.constants import (
@@ -69,17 +69,18 @@ def create_connection(connection_config):
         ValueError: If connection type is not supported
     """
     # Get environment variables from the ConnectionConfig
-    env_vars = {}
-    if connection_config.username:
-        env_vars['username'] = connection_config.username.get_actual_value()
-    if connection_config.password:
-        env_vars['password'] = connection_config.password.get_actual_value()
-    if connection_config.secret_key:
-        env_vars['secret_key'] = connection_config.secret_key.get_actual_value()
 
     # Get custom config data for each connection type
     config_data = connection_config.config_data or {}
-
+    for key in config_data:
+        try:
+            environment_pk = UUID(config_data[key])
+            environment = Environment.objects.get(pk=environment_pk)
+            value = environment.get_actual_value()
+            if value:
+                config_data[key] = value
+        except (ValueError, AttributeError, TypeError):
+             continue
     if connection_config.config_type == 'database':
         # Create database connection
         db_type = config_data.get('database_type', 'postgresql')
@@ -98,8 +99,8 @@ def create_connection(connection_config):
             host=connection_config.host,
             port=connection_config.port,
             database=config_data.get('database'),
-            username=env_vars.get('username'),
-            password=env_vars.get('password'),
+            username=config_data.get('username'),
+            password=config_data.get('password'),
             database_type=db_type_map.get(db_type, DatabaseType.POSTGRESQL),
             timeout=connection_config.timeout_seconds,
             max_retries=connection_config.retry_attempts,
@@ -128,10 +129,10 @@ def create_connection(connection_config):
             name=f"api_connection_{connection_config.id}",
             host=connection_config.host,
             port=connection_config.port,
-            username=env_vars.get('username'),
-            password=env_vars.get('password'),
+            username=config_data.get('username'),
+            password=config_data.get('password'),
             auth_method=auth_method_map.get(auth_method_str, AuthMethod.NONE),
-            auth_token=env_vars.get('secret_key'),
+            auth_token=config_data.get('secret_key'),
             timeout=connection_config.timeout_seconds,
             max_retries=connection_config.retry_attempts,
             # Additional API-specific configurations
@@ -145,28 +146,11 @@ def create_connection(connection_config):
 
     elif connection_config.config_type == 'ssh':
         # Create SSH connection
-        auth_method_str = config_data.get('auth_method', 'password')
-
+        if 'auth_method' in config_data:
+            config_data['auth_method'] = SSHAuthMethod(config_data['auth_method'])
+        ssh_config=SSHConnectionConfig.from_dict(config_data)
+        ssh_config.get_info()
         # Map string to SSHAuthMethod enum
-        auth_method_map = {
-            'password': SSHAuthMethod.PASSWORD,
-            'publickey': SSHAuthMethod.PUBLIC_KEY,
-            'agent': SSHAuthMethod.AGENT
-        }
-
-        ssh_config = SSHConnectionConfig(
-            name=f"ssh_connection_{connection_config.id}",
-            host=connection_config.host,
-            port=connection_config.port,
-            username=env_vars.get('username'),
-            password=env_vars.get('password'),
-            auth_method=auth_method_map.get(auth_method_str, SSHAuthMethod.PASSWORD),
-            private_key=config_data.get('private_key'),
-            passphrase=env_vars.get('secret_key'),
-            timeout=connection_config.timeout_seconds,
-            max_retries=connection_config.retry_attempts
-        )
-
         return SSHConnection(ssh_config)
 
     elif connection_config.config_type == 'kubernetes':
@@ -185,10 +169,10 @@ def create_connection(connection_config):
             name=f"k8s_connection_{connection_config.id}",
             host=connection_config.host,
             port=connection_config.port,
-            username=env_vars.get('username'),
-            password=env_vars.get('password'),
+            username=config_data.get('username'),
+            password=config_data.get('password'),
             auth_method=auth_method_map.get(auth_method_str, KubernetesAuthMethod.CONFIG),
-            api_token=env_vars.get('secret_key'),
+            api_token=config_data.get('secret_key'),
             kubeconfig_path=config_data.get('kubeconfig_path'),
             namespace=config_data.get('namespace', 'default'),
             verify_ssl=config_data.get('verify_ssl', True),
@@ -235,9 +219,9 @@ def create_connection(connection_config):
             auth_method=auth_method_map.get(auth_method_str, AWSAuthMethod.ACCESS_KEY),
             service=service_map.get(service_str, AWSService.S3),
             region=region_map.get(region_str, AWSRegion.US_EAST_1),
-            access_key_id=env_vars.get('username'),
-            secret_access_key=env_vars.get('password'),
-            session_token=env_vars.get('secret_key'),
+            access_key_id=config_data.get('username'),
+            secret_access_key=config_data.get('password'),
+            session_token=config_data.get('secret_key'),
             timeout=connection_config.timeout_seconds,
             max_retries=connection_config.retry_attempts
         )

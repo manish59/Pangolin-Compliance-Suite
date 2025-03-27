@@ -1,0 +1,245 @@
+# Validation Rules for Pangolin SDK Configuration Classes
+# Each configuration type has its own set of field validations
+
+# AWS Connection Configuration
+aws_connection:
+  auth_method:
+    required: true
+    choices:
+      - ACCESS_KEY
+      - PROFILE
+      - INSTANCE_ROLE
+      - WEB_IDENTITY
+      - SSO
+  region:
+    required: true
+  service:
+    required: true
+  access_key_id:
+    required_if:
+      field: auth_method
+      value: ACCESS_KEY
+  secret_access_key:
+    required_if:
+      field: auth_method
+      value: ACCESS_KEY
+  profile_name:
+    required_if:
+      field: auth_method
+      value: PROFILE
+  role_arn:
+    required_if:
+      field: auth_method
+      value: WEB_IDENTITY
+  web_identity_token_file:
+    required_if:
+      field: auth_method
+      value: WEB_IDENTITY
+  sso_account_id:
+    required_if:
+      field: auth_method
+      value: SSO
+  sso_role_name:
+    required_if:
+      field: auth_method
+      value: SSO
+  sso_region:
+    required_if:
+      field: auth_method
+      value: SSO
+  sso_start_url:
+    required_if:
+      field: auth_method
+      value: SSO
+
+# Database Connection Configuration
+database_connection:
+  database_type:
+    required: true
+  host:
+    required_unless:
+      field: connection_string
+      not_empty: true
+  port:
+    required_unless:
+      field: connection_string
+      not_empty: true
+  database:
+    required_unless:
+      - field: connection_string
+        not_empty: true
+      - field: service_name
+        not_empty: true
+      - field: sid
+        not_empty: true
+  username:
+    required_unless:
+      field: connection_string
+      not_empty: true
+  password:
+    required_unless:
+      field: connection_string
+      not_empty: true
+  # Special validation for Oracle connections
+  service_name:
+    required_if_custom: oracle_connection_requires_identifier
+
+# Kubernetes Connection Configuration
+kubernetes_connection:
+  auth_method:
+    required: true
+    choices:
+      - CONFIG
+      - TOKEN
+      - CERTIFICATE
+      - BASIC
+  kubeconfig_path:
+    required_if_custom: config_auth_without_in_cluster
+  in_cluster:
+    required_if_custom: config_auth_without_kubeconfig
+  api_token:
+    required_if:
+      field: auth_method
+      value: TOKEN
+  client_cert_path:
+    required_if:
+      field: auth_method
+      value: CERTIFICATE
+  client_key_path:
+    required_if:
+      field: auth_method
+      value: CERTIFICATE
+  username:
+    required_if:
+      field: auth_method
+      value: BASIC
+  password:
+    required_if:
+      field: auth_method
+      value: BASIC
+
+# SSH Connection Configuration
+ssh_connection:
+  auth_method:
+    required: true
+    choices:
+      - PASSWORD
+      - PUBLIC_KEY
+      - AGENT
+  username:
+    required: true
+  password:
+    required_if:
+      field: auth_method
+      value: PASSWORD
+  key_filename:
+    required_if_custom: public_key_auth_without_encrypted_key
+  encrypted_key_str:
+    required_if_custom: public_key_auth_without_key_filename
+  passphrase:
+    required_if_custom: encrypted_key_without_filename
+
+# API Connection Configuration
+api_connection:
+  auth_method:
+    required: true
+    choices:
+      - NONE
+      - BASIC
+      - BEARER
+      - JWT
+      - API_KEY
+      - OAUTH2
+      - HMAC
+  username:
+    required_if:
+      field: auth_method
+      value: BASIC
+  password:
+    required_if:
+      field: auth_method
+      value: BASIC
+  auth_token:
+    required_if:
+      - field: auth_method
+        value: BEARER
+      - field: auth_method
+        value: JWT
+  api_key:
+    required_if:
+      field: auth_method
+      value: API_KEY
+  api_key_name:
+    required_if:
+      field: auth_method
+      value: API_KEY
+  oauth_client_id:
+    required_if:
+      field: auth_method
+      value: OAUTH2
+  oauth_client_secret:
+    required_if:
+      field: auth_method
+      value: OAUTH2
+  hmac_key:
+    required_if:
+      field: auth_method
+      value: HMAC
+  hmac_secret:
+    required_if:
+      field: auth_method
+      value: HMAC
+
+# Azure Connection Configuration
+azure_connection:
+  auth_method:
+    required: true
+    choices:
+      - SERVICE_PRINCIPAL
+      - MANAGED_IDENTITY
+      - CLI
+  client_id:
+    required_if:
+      field: auth_method
+      value: SERVICE_PRINCIPAL
+  client_secret:
+    required_if:
+      field: auth_method
+      value: SERVICE_PRINCIPAL
+  tenant_id:
+    required_if:
+      field: auth_method
+      value: SERVICE_PRINCIPAL
+
+# Base Connection Configuration
+base_connection:
+  name:
+    required: true
+  host:
+    required: true
+
+# Custom validation functions definitions
+custom_validators:
+  oracle_connection_requires_identifier: >
+    Lambda function that validates if Oracle connection has at least one identifier method 
+    (service_name, sid, or tns_name) when using direct connection instead of connection string
+
+  config_auth_without_in_cluster: >
+    Lambda function that validates Kubernetes CONFIG auth method requires kubeconfig_path
+    when in_cluster is not set
+
+  config_auth_without_kubeconfig: >
+    Lambda function that validates Kubernetes CONFIG auth method requires in_cluster flag
+    when kubeconfig_path is not set
+
+  public_key_auth_without_encrypted_key: >
+    Lambda function that validates SSH PUBLIC_KEY auth requires key_filename
+    when encrypted_key_str is not provided
+
+  public_key_auth_without_key_filename: >
+    Lambda function that validates SSH PUBLIC_KEY auth requires encrypted_key_str
+    when key_filename is not provided
+
+  encrypted_key_without_filename: >
+    Lambda function that validates SSH PUBLIC_KEY auth with encrypted_key_str
+    requires passphrase when key_filename is not provided

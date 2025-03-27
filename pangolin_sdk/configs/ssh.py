@@ -54,7 +54,7 @@ class SSHConnectionConfig(ConnectionConfig):
     pkey: Optional[paramiko.RSAKey] = None
     pkey_type: ParamikoKey = field(default_factory=lambda: ParamikoKey.RSA)
     allow_agent: bool = True
-    auth_method: SSHAuthMethod = SSHAuthMethod.PASSWORD
+    auth_method: Optional[str] = SSHAuthMethod.PASSWORD
     port: int = 22
     private_key: Optional[str] = None
     look_for_keys: bool = True

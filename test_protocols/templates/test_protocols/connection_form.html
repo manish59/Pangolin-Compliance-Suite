@@ -145,16 +145,16 @@
             <div class="flex items-center space-x-2">
                 <select id="env_var_selector" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 flex-grow text-base px-4 py-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
                     <option value="">Select an environment variable</option>
-                    {% for choice in environments %}
-                        <option value="{{ choice.pk }}">{{ choice.project.name }} : {{ choice.key }}</option>
+                    {% for env in environments %}
+                        <option value="{{ env.pk }}">{{ env.project.name }} : {{ env.key }}</option>
                     {% endfor %}
                 </select>
-                <button type="button" id="insert_env_var" class="insert-btn px-4 py-2 bg-indigo-600 text-white rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Insert
+                <button type="button" id="copy_env_var" class="insert-btn px-4 py-2 bg-indigo-600 text-white rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Copy to Clipboard
                 </button>
             </div>
             <p class="mt-1 text-xs text-gray-500">
-                Select and insert environment variables into your configuration
+                Select and copy environment variables to paste into your configuration
             </p>
         </div>
 
@@ -194,70 +194,101 @@
 </div>
 
 <script>
-// Directly add the event listener without waiting for DOMContentLoaded
-// Immediately executed function without waiting for DOM loaded
-(function() {
-    console.log("Script executing immediately");
+document.addEventListener('DOMContentLoaded', function() {
+    // Wait for the editor to be fully initialized
+    setTimeout(function() {
+        setupEnvVarCopy();
+        updateConfigHints();
+    }, 500);
+});
 
+function setupEnvVarCopy() {
     // Get references to the elements
     const envVarSelector = document.getElementById('env_var_selector');
-    const insertButton = document.getElementById('insert_env_var');
+    const copyButton = document.getElementById('copy_env_var');
 
     // Check if elements exist
-    if (envVarSelector && insertButton) {
-        insertButton.onclick = function(event) {
-            event.preventDefault();
-            console.log("Insert button clicked");
-
+    if (envVarSelector && copyButton) {
+        copyButton.addEventListener('click', function() {
             // Get the selected variable
             const selectedVar = envVarSelector.value;
             if (!selectedVar) {
-                console.log("No variable selected");
+                showCopyMessage("Please select a variable first", false);
                 return;
             }
 
-            // Format with ${} syntax
-            const formattedVar = "${" + selectedVar + "}";
-            console.log("Formatted variable:", formattedVar);
+            // Format with ${} syntax for environment variable
+            const formattedVar = selectedVar;
 
-            // Find the editor textarea directly (no Monaco)
-            const editorTextarea = document.querySelector('#config_data_editor textarea');
-            const hiddenTextarea = document.getElementById('config_data');
-
-            console.log("Editor textarea found:", !!editorTextarea);
-            console.log("Hidden textarea found:", !!hiddenTextarea);
-
-            if (editorTextarea) {
-                // Insert at cursor position
-                const cursorPos = editorTextarea.selectionStart;
-                const textBefore = editorTextarea.value.substring(0, cursorPos);
-                const textAfter = editorTextarea.value.substring(cursorPos);
-
-                // Update visible textarea
-                editorTextarea.value = textBefore + formattedVar + textAfter;
-
-                // Update hidden textarea if it exists
-                if (hiddenTextarea) {
-                    hiddenTextarea.value = editorTextarea.value;
-                }
-
-                // Set focus back to the editor
-                editorTextarea.focus();
-                editorTextarea.selectionStart = editorTextarea.selectionEnd = cursorPos + formattedVar.length;
-
-                console.log("Variable inserted successfully");
-            } else {
-                console.log("Editor textarea not found");
-            }
-
-            return false; // Prevent default and stop propagation
-        };
-
-        console.log("Click handler assigned to insert button");
-    } else {
-        console.log("Required elements not found");
+            // Copy to clipboard
+            copyToClipboard(formattedVar);
+        });
     }
-})();
+}
+
+function copyToClipboard(text) {
+    // Create a temporary textarea for copying
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'absolute';
+    textarea.style.left = '-9999px';
+    document.body.appendChild(textarea);
+
+    // Select the text
+    textarea.select();
+
+    try {
+        // Execute copy command
+        const successful = document.execCommand('copy');
+        if (successful) {
+            showCopyMessage("Variable copied to clipboard!", true);
+        } else {
+            showCopyMessage("Failed to copy. Please try again.", false);
+        }
+    } catch (err) {
+        showCopyMessage("Failed to copy: " + err, false);
+    }
+
+    // Clean up
+    document.body.removeChild(textarea);
+}
+
+function showCopyMessage(message, isSuccess) {
+    // Create or get the message element
+    let messageElement = document.getElementById('copy_message');
+    if (!messageElement) {
+        messageElement = document.createElement('div');
+        messageElement.id = 'copy_message';
+        messageElement.style.position = 'fixed';
+        messageElement.style.bottom = '20px';
+        messageElement.style.right = '20px';
+        messageElement.style.padding = '10px 20px';
+        messageElement.style.borderRadius = '4px';
+        messageElement.style.fontWeight = 'bold';
+        messageElement.style.zIndex = '1000';
+        messageElement.style.transition = 'opacity 0.5s ease-in-out';
+        document.body.appendChild(messageElement);
+    }
+
+    // Style message based on success/failure
+    if (isSuccess) {
+        messageElement.style.backgroundColor = '#10B981'; // Green
+        messageElement.style.color = 'white';
+    } else {
+        messageElement.style.backgroundColor = '#EF4444'; // Red
+        messageElement.style.color = 'white';
+    }
+
+    // Set message and show it
+    messageElement.textContent = message;
+    messageElement.style.opacity = '1';
+
+    // Hide after delay
+    setTimeout(function() {
+        messageElement.style.opacity = '0';
+    }, 3000);
+}
 
 function updateConfigHints() {
     const configType = document.getElementById('id_config_type').value;
