@@ -1,331 +1,275 @@
-{% extends 'test_protocols/base.html' %}
+{% extends 'home/base.html' %}
 
-{% block breadcrumbs %}
-<li>
-    <div class="flex items-center">
-        <svg class="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
-            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
-        </svg>
-        <a href="{% url 'testsuite:testsuite_detail' protocol.suite.id %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2 dark:text-gray-400 dark:hover:text-white">
-            {{ protocol.suite.name }}
-        </a>
-    </div>
-</li>
-<li>
-    <div class="flex items-center">
-        <svg class="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
-            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
-        </svg>
-        <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2 dark:text-gray-400">{{ protocol.name }}</span>
-    </div>
-</li>
-{% endblock %}
+{% block title %}{{ project.name }} - Project Details{% endblock %}
 
-{% block page_title %}{{ protocol.name }}{% endblock %}
-
-{% block action_buttons %}
-<div class="flex justify-end space-x-2">
-    <a href="{% url 'testsuite:protocol_update' protocol.id %}" class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 active:bg-green-800 focus:outline-none focus:border-green-800 focus:ring focus:ring-green-200 disabled:opacity-25 transition">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-        </svg>
-        Edit Protocol
-    </a>
-    {% if not connection_config %}
-    <a href="{% url 'testsuite:protocol_connection_create' protocol.id %}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:border-blue-800 focus:ring focus:ring-blue-200 disabled:opacity-25 transition">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-        </svg>
-        Add Connection
-    </a>
-    {% endif %}
-
-    {% if protocol.steps.exists %}
-    <a href="{% url 'testsuite:protocol_verification_list' protocol.id %}" class="inline-flex items-center px-4 py-2 bg-amber-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-amber-700 active:bg-amber-800 focus:outline-none focus:border-amber-800 focus:ring focus:ring-amber-200 disabled:opacity-25 transition">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        Verification Methods
-    </a>
-    {% endif %}
-
-    {% if not protocol.steps.exists %}
-    <a href="{% url 'testsuite:protocol_step_create' protocol.id %}" class="inline-flex items-center px-4 py-2 bg-purple-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-purple-700 active:bg-purple-800 focus:outline-none focus:border-purple-800 focus:ring focus:ring-purple-200 disabled:opacity-25 transition">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-        </svg>
-        Add First Execution Step
-    </a>
-    {% else %}
-    <a href="{% url 'testsuite:step_list' protocol.id %}" class="inline-flex items-center px-4 py-2 bg-purple-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-purple-700 active:bg-purple-800 focus:outline-none focus:border-purple-800 focus:ring focus:ring-purple-200 disabled:opacity-25 transition">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-        </svg>
-        Manage Steps
-    </a>
-    {% endif %}
-
-    {% if protocol.steps.exists and connection_config %}
-    <a href="{% url 'testsuite:protocol_run_create' protocol.id %}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:border-indigo-800 focus:ring focus:ring-indigo-200 disabled:opacity-25 transition">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        Run Protocol
-    </a>
-    {% endif %}
-</div>
-{% endblock %}
-
-{% block main_content %}
-<div class="p-6">
-    {% if messages %}
-    <div class="mb-6">
-        {% for message in messages %}
-        <div class="p-4 mb-4 rounded-md {% if message.tags == 'success' %}bg-green-100 text-green-700{% elif message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-blue-100 text-blue-700{% endif %}">
-            {{ message }}
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-            <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">Protocol Details</h2>
-            <dl class="grid grid-cols-1 gap-x-4 gap-y-2">
-                <div class="sm:col-span-1">
-                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Name</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ protocol.name }}</dd>
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Breadcrumbs -->
+    <nav class="flex mb-6" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li class="inline-flex items-center">
+                <a href="{% url 'projects:project_list' %}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
+                    <svg class="w-3 h-3 mr-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 0C4.477 0 0 4.477 0 10c0 5.523 4.477 10 10 10s10-4.477 10-10C20 4.477 15.523 0 10 0z" />
+                    </svg>
+                    Projects
+                </a>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <svg class="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
+                    </svg>
+                    <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2 dark:text-gray-400">{{ project.name }}</span>
                 </div>
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Project Header -->
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ project.name }}</h1>
+        <div class="flex space-x-2">
+            <a href="{% url 'projects:project_update' project.id %}" class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+                Edit Project
+            </a>
+            <a href="{% url 'testsuite:testsuite_create' %}?project={{ project.id }}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Create Test Suite
+            </a>
+        </div>
+    </div>
+
+    <!-- Project Details Card -->
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden mb-8">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
+            <h2 class="text-xl font-medium text-gray-900 dark:text-white">Project Details</h2>
+        </div>
+        <div class="p-6">
+            <dl class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-6">
                 <div class="sm:col-span-1">
-                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Test Suite</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">
-                        <a href="{% url 'testsuite:testsuite_detail' protocol.suite.id %}" class="text-blue-600 dark:text-blue-400 hover:underline">
-                            {{ protocol.suite.name }}
-                        </a>
-                    </dd>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Project ID</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ project.id }}</dd>
                 </div>
                 <div class="sm:col-span-1">
                     <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Status</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">
-                        <span class="px-2 py-1 text-xs font-medium
-                        {% if protocol.status == 'active' %}
-                            bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
-                        {% elif protocol.status == 'deprecated' %}
-                            bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300
-                        {% elif protocol.status == 'draft' %}
-                            bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300
-                        {% else %}
-                            bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300
-                        {% endif %}
-                        rounded-full">
-                            {{ protocol.status|title }}
+                    <dd class="mt-1 text-sm">
+                        <span class="px-2 py-1 text-xs font-medium rounded-full
+                            {% if project.status == 'active' %}
+                                bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
+                            {% elif project.status == 'archived' %}
+                                bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300
+                            {% elif project.status == 'pending' %}
+                                bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300
+                            {% else %}
+                                bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300
+                            {% endif %}">
+                            {{ project.status|title }}
                         </span>
                     </dd>
                 </div>
                 <div class="sm:col-span-1">
-                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Order Index</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ protocol.order_index }}</dd>
-                </div>
-                <div class="sm:col-span-1">
                     <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Created</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ protocol.created_at|date:"M d, Y H:i" }}</dd>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ project.created_at|date:"M d, Y H:i" }}</dd>
                 </div>
                 <div class="sm:col-span-1">
                     <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Last Updated</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ protocol.updated_at|date:"M d, Y H:i" }}</dd>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ project.updated_at|date:"M d, Y H:i" }}</dd>
                 </div>
                 <div class="sm:col-span-2">
                     <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Description</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ protocol.description|default:"No description provided." }}</dd>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ project.description|default:"No description provided." }}</dd>
                 </div>
             </dl>
         </div>
+    </div>
 
-        <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-            <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">Connection Configuration</h2>
-            {% if connection_config %}
-            <dl class="grid grid-cols-1 gap-x-4 gap-y-2">
-                <div class="sm:col-span-1">
-                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Connection Type</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ connection_config.config_type|title }}</dd>
-                </div>
-                <div class="sm:col-span-1">
-                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Host</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ connection_config.host|default:"Not specified" }}</dd>
-                </div>
-                <div class="sm:col-span-1">
-                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Port</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ connection_config.port|default:"Not specified" }}</dd>
-                </div>
-                <div class="sm:col-span-1">
-                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Timeout</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ connection_config.timeout_seconds }} seconds</dd>
-                </div>
-                <div class="sm:col-span-1">
-                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Retry Attempts</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ connection_config.retry_attempts }}</dd>
-                </div>
-                <div class="sm:col-span-2 mt-2">
-                    <a href="{% url 'testsuite:connection_detail' connection_config.id %}" class="text-blue-600 dark:text-blue-400 hover:underline text-sm">
-                        View full connection details →
-                    </a>
-                </div>
-            </dl>
-            {% else %}
-            <div class="bg-white dark:bg-gray-800 p-6 text-center border border-gray-200 dark:border-gray-700 rounded-lg">
-                <p class="text-gray-500 dark:text-gray-400">No connection configuration found for this protocol.</p>
-                <a href="{% url 'testsuite:protocol_connection_create' protocol.id %}" class="inline-flex items-center mt-4 px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:border-blue-800 focus:ring focus:ring-blue-200 disabled:opacity-25 transition">
-                    Add Connection Configuration
+    <!-- Test Suites Section -->
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 flex justify-between items-center">
+            <h2 class="text-xl font-medium text-gray-900 dark:text-white">Test Suites</h2>
+            <a href="{% url 'testsuite:testsuite_create' %}?project={{ project.id }}" class="inline-flex items-center text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Add Test Suite
+            </a>
+        </div>
+
+        {% if test_suites %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Protocols</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Last Run</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                    {% for suite in test_suites %}
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="ml-2">
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                        <a href="{% url 'testsuite:testsuite_detail' suite.id %}" class="hover:text-blue-600 dark:hover:text-blue-400">
+                                            {{ suite.name }}
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900 dark:text-white">{{ suite.protocols.count }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-500 dark:text-gray-400">{{ suite.created_at|date:"M d, Y" }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% with last_run=suite.get_last_run %}
+                            {% if last_run %}
+                            <div class="text-sm text-gray-500 dark:text-gray-400">{{ last_run.started_at|date:"M d, Y H:i" }}</div>
+                            <div class="flex items-center mt-1">
+                                <span class="px-2 py-0.5 text-xs rounded-full
+                                    {% if last_run.result_status == 'pass' %}
+                                        bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
+                                    {% elif last_run.result_status == 'fail' %}
+                                        bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300
+                                    {% else %}
+                                        bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300
+                                    {% endif %}">
+                                    {{ last_run.result_status|default:"No result"|title }}
+                                </span>
+                            </div>
+                            {% else %}
+                            <div class="text-sm text-gray-500 dark:text-gray-400">Never run</div>
+                            {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div class="flex justify-end space-x-2">
+                                <a href="{% url 'testsuite:testsuite_detail' suite.id %}" class="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">View</a>
+                                <a href="{% url 'testsuite:testsuite_update' suite.id %}" class="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300">Edit</a>
+                                <a href="{% url 'testsuite:testsuite_run' suite.id %}" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300">Run</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-8 text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p class="text-gray-600 dark:text-gray-400 mb-4">No test suites have been created for this project yet.</p>
+            <a href="{% url 'testsuite:testsuite_create' %}?project={{ project.id }}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-sm text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Create Your First Test Suite
+            </a>
+        </div>
+        {% endif %}
+
+        {% if is_paginated %}
+        <div class="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-700">
+            <div class="flex-1 flex justify-between">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600">
+                    Previous
                 </a>
+                {% endif %}
+                <span class="text-sm text-gray-700 dark:text-gray-400">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600">
+                    Next
+                </a>
+                {% endif %}
             </div>
-            {% endif %}
-        </div>
-    </div>
-<!-- Execution Steps Section - Must exist before verification methods can be added -->
-    <div class="mt-8">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Execution Steps</h2>
-            {% if not protocol.steps.exists %}
-            <a href="{% url 'testsuite:protocol_step_create' protocol.id %}" class="inline-flex items-center px-4 py-2 bg-purple-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-purple-700 active:bg-purple-800 focus:outline-none focus:border-purple-800 focus:ring focus:ring-purple-200 disabled:opacity-25 transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Add First Execution Step
-            </a>
-            {% else %}
-            <a href="{% url 'testsuite:step_list' protocol.id %}" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 active:bg-gray-800 focus:outline-none focus:border-gray-800 focus:ring focus:ring-gray-200 disabled:opacity-25 transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-                Manage All Steps
-            </a>
-            {% endif %}
-        </div>
-
-        {% if protocol.steps.exists %}
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                    <tr>
-                        <th scope="col" class="px-6 py-3">Created At</th>
-                        <th scope="col" class="px-6 py-3">Arguments</th>
-                        <th scope="col" class="px-6 py-3">Keyword Arguments</th>
-                        <th scope="col" class="px-6 py-3">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for step in protocol.steps.all %}
-                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                        <td class="px-6 py-4">{{ step.created_at|date:"M d, Y H:i" }}</td>
-                        <td class="px-6 py-4">
-                            <div class="max-w-xs truncate">{{ step.args|pprint|truncatechars:50 }}</div>
-                        </td>
-                        <td class="px-6 py-4">
-                            <div class="max-w-xs truncate">{{ step.kwargs|pprint|truncatechars:50 }}</div>
-                        </td>
-                        <td class="px-6 py-4 flex space-x-2">
-                            <a href="{% url 'testsuite:step_detail' step.id %}" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">View</a>
-                            <a href="{% url 'testsuite:step_update' step.id %}" class="font-medium text-green-600 dark:text-green-500 hover:underline">Edit</a>
-                            <a href="{% url 'testsuite:step_delete' step.id %}" class="font-medium text-red-600 dark:text-red-500 hover:underline">Delete</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <div class="bg-white dark:bg-gray-800 p-6 text-center border border-gray-200 dark:border-gray-700 rounded-lg">
-            <p class="text-gray-500 dark:text-gray-400">No execution steps defined for this protocol.</p>
-            <p class="text-gray-500 dark:text-gray-400 mt-2">You must add an execution step before you can define verification methods.</p>
-            <a href="{% url 'testsuite:protocol_step_create' protocol.id %}" class="inline-flex items-center mt-4 px-4 py-2 bg-purple-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-purple-700 active:bg-purple-800 focus:outline-none focus:border-purple-800 focus:ring focus:ring-purple-200 disabled:opacity-25 transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Add First Execution Step
-            </a>
         </div>
         {% endif %}
     </div>
 
-    <!-- Verification Methods Section - Only show if steps exist -->
-    {% if protocol.steps.exists %}
-    <div class="mt-8">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Verification Methods</h2>
-            <a href="{% url 'testsuite:protocol_verification_create' protocol.id %}" class="inline-flex items-center px-4 py-2 bg-amber-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-amber-700 active:bg-amber-800 focus:outline-none focus:border-amber-800 focus:ring focus:ring-amber-200 disabled:opacity-25 transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <!-- Environment Variables Section -->
+    <div class="mt-8 bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 flex justify-between items-center">
+            <h2 class="text-xl font-medium text-gray-900 dark:text-white">Environment Variables</h2>
+            <a href="{% url 'environments:environment_create' %}?project={{ project.id }}" class="inline-flex items-center text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                Add Verification Method
+                Add Environment Variable
             </a>
         </div>
 
-        {% if protocol.verification_methods.exists %}
+        {% if environments %}
         <div class="overflow-x-auto">
-            <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700">
                     <tr>
-                        <th scope="col" class="px-6 py-3">Name</th>
-                        <th scope="col" class="px-6 py-3">Method Type</th>
-                        <th scope="col" class="px-6 py-3">Linked Step</th>
-                        <th scope="col" class="px-6 py-3">Comparison</th>
-                        <th scope="col" class="px-6 py-3">Expected Value</th>
-                        <th scope="col" class="px-6 py-3">Actions</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Key</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Value</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
-                    {% for method in protocol.verification_methods.all %}
-                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                        <td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">
-                            <a href="{% url 'testsuite:protocol_verification_detail' protocol.id method.id %}" class="text-blue-600 dark:text-blue-400 hover:underline">
-                                {{ method.name }}
-                            </a>
+                <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                    {% for env in environments %}
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900 dark:text-white">{{ env.key }}</div>
                         </td>
-                        <td class="px-6 py-4">
-                            <span class="px-2 py-1 text-xs font-medium
-                            {% if 'string' in method.method_type %}
-                                bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
-                            {% elif 'numeric' in method.method_type %}
-                                bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300
-                            {% elif 'api' in method.method_type %}
-                                bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300
-                            {% elif 'db' in method.method_type %}
-                                bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300
-                            {% else %}
-                                bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300
-                            {% endif %}
-                            rounded-full">
-                                {{ method.get_method_type_display }}
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full
+                                {% if env.variable_type == 'secret' %}
+                                    bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300
+                                {% elif env.variable_type == 'json' %}
+                                    bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300
+                                {% elif env.variable_type == 'file' %}
+                                    bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300
+                                {% else %}
+                                    bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300
+                                {% endif %}">
+                                {{ env.variable_type|title }}
                             </span>
                         </td>
-                        <td class="px-6 py-4">
-                            {% if method.execution_step %}
-                                <a href="{% url 'testsuite:step_detail' method.execution_step.id %}" class="text-blue-600 dark:text-blue-400 hover:underline">
-                                    Step #{{ method.execution_step.id|slice:":8" }}
-                                </a>
-                            {% else %}
-                                <span class="text-gray-400">Global</span>
-                            {% endif %}
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900 dark:text-white">
+                                {% if env.variable_type == 'secret' %}
+                                    •••••••••••
+                                {% else %}
+                                    {{ env.display_value|truncatechars:20 }}
+                                {% endif %}
+                            </div>
                         </td>
-                        <td class="px-6 py-4">
-                            {% if method.supports_comparison %}
-                                {{ method.get_comparison_method_display }}
-                            {% else %}
-                                <span class="text-gray-400">None</span>
-                            {% endif %}
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full
+                                {% if env.is_enabled %}
+                                    bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
+                                {% else %}
+                                    bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300
+                                {% endif %}">
+                                {{ env.is_enabled|yesno:"Enabled,Disabled" }}
+                            </span>
                         </td>
-                        <td class="px-6 py-4">
-                            {% if method.requires_expected_value %}
-                                <span class="text-green-600 dark:text-green-400">Required</span>
-                            {% else %}
-                                <span class="text-gray-500">Not Required</span>
-                            {% endif %}
-                        </td>
-                        <td class="px-6 py-4 flex space-x-2">
-                            <a href="{% url 'testsuite:protocol_verification_detail' protocol.id method.id %}" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">View</a>
-                            <a href="{% url 'testsuite:protocol_verification_edit' protocol.id method.id %}" class="font-medium text-green-600 dark:text-green-500 hover:underline">Edit</a>
-                            <a href="{% url 'testsuite:protocol_verification_delete' protocol.id method.id %}" class="font-medium text-red-600 dark:text-red-500 hover:underline">Delete</a>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div class="flex justify-end space-x-2">
+                                <a href="{% url 'environments:environment_edit' env.id %}" class="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300">Edit</a>
+                                <a href="{% url 'environments:environment_delete' env.id %}" class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300">Delete</a>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -333,104 +277,17 @@
             </table>
         </div>
         {% else %}
-        <div class="bg-white dark:bg-gray-800 p-6 text-center border border-gray-200 dark:border-gray-700 rounded-lg">
-            <p class="text-gray-500 dark:text-gray-400">No verification methods defined for this protocol.</p>
-            <a href="{% url 'testsuite:protocol_verification_create' protocol.id %}" class="inline-flex items-center mt-4 px-4 py-2 bg-amber-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-amber-700 active:bg-amber-800 focus:outline-none focus:border-amber-800 focus:ring focus:ring-amber-200 disabled:opacity-25 transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div class="p-8 text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+            </svg>
+            <p class="text-gray-600 dark:text-gray-400 mb-4">No environment variables have been created for this project yet.</p>
+            <a href="{% url 'environments:environment_create' %}?project={{ project.id }}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-sm text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                Add First Verification Method
+                Create Your First Environment Variable
             </a>
-        </div>
-        {% endif %}
-    </div>
-    {% endif %}
-<div class="mt-8">
-        <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">Recent Runs</h2>
-
-        {% if runs %}
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                    <tr>
-                        <th scope="col" class="px-6 py-3">Started</th>
-                        <th scope="col" class="px-6 py-3">Status</th>
-                        <th scope="col" class="px-6 py-3">Result</th>
-                        <th scope="col" class="px-6 py-3">Duration</th>
-                        <th scope="col" class="px-6 py-3">Executed By</th>
-                        <th scope="col" class="px-6 py-3">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for run in runs %}
-                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                        <td class="px-6 py-4">{{ run.started_at|date:"M d, Y H:i:s" }}</td>
-                        <td class="px-6 py-4">
-                            <span class="px-2 py-1 text-xs font-medium
-                            {% if run.status == 'completed' %}
-                                bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
-                            {% elif run.status == 'running' %}
-                                bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300
-                            {% elif run.status == 'failed' or run.status == 'error' %}
-                                bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300
-                            {% else %}
-                                bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300
-                            {% endif %}
-                            rounded-full">
-                                {{ run.status|title }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4">
-                            {% if run.result_status %}
-                            <span class="px-2 py-1 text-xs font-medium
-                            {% if run.result_status == 'pass' %}
-                                bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
-                            {% elif run.result_status == 'fail' %}
-                                bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300
-                            {% elif run.result_status == 'error' %}
-                                bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300
-                            {% else %}
-                                bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300
-                            {% endif %}
-                            rounded-full">
-                                {{ run.result_status|title }}
-                            </span>
-                            {% else %}
-                            -
-                            {% endif %}
-                        </td>
-                        <td class="px-6 py-4">
-                            {% if run.duration_seconds %}
-                                {{ run.duration_seconds }} sec
-                            {% else %}
-                                -
-                            {% endif %}
-                        </td>
-                        <td class="px-6 py-4">{{ run.executed_by|default:"-" }}</td>
-                        <td class="px-6 py-4 flex space-x-2">
-                            <a href="{% url 'testsuite:run_detail' run.id %}" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">View</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <div class="bg-white dark:bg-gray-800 p-6 text-center border border-gray-200 dark:border-gray-700 rounded-lg">
-            <p class="text-gray-500 dark:text-gray-400">No runs found for this protocol.</p>
-            {% if protocol.steps.exists and connection_config %}
-            <a href="{% url 'testsuite:protocol_run_create' protocol.id %}" class="inline-flex items-center mt-4 px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:border-indigo-800 focus:ring focus:ring-indigo-200 disabled:opacity-25 transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Run Protocol
-            </a>
-            {% elif not protocol.steps.exists %}
-            <p class="mt-2 text-gray-500 dark:text-gray-400">Add an execution step first before running this protocol.</p>
-            {% elif not connection_config %}
-            <p class="mt-2 text-gray-500 dark:text-gray-400">Add a connection configuration before running this protocol.</p>
-            {% endif %}
         </div>
         {% endif %}
     </div>
