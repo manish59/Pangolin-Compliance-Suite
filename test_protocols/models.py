@@ -253,6 +253,19 @@ class ExecutionStep(BaseModel):
         return f"{self.name}- {self.test_protocol}"
     def __repr__(self):
         return f"{self.name}- {self.test_protocol}"
+
+    def save(self, *args, **kwargs):
+        """
+        convert the config_data field incoming str to JSON before saving.
+        """
+        if isinstance(self.kwargs, str) and self.kwargs.strip():
+            try:
+                kwargs = yaml.safe_load(self.kwargs)
+                self.kwargs = kwargs
+            except yaml.YAMLError as e:
+                raise ValueError(f"Error parsing config_data YAML: {str(e)}")
+        super().save(*args, **kwargs)
+
 class VerificationMethod(BaseModel):
     """
     A specific method of verification that can be applied to test results

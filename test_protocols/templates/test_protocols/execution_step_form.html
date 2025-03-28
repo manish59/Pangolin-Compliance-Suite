@@ -100,10 +100,10 @@
                     Keyword Arguments (kwargs)
                 </label>
  <div class="mt-1">
-            {% include "test_protocols/yaml_editor.html" with field_name="kwargs" initial_content=form.config_data.value label="Additional Configuration" help_text="Enter configuration data in YAML format. This will be used to configure the connection based on the selected type." required=False %}
+            {% include "test_protocols/yaml_editor.html" with field_name="kwargs" initial_content=form.kwargs.value label="Additional Configuration" help_text="Enter configuration data in YAML format. This will be used to configure the connection based on the selected type." required=False %}
 
-            {% if form.config_data.errors %}
-            <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.config_data.errors.0 }}</p>
+            {% if form.kwargs.errors %}
+            <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.kwarfs.errors.0 }}</p>
             {% endif %}
         </div>
                 <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">

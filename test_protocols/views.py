@@ -1,4 +1,5 @@
 import json
+import yaml
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.urls import reverse_lazy, reverse
@@ -216,7 +217,6 @@ class ConnectionConfigUpdateView(UpdateView):
         config_data = context['object'].config_data
         if test_protocol:
             try:
-                import  yaml
                 project = test_protocol.suite.project
                 context['environments'] = Environment.objects.filter(project=project)
                 if isinstance(config_data, str):
@@ -498,10 +498,16 @@ class ExecutionStepUpdateView(LoginRequiredMixin, UpdateView):
     """View for updating an execution step"""
     model = ExecutionStep
     template_name = 'test_protocols/execution_step_form.html'
-    fields = ['kwargs']
+    fields = ['name','kwargs']
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        value = yaml.dump(context['object'].kwargs,
+                          default_flow_style=False,
+                          indent=2, sort_keys=False
+                          )
+        context['object'].kwargs = mark_safe(value)
+
         context['protocol'] = self.object.test_protocol
         return context
 
