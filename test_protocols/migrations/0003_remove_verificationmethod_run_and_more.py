@@ -6,17 +6,22 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('test_protocols', '0002_verificationmethod_run'),
+        ("test_protocols", "0002_verificationmethod_run"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='verificationmethod',
-            name='run',
+            model_name="verificationmethod",
+            name="run",
         ),
         migrations.AddField(
-            model_name='testprotocol',
-            name='verification_methods',
-            field=models.ManyToManyField(blank=True, default=None, related_name='test_protocols', to='test_protocols.verificationmethod'),
+            model_name="testprotocol",
+            name="verification_methods",
+            field=models.ManyToManyField(
+                blank=True,
+                default=None,
+                related_name="test_protocols",
+                to="test_protocols.verificationmethod",
+            ),
         ),
     ]

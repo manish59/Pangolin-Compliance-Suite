@@ -38,9 +38,7 @@ def run_protocol(protocol_id, user=None, executed_by=None):
 
     # Create the protocol run
     protocol_run = ProtocolRun.objects.create(
-        protocol=protocol,
-        status='pending',
-        executed_by=executed_by
+        protocol=protocol, status="pending", executed_by=executed_by
     )
 
     logger.info(f"Created ProtocolRun with ID: {protocol_run.id}")
@@ -51,7 +49,9 @@ def run_protocol(protocol_id, user=None, executed_by=None):
     # Send task to Celery via RabbitMQ with protocol UUID
     run_test_protocol.delay(protocol_run.id, username)
 
-    logger.info(f"Sent message to RabbitMQ for protocol run: {protocol_run.id}, protocol: {protocol.id}")
+    logger.info(
+        f"Sent message to RabbitMQ for protocol run: {protocol_run.id}, protocol: {protocol.id}"
+    )
 
     return protocol_run
 
@@ -110,7 +110,7 @@ def run_protocols_in_suite(suite_id, user=None):
         raise ValueError(f"Test suite with ID {suite_id} not found")
 
     # Get all active protocols in this suite
-    protocols = test_suite.protocols.filter(status='active').order_by('order_index')
+    protocols = test_suite.protocols.filter(status="active").order_by("order_index")
 
     if not protocols.exists():
         logger.warning(f"No active protocols found in test suite: {test_suite.name}")
@@ -122,8 +122,12 @@ def run_protocols_in_suite(suite_id, user=None):
         try:
             protocol_run = run_protocol(protocol.id, user)
             protocol_runs.append(protocol_run)
-            logger.info(f"Scheduled protocol {protocol.name} (ID: {protocol.id}) in suite {test_suite.name} (ID: {test_suite.id})")
+            logger.info(
+                f"Scheduled protocol {protocol.name} (ID: {protocol.id}) in suite {test_suite.name} (ID: {test_suite.id})"
+            )
         except Exception as e:
-            logger.error(f"Failed to schedule protocol {protocol.name} (ID: {protocol.id}): {str(e)}")
+            logger.error(
+                f"Failed to schedule protocol {protocol.name} (ID: {protocol.id}): {str(e)}"
+            )
 
     return protocol_runs

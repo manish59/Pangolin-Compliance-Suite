@@ -8,23 +8,63 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('test_protocols', '0005_alter_protocolrun_status'),
+        ("test_protocols", "0005_alter_protocolrun_status"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ExecutionStep',
+            name="ExecutionStep",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, help_text='Unique identifier for this record', primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True, help_text='Timestamp when the record was created')),
-                ('updated_at', models.DateTimeField(auto_now=True, help_text='Timestamp when the record was last updated')),
-                ('args', models.JSONField(default=list, help_text='Positional arguments (args) as a JSON array')),
-                ('kwargs', models.JSONField(default=dict, help_text='Keyword arguments (kwargs) as a JSON object')),
-                ('test_protocol', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='steps', to='test_protocols.testprotocol')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        help_text="Unique identifier for this record",
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(
+                        auto_now_add=True,
+                        help_text="Timestamp when the record was created",
+                    ),
+                ),
+                (
+                    "updated_at",
+                    models.DateTimeField(
+                        auto_now=True,
+                        help_text="Timestamp when the record was last updated",
+                    ),
+                ),
+                (
+                    "args",
+                    models.JSONField(
+                        default=list,
+                        help_text="Positional arguments (args) as a JSON array",
+                    ),
+                ),
+                (
+                    "kwargs",
+                    models.JSONField(
+                        default=dict,
+                        help_text="Keyword arguments (kwargs) as a JSON object",
+                    ),
+                ),
+                (
+                    "test_protocol",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="steps",
+                        to="test_protocols.testprotocol",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Execution Step',
-                'verbose_name_plural': 'Execution Steps',
+                "verbose_name": "Execution Step",
+                "verbose_name_plural": "Execution Steps",
             },
         ),
     ]

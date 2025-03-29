@@ -6,28 +6,28 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('test_protocols', '0012_alter_verificationresult_verification_step'),
+        ("test_protocols", "0012_alter_verificationresult_verification_step"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='connectionconfig',
-            name='host',
+            model_name="connectionconfig",
+            name="host",
         ),
         migrations.RemoveField(
-            model_name='connectionconfig',
-            name='password',
+            model_name="connectionconfig",
+            name="password",
         ),
         migrations.RemoveField(
-            model_name='connectionconfig',
-            name='port',
+            model_name="connectionconfig",
+            name="port",
         ),
         migrations.RemoveField(
-            model_name='connectionconfig',
-            name='secret_key',
+            model_name="connectionconfig",
+            name="secret_key",
         ),
         migrations.RemoveField(
-            model_name='connectionconfig',
-            name='username',
+            model_name="connectionconfig",
+            name="username",
         ),
     ]

@@ -8,7 +8,7 @@ register = template.Library()
 def format_duration(seconds):
     """Format seconds into a human-readable duration (min:sec)"""
     if seconds is None:
-        return '-'
+        return "-"
 
     minutes = int(seconds // 60)
     remaining_seconds = int(seconds % 60)

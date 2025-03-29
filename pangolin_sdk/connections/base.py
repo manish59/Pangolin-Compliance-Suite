@@ -146,7 +146,7 @@ class BaseConnection(ABC, Generic[T]):
                 self._logger.info(
                     "Attempting connection %d/%d",
                     retry_count + 1,
-                    self.config.max_retries + 1
+                    self.config.max_retries + 1,
                 )
                 start_time = datetime.utcnow()
 
@@ -172,9 +172,7 @@ class BaseConnection(ABC, Generic[T]):
                 if retry_count < self.config.max_retries:
                     retry_delay = self._calculate_retry_delay(retry_count)
                     self._logger.warning(
-                        "Connection failed, retrying in %0.2fs: %s",
-                        retry_delay,
-                        str(e)
+                        "Connection failed, retrying in %0.2fs: %s", retry_delay, str(e)
                     )
                     time.sleep(retry_delay)
 
@@ -273,9 +271,7 @@ class BaseConnection(ABC, Generic[T]):
         """
         self.errors.append(error)
         # Use a custom timestamp if the error doesn't have a timestamp attribute
-        self.metrics.last_error_at = (
-            getattr(error, 'timestamp', datetime.utcnow())
-        )
+        self.metrics.last_error_at = getattr(error, "timestamp", datetime.utcnow())
 
     def get_status(self) -> ConnectionStatus:
         """Get current connection status.

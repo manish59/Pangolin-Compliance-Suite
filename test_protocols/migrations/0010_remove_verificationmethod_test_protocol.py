@@ -6,12 +6,12 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('test_protocols', '0009_executionstep_name'),
+        ("test_protocols", "0009_executionstep_name"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='verificationmethod',
-            name='test_protocol',
+            model_name="verificationmethod",
+            name="test_protocol",
         ),
     ]

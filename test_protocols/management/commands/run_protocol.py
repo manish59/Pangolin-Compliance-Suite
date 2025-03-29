@@ -7,15 +7,17 @@ from test_protocols.services import trigger_protocol_run
 
 
 class Command(BaseCommand):
-    help = 'Run a test protocol by ID'
+    help = "Run a test protocol by ID"
 
     def add_arguments(self, parser):
-        parser.add_argument('protocol_id', type=str, help='The UUID of the protocol to run')
-        parser.add_argument('--user', type=str, help='Username to attribute the run to')
+        parser.add_argument(
+            "protocol_id", type=str, help="The UUID of the protocol to run"
+        )
+        parser.add_argument("--user", type=str, help="Username to attribute the run to")
 
     def handle(self, *args, **options):
-        protocol_id = options['protocol_id']
-        username = options.get('user')
+        protocol_id = options["protocol_id"]
+        username = options.get("user")
 
         try:
             # Parse the protocol ID as a UUID
@@ -29,7 +31,11 @@ class Command(BaseCommand):
             try:
                 user = User.objects.get(username=username)
             except User.DoesNotExist:
-                self.stdout.write(self.style.WARNING(f"User {username} not found, proceeding with system user"))
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"User {username} not found, proceeding with system user"
+                    )
+                )
 
         try:
             # Get the protocol
@@ -39,9 +45,9 @@ class Command(BaseCommand):
             # Trigger the protocol run
             protocol_run = trigger_protocol_run(protocol_id, user)
 
-            self.stdout.write(self.style.SUCCESS(
-                f"Protocol run initiated with ID: {protocol_run.id}"
-            ))
+            self.stdout.write(
+                self.style.SUCCESS(f"Protocol run initiated with ID: {protocol_run.id}")
+            )
 
         except TestProtocol.DoesNotExist:
             raise CommandError(f"Protocol with ID {protocol_id} not found")

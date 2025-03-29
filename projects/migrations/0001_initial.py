@@ -16,21 +16,71 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Project',
+            name="Project",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, help_text='Unique identifier for this record', primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True, help_text='Timestamp when the record was created')),
-                ('updated_at', models.DateTimeField(auto_now=True, help_text='Timestamp when the record was last updated')),
-                ('name', models.CharField(help_text='Name of the test automation project', max_length=100, verbose_name='Project Name')),
-                ('description', models.TextField(blank=True, help_text='Detailed description of the project and its purpose', verbose_name='Description')),
-                ('is_active', models.BooleanField(default=True, help_text='Whether this project is currently active', verbose_name='Active')),
-                ('owner', models.ForeignKey(help_text='User who owns this project', on_delete=django.db.models.deletion.CASCADE, related_name='projects', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        help_text="Unique identifier for this record",
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(
+                        auto_now_add=True,
+                        help_text="Timestamp when the record was created",
+                    ),
+                ),
+                (
+                    "updated_at",
+                    models.DateTimeField(
+                        auto_now=True,
+                        help_text="Timestamp when the record was last updated",
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        help_text="Name of the test automation project",
+                        max_length=100,
+                        verbose_name="Project Name",
+                    ),
+                ),
+                (
+                    "description",
+                    models.TextField(
+                        blank=True,
+                        help_text="Detailed description of the project and its purpose",
+                        verbose_name="Description",
+                    ),
+                ),
+                (
+                    "is_active",
+                    models.BooleanField(
+                        default=True,
+                        help_text="Whether this project is currently active",
+                        verbose_name="Active",
+                    ),
+                ),
+                (
+                    "owner",
+                    models.ForeignKey(
+                        help_text="User who owns this project",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="projects",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Project',
-                'verbose_name_plural': 'Projects',
-                'ordering': ['-updated_at'],
-                'unique_together': {('name', 'owner')},
+                "verbose_name": "Project",
+                "verbose_name_plural": "Projects",
+                "ordering": ["-updated_at"],
+                "unique_together": {("name", "owner")},
             },
         ),
     ]

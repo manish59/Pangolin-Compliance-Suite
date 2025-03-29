@@ -13,7 +13,7 @@ class DictHasKeysVerifier(BaseVerifier):
                     message="Actual value is not a dictionary",
                     actual_value=actual_value,
                     expected_value=expected_value,
-                    method="dict_has_keys"
+                    method="dict_has_keys",
                 )
 
             # expected_value should be a list of keys
@@ -37,7 +37,7 @@ class DictHasKeysVerifier(BaseVerifier):
                 actual_value=list(actual_value.keys()),
                 expected_value=expected_keys,
                 method="dict_has_keys",
-                missing_keys=missing_keys
+                missing_keys=missing_keys,
             )
         except Exception as e:
             return self.format_result(
@@ -46,7 +46,7 @@ class DictHasKeysVerifier(BaseVerifier):
                 actual_value=actual_value,
                 expected_value=expected_value,
                 method="dict_has_keys",
-                error=str(e)
+                error=str(e),
             )
 
 
@@ -60,7 +60,7 @@ class DictSchemaVerifier(BaseVerifier):
                     message="Actual value is not a dictionary",
                     actual_value=actual_value,
                     expected_value=expected_value,
-                    method="dict_schema_valid"
+                    method="dict_schema_valid",
                 )
 
             # expected_value should be a JSON schema
@@ -70,7 +70,7 @@ class DictSchemaVerifier(BaseVerifier):
                     message="Expected value is not a valid JSON schema (not a dictionary)",
                     actual_value=actual_value,
                     expected_value=expected_value,
-                    method="dict_schema_valid"
+                    method="dict_schema_valid",
                 )
 
             # Validate against JSON schema
@@ -83,9 +83,9 @@ class DictSchemaVerifier(BaseVerifier):
                 success = False
                 message = f"Dictionary does not match JSON schema: {ve.message}"
                 validation_error = {
-                    'message': str(ve),
-                    'path': list(ve.path) if ve.path else [],
-                    'schema_path': list(ve.schema_path) if ve.schema_path else []
+                    "message": str(ve),
+                    "path": list(ve.path) if ve.path else [],
+                    "schema_path": list(ve.schema_path) if ve.schema_path else [],
                 }
             except jsonschema.exceptions.SchemaError as se:
                 return self.format_result(
@@ -94,7 +94,7 @@ class DictSchemaVerifier(BaseVerifier):
                     actual_value=actual_value,
                     expected_value=expected_value,
                     method="dict_schema_valid",
-                    error=str(se)
+                    error=str(se),
                 )
 
             return self.format_result(
@@ -103,7 +103,7 @@ class DictSchemaVerifier(BaseVerifier):
                 actual_value=actual_value,
                 expected_value=expected_value,
                 method="dict_schema_valid",
-                validation_error=validation_error
+                validation_error=validation_error,
             )
         except Exception as e:
             return self.format_result(
@@ -112,7 +112,7 @@ class DictSchemaVerifier(BaseVerifier):
                 actual_value=actual_value,
                 expected_value=expected_value,
                 method="dict_schema_valid",
-                error=str(e)
+                error=str(e),
             )
 
 
@@ -126,7 +126,7 @@ class DictSubsetVerifier(BaseVerifier):
                     message="Actual value is not a dictionary",
                     actual_value=actual_value,
                     expected_value=expected_value,
-                    method="dict_subset"
+                    method="dict_subset",
                 )
 
             # expected_value should be a dictionary (subset)
@@ -136,7 +136,7 @@ class DictSubsetVerifier(BaseVerifier):
                     message="Expected value is not a dictionary",
                     actual_value=actual_value,
                     expected_value=expected_value,
-                    method="dict_subset"
+                    method="dict_subset",
                 )
 
             # Check if actual_value contains all key-value pairs from expected_value
@@ -167,7 +167,7 @@ class DictSubsetVerifier(BaseVerifier):
                 expected_value=expected_value,
                 method="dict_subset",
                 missing_keys=missing_keys,
-                mismatched_values=mismatched_values
+                mismatched_values=mismatched_values,
             )
         except Exception as e:
             return self.format_result(
@@ -176,5 +176,5 @@ class DictSubsetVerifier(BaseVerifier):
                 actual_value=actual_value,
                 expected_value=expected_value,
                 method="dict_subset",
-                error=str(e)
+                error=str(e),
             )

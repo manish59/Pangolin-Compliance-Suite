@@ -2,6 +2,7 @@ import yaml
 from django import template
 from django.db.models import QuerySet
 from django.utils.safestring import mark_safe
+
 register = template.Library()
 
 
@@ -11,7 +12,7 @@ def get(dictionary, key):
     Template filter to get a value from a dictionary using a variable key.
     Usage: {{ my_dict|get:my_key }}
     """
-    return dictionary.get(key, '')
+    return dictionary.get(key, "")
 
 
 @register.filter
@@ -82,6 +83,7 @@ def divisibleby(value, arg):
     except (ValueError, TypeError):
         return 0
 
+
 @register.filter
 def to_yaml(value, indent=2):
     """
@@ -91,6 +93,7 @@ def to_yaml(value, indent=2):
     if isinstance(value, str):
         # Try to parse as JSON first
         import json
+
         try:
             value = json.loads(value)
         except json.JSONDecodeError:
@@ -100,10 +103,7 @@ def to_yaml(value, indent=2):
     try:
         # Convert to YAML
         yaml_string = yaml.dump(
-            value,
-            default_flow_style=False,
-            indent=indent,
-            sort_keys=False
+            value, default_flow_style=False, indent=indent, sort_keys=False
         )
         return mark_safe(yaml_string)
     except Exception as e:

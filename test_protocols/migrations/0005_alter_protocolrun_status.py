@@ -6,13 +6,25 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('test_protocols', '0004_remove_testprotocol_verification_methods_and_more'),
+        ("test_protocols", "0004_remove_testprotocol_verification_methods_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='protocolrun',
-            name='status',
-            field=models.CharField(choices=[('created', 'Created'), ('started', 'Started'), ('running', 'Running'), ('completed', 'Completed'), ('failed', 'Failed'), ('error', 'Error'), ('aborted', 'Aborted')], default='running', max_length=20),
+            model_name="protocolrun",
+            name="status",
+            field=models.CharField(
+                choices=[
+                    ("created", "Created"),
+                    ("started", "Started"),
+                    ("running", "Running"),
+                    ("completed", "Completed"),
+                    ("failed", "Failed"),
+                    ("error", "Error"),
+                    ("aborted", "Aborted"),
+                ],
+                default="running",
+                max_length=20,
+            ),
         ),
     ]

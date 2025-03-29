@@ -10,7 +10,7 @@ class ApiStatusCodeVerifier(BaseVerifier):
                 status_code = int(actual_value)
             except (ValueError, TypeError):
                 # If actual_value is a response object with a status_code attribute (like requests.Response)
-                if hasattr(actual_value, 'status_code'):
+                if hasattr(actual_value, "status_code"):
                     status_code = actual_value.status_code
                 else:
                     return self.format_result(
@@ -18,7 +18,7 @@ class ApiStatusCodeVerifier(BaseVerifier):
                         message="Actual value is not a valid status code or response object",
                         actual_value=actual_value,
                         expected_value=expected_value,
-                        method="api_status_code"
+                        method="api_status_code",
                     )
 
             # Expected value can be a single status code or a list of valid codes
@@ -37,7 +37,7 @@ class ApiStatusCodeVerifier(BaseVerifier):
                         message="Expected value is not a valid status code",
                         actual_value=status_code,
                         expected_value=expected_value,
-                        method="api_status_code"
+                        method="api_status_code",
                     )
 
                 # Use comparison operator if provided, otherwise check for equality
@@ -49,7 +49,7 @@ class ApiStatusCodeVerifier(BaseVerifier):
                             message=f"Invalid comparison method: {comparison_method}",
                             actual_value=status_code,
                             expected_value=expected_code,
-                            method="api_status_code"
+                            method="api_status_code",
                         )
                     success = operator(status_code, expected_code)
                     if success:
@@ -69,7 +69,7 @@ class ApiStatusCodeVerifier(BaseVerifier):
                 message=message,
                 actual_value=status_code,
                 expected_value=expected_value,
-                method="api_status_code"
+                method="api_status_code",
             )
         except Exception as e:
             return self.format_result(
@@ -78,7 +78,7 @@ class ApiStatusCodeVerifier(BaseVerifier):
                 actual_value=actual_value,
                 expected_value=expected_value,
                 method="api_status_code",
-                error=str(e)
+                error=str(e),
             )
 
 
@@ -90,7 +90,7 @@ class ApiResponseTimeVerifier(BaseVerifier):
                 response_time = float(actual_value)
             except (ValueError, TypeError):
                 # If actual_value is a response object with an elapsed attribute (like requests.Response)
-                if hasattr(actual_value, 'elapsed'):
+                if hasattr(actual_value, "elapsed"):
                     # Convert timedelta to seconds
                     response_time = actual_value.elapsed.total_seconds()
                 else:
@@ -99,7 +99,7 @@ class ApiResponseTimeVerifier(BaseVerifier):
                         message="Actual value is not a valid response time or response object",
                         actual_value=actual_value,
                         expected_value=expected_value,
-                        method="api_response_time"
+                        method="api_response_time",
                     )
 
             # Expected value is the maximum acceptable response time
@@ -111,7 +111,7 @@ class ApiResponseTimeVerifier(BaseVerifier):
                     message="Expected value is not a valid response time threshold",
                     actual_value=response_time,
                     expected_value=expected_value,
-                    method="api_response_time"
+                    method="api_response_time",
                 )
 
             # Use comparison operator if provided, otherwise check if response_time <= expected_time
@@ -123,7 +123,7 @@ class ApiResponseTimeVerifier(BaseVerifier):
                         message=f"Invalid comparison method: {comparison_method}",
                         actual_value=response_time,
                         expected_value=expected_time,
-                        method="api_response_time"
+                        method="api_response_time",
                     )
                 success = operator(response_time, expected_time)
                 if success:
@@ -143,7 +143,7 @@ class ApiResponseTimeVerifier(BaseVerifier):
                 message=message,
                 actual_value=response_time,
                 expected_value=expected_time,
-                method="api_response_time"
+                method="api_response_time",
             )
         except Exception as e:
             return self.format_result(
@@ -152,7 +152,7 @@ class ApiResponseTimeVerifier(BaseVerifier):
                 actual_value=actual_value,
                 expected_value=expected_value,
                 method="api_response_time",
-                error=str(e)
+                error=str(e),
             )
 
 
@@ -163,7 +163,7 @@ class ApiHeadersVerifier(BaseVerifier):
             headers = None
             if isinstance(actual_value, dict):
                 headers = actual_value
-            elif hasattr(actual_value, 'headers'):
+            elif hasattr(actual_value, "headers"):
                 # If actual_value is a response object with headers attribute (like requests.Response)
                 headers = actual_value.headers
             else:
@@ -172,7 +172,7 @@ class ApiHeadersVerifier(BaseVerifier):
                     message="Actual value is not a valid headers dict or response object",
                     actual_value=actual_value,
                     expected_value=expected_value,
-                    method="api_headers"
+                    method="api_headers",
                 )
 
             # Convert headers to lowercase dict for case-insensitive comparison
@@ -186,7 +186,7 @@ class ApiHeadersVerifier(BaseVerifier):
                     message="Expected value is not a valid headers dict",
                     actual_value=headers,
                     expected_value=expected_value,
-                    method="api_headers"
+                    method="api_headers",
                 )
 
             # Convert expected headers to lowercase for case-insensitive comparison
@@ -220,7 +220,7 @@ class ApiHeadersVerifier(BaseVerifier):
                 expected_value=expected_value,
                 method="api_headers",
                 missing_headers=missing_headers,
-                mismatched_headers=mismatched_headers
+                mismatched_headers=mismatched_headers,
             )
         except Exception as e:
             return self.format_result(
@@ -229,7 +229,7 @@ class ApiHeadersVerifier(BaseVerifier):
                 actual_value=actual_value,
                 expected_value=expected_value,
                 method="api_headers",
-                error=str(e)
+                error=str(e),
             )
 
 
@@ -242,19 +242,21 @@ class ApiContentTypeVerifier(BaseVerifier):
             if isinstance(actual_value, str):
                 # If actual_value is already a content type string
                 content_type = actual_value.lower()
-            elif isinstance(actual_value, dict) and 'content-type' in actual_value:
+            elif isinstance(actual_value, dict) and "content-type" in actual_value:
                 # If actual_value is a headers dict
-                content_type = actual_value['content-type'].lower()
-            elif isinstance(actual_value, dict) and 'Content-Type' in actual_value:
+                content_type = actual_value["content-type"].lower()
+            elif isinstance(actual_value, dict) and "Content-Type" in actual_value:
                 # Check with capitalized header name
-                content_type = actual_value['Content-Type'].lower()
-            elif hasattr(actual_value, 'headers'):
+                content_type = actual_value["Content-Type"].lower()
+            elif hasattr(actual_value, "headers"):
                 # If actual_value is a response object with headers (like requests.Response)
                 headers = actual_value.headers
 
                 # Headers object might be case-sensitive or case-insensitive based on implementation
                 if isinstance(headers, dict):
-                    content_type = headers.get('content-type') or headers.get('Content-Type')
+                    content_type = headers.get("content-type") or headers.get(
+                        "Content-Type"
+                    )
                     if content_type:
                         content_type = content_type.lower()
 
@@ -264,7 +266,7 @@ class ApiContentTypeVerifier(BaseVerifier):
                     message="Could not extract Content-Type from the provided value",
                     actual_value=actual_value,
                     expected_value=expected_value,
-                    method="api_content_type"
+                    method="api_content_type",
                 )
 
             # Expected value should be a string or list of strings
@@ -278,13 +280,15 @@ class ApiContentTypeVerifier(BaseVerifier):
                     message="Expected value is not a valid content type or list of content types",
                     actual_value=content_type,
                     expected_value=expected_value,
-                    method="api_content_type"
+                    method="api_content_type",
                 )
 
             # Check for exact match or contains, based on comparison_method
-            if comparison_method == 'contains':
+            if comparison_method == "contains":
                 # Check if any expected content type is contained in the actual content type
-                success = any(exp_ct in content_type for exp_ct in expected_content_types)
+                success = any(
+                    exp_ct in content_type for exp_ct in expected_content_types
+                )
                 if success:
                     message = f"Content-Type '{content_type}' contains one of the expected types"
                 else:
@@ -302,7 +306,7 @@ class ApiContentTypeVerifier(BaseVerifier):
                 message=message,
                 actual_value=content_type,
                 expected_value=expected_value,
-                method="api_content_type"
+                method="api_content_type",
             )
         except Exception as e:
             return self.format_result(
@@ -311,5 +315,5 @@ class ApiContentTypeVerifier(BaseVerifier):
                 actual_value=actual_value,
                 expected_value=expected_value,
                 method="api_content_type",
-                error=str(e)
+                error=str(e),
             )

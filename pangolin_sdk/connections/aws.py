@@ -1,6 +1,6 @@
 """AWS Connection Handling Module.
 
-This module provides implementation for AWS service connections 
+This module provides implementation for AWS service connections
 and operations using the boto3 library.
 """
 
@@ -14,7 +14,10 @@ from botocore.exceptions import BotoCoreError, ClientError
 from pangolin_sdk.configs.aws import AWSConnectionConfig
 from pangolin_sdk.connections.base import BaseConnection
 from pangolin_sdk.constants import AWSAuthMethod, AWSService
-from pangolin_sdk.exceptions import BaseConnectionError as ConnectionError, BaseExecutionError as ExecutionError
+from pangolin_sdk.exceptions import (
+    BaseConnectionError as ConnectionError,
+    BaseExecutionError as ExecutionError,
+)
 
 
 class AWSConnection(BaseConnection[BaseClient]):
@@ -148,7 +151,7 @@ class AWSConnection(BaseConnection[BaseClient]):
         return boto3.Session(profile_name=self.config.profile_name)
 
     def _create_service_interfaces(
-            self, session: boto3.Session, kwargs: Dict[str, Any]
+        self, session: boto3.Session, kwargs: Dict[str, Any]
     ) -> None:
         """
         Create service client and resource interfaces.
@@ -186,8 +189,8 @@ class AWSConnection(BaseConnection[BaseClient]):
             ExecutionError: If execution fails
         """
         # Extract specific AWS operation parameters
-        operation = kwargs.get('operation')
-        using = kwargs.get('using', 'client')
+        operation = kwargs.get("operation")
+        using = kwargs.get("using", "client")
 
         # Validate operation is provided
         if not operation:
@@ -203,8 +206,9 @@ class AWSConnection(BaseConnection[BaseClient]):
             method = getattr(interface, operation)
 
             # Remove 'operation' and 'using' from kwargs
-            op_kwargs = {k: v for k, v in kwargs.items()
-                         if k not in ['operation', 'using']}
+            op_kwargs = {
+                k: v for k, v in kwargs.items() if k not in ["operation", "using"]
+            }
 
             # Execute the operation
             response = method(**op_kwargs)
@@ -269,7 +273,7 @@ class AWSConnection(BaseConnection[BaseClient]):
             else:
                 self._logger.warning(
                     "No connection test method for service %s",
-                    self.config.service.value
+                    self.config.service.value,
                 )
 
         except (BotoCoreError, ClientError) as e:

@@ -68,7 +68,9 @@ class KubernetesConnection(BaseConnection[ApiClient]):
 
             handler = auth_method_handlers.get(self.config.auth_method)
             if not handler:
-                raise ValueError(f"Unsupported authentication method: {self.config.auth_method}")
+                raise ValueError(
+                    f"Unsupported authentication method: {self.config.auth_method}"
+                )
 
             self._api_client = handler()
 
@@ -110,9 +112,7 @@ class KubernetesConnection(BaseConnection[ApiClient]):
         """
         configuration = client.Configuration()
         configuration.host = f"https://{self.config.host}:{self.config.port}"
-        configuration.api_key = {
-            "authorization": f"Bearer {self.config.api_token}"
-        }
+        configuration.api_key = {"authorization": f"Bearer {self.config.api_token}"}
         configuration.verify_ssl = self.config.verify_ssl
         if self.config.ca_cert_path:
             configuration.ssl_ca_cert = self.config.ca_cert_path
@@ -175,24 +175,24 @@ class KubernetesConnection(BaseConnection[ApiClient]):
             ExecutionError: If execution fails
         """
         # If specific Kubernetes arguments are provided
-        if 'resource_type' in kwargs and 'action' in kwargs:
+        if "resource_type" in kwargs and "action" in kwargs:
             return self._execute_kubernetes_operation(
-                resource_type=kwargs['resource_type'],
-                action=kwargs['action'],
-                **{k: v for k, v in kwargs.items() if k not in ['resource_type', 'action']}
+                resource_type=kwargs["resource_type"],
+                action=kwargs["action"],
+                **{
+                    k: v
+                    for k, v in kwargs.items()
+                    if k not in ["resource_type", "action"]
+                },
             )
 
         # Fallback to base implementation or raise an error
         raise ExecutionError(
-            message="Invalid arguments for Kubernetes execution",
-            details=kwargs
+            message="Invalid arguments for Kubernetes execution", details=kwargs
         )
 
     def _execute_kubernetes_operation(
-        self,
-        resource_type: KubernetesResourceType,
-        action: str,
-        **kwargs
+        self, resource_type: KubernetesResourceType, action: str, **kwargs
     ) -> Dict[str, Any]:
         """
         Execute a specific Kubernetes operation.

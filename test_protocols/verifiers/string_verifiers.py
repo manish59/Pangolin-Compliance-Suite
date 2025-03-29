@@ -22,7 +22,7 @@ class StringExactMatchVerifier(BaseVerifier):
                 message=message,
                 actual_value=actual_str,
                 expected_value=expected_str,
-                method="string_exact_match"
+                method="string_exact_match",
             )
         except Exception as e:
             return self.format_result(
@@ -31,7 +31,7 @@ class StringExactMatchVerifier(BaseVerifier):
                 actual_value=actual_value,
                 expected_value=expected_value,
                 method="string_exact_match",
-                error=str(e)
+                error=str(e),
             )
 
 
@@ -54,7 +54,7 @@ class StringContainsVerifier(BaseVerifier):
                 message=message,
                 actual_value=actual_str,
                 expected_value=expected_str,
-                method="string_contains"
+                method="string_contains",
             )
         except Exception as e:
             return self.format_result(
@@ -63,7 +63,7 @@ class StringContainsVerifier(BaseVerifier):
                 actual_value=actual_value,
                 expected_value=expected_value,
                 method="string_contains",
-                error=str(e)
+                error=str(e),
             )
 
 
@@ -86,7 +86,7 @@ class StringRegexMatchVerifier(BaseVerifier):
                     actual_value=actual_str,
                     expected_value=pattern,
                     method="string_regex_match",
-                    error=str(regex_error)
+                    error=str(regex_error),
                 )
 
             if success:
@@ -100,7 +100,7 @@ class StringRegexMatchVerifier(BaseVerifier):
                 actual_value=actual_str,
                 expected_value=pattern,
                 method="string_regex_match",
-                match_groups=match.groups() if success and match.groups() else None
+                match_groups=match.groups() if success and match.groups() else None,
             )
         except Exception as e:
             return self.format_result(
@@ -109,7 +109,7 @@ class StringRegexMatchVerifier(BaseVerifier):
                 actual_value=actual_value,
                 expected_value=expected_value,
                 method="string_regex_match",
-                error=str(e)
+                error=str(e),
             )
 
 
@@ -124,7 +124,7 @@ class StringLengthVerifier(BaseVerifier):
             if isinstance(expected_value, (int, float)):
                 # Single value - exact length check
                 expected_length = int(expected_value)
-                comparison = comparison_method if comparison_method else 'eq'
+                comparison = comparison_method if comparison_method else "eq"
                 operator = self.get_comparison_operator(comparison)
 
                 if not operator:
@@ -133,7 +133,7 @@ class StringLengthVerifier(BaseVerifier):
                         message=f"Invalid comparison method: {comparison}",
                         actual_value=actual_length,
                         expected_value=expected_length,
-                        method="string_length"
+                        method="string_length",
                     )
 
                 success = operator(actual_length, expected_length)
@@ -143,10 +143,14 @@ class StringLengthVerifier(BaseVerifier):
                 else:
                     message = f"String length ({actual_length}) does not meet the {comparison} condition with expected value {expected_length}"
 
-            elif isinstance(expected_value, dict) and 'min' in expected_value and 'max' in expected_value:
+            elif (
+                isinstance(expected_value, dict)
+                and "min" in expected_value
+                and "max" in expected_value
+            ):
                 # Range check
-                min_length = expected_value.get('min')
-                max_length = expected_value.get('max')
+                min_length = expected_value.get("min")
+                max_length = expected_value.get("max")
 
                 success = min_length <= actual_length <= max_length
 
@@ -160,7 +164,7 @@ class StringLengthVerifier(BaseVerifier):
                     message=f"Invalid expected value for string length verification: {expected_value}",
                     actual_value=actual_length,
                     expected_value=expected_value,
-                    method="string_length"
+                    method="string_length",
                 )
 
             return self.format_result(
@@ -169,7 +173,7 @@ class StringLengthVerifier(BaseVerifier):
                 actual_value=actual_length,
                 expected_value=expected_value,
                 method="string_length",
-                string_value=actual_str
+                string_value=actual_str,
             )
         except Exception as e:
             return self.format_result(
@@ -178,5 +182,5 @@ class StringLengthVerifier(BaseVerifier):
                 actual_value=actual_value,
                 expected_value=expected_value,
                 method="string_length",
-                error=str(e)
+                error=str(e),
             )

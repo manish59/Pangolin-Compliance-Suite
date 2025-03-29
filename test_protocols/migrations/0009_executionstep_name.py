@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('test_protocols', '0008_verificationmethod_execution_step_verificationresult'),
+        ("test_protocols", "0008_verificationmethod_execution_step_verificationresult"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='executionstep',
-            name='name',
+            model_name="executionstep",
+            name="name",
             field=models.CharField(blank=True, default=None, max_length=100, null=True),
         ),
     ]

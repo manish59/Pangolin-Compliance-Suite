@@ -8,6 +8,7 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, Optional
 from dataclasses import fields
 
+
 @dataclass(kw_only=True)
 class BaseConfig:
     """Base configuration for all connection types.

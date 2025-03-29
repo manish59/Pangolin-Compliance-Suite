@@ -20,7 +20,13 @@ from django.contrib.auth.models import User
 
 # Import your models
 from projects.models import Project
-from test_protocols.models import TestSuite, TestProtocol, ConnectionConfig, ExecutionStep, VerificationMethod
+from test_protocols.models import (
+    TestSuite,
+    TestProtocol,
+    ConnectionConfig,
+    ExecutionStep,
+    VerificationMethod,
+)
 from environments.models import Environment
 
 # Configuration
@@ -32,48 +38,58 @@ NUM_ENVIRONMENTS_PER_PROJECT = 10
 NUM_VERIFICATIONS_PER_STEP = 2
 
 # Sample data
-CONNECTION_TYPES = ['database', 'api', 'ssh', 'kubernetes', 'aws', 'azure']
-PROTOCOL_STATUSES = ['active', 'deprecated', 'draft', 'archived']
+CONNECTION_TYPES = ["database", "api", "ssh", "kubernetes", "aws", "azure"]
+PROTOCOL_STATUSES = ["active", "deprecated", "draft", "archived"]
 VERIFICATION_TYPES = [
-    'string_exact_match', 'string_contains', 'numeric_equal',
-    'numeric_range', 'api_status_code', 'db_row_count'
+    "string_exact_match",
+    "string_contains",
+    "numeric_equal",
+    "numeric_range",
+    "api_status_code",
+    "db_row_count",
 ]
-VARIABLE_TYPES = ['text', 'number', 'boolean', 'secret', 'json', 'url']
+VARIABLE_TYPES = ["text", "number", "boolean", "secret", "json", "url"]
 
 # Sample hosts for different connection types
 HOSTS = {
-    'database': ['postgres-db', 'mysql-server', 'oracle-db', 'mssql-server'],
-    'api': ['api.example.com', 'rest.service.io', 'graphql.endpoint.org'],
-    'ssh': ['server1.example.com', 'bastion.example.com', 'worker1.example.com'],
-    'kubernetes': ['k8s-master', 'aks-cluster', 'eks-cluster', 'gke-cluster'],
-    'aws': ['s3.amazonaws.com', 'ec2.amazonaws.com', 'rds.amazonaws.com'],
-    'azure': ['blob.core.windows.net', 'database.azure.com', 'azurewebsites.net']
+    "database": ["postgres-db", "mysql-server", "oracle-db", "mssql-server"],
+    "api": ["api.example.com", "rest.service.io", "graphql.endpoint.org"],
+    "ssh": ["server1.example.com", "bastion.example.com", "worker1.example.com"],
+    "kubernetes": ["k8s-master", "aks-cluster", "eks-cluster", "gke-cluster"],
+    "aws": ["s3.amazonaws.com", "ec2.amazonaws.com", "rds.amazonaws.com"],
+    "azure": ["blob.core.windows.net", "database.azure.com", "azurewebsites.net"],
 }
 
 # Sample project names
 PROJECT_NAMES = [
-    "Data Pipeline", "Customer API", "Authentication Service",
-    "Inventory System", "Payment Gateway", "Order Management",
-    "Analytics Platform", "CRM Integration", "Security Compliance",
-    "DevOps Automation"
+    "Data Pipeline",
+    "Customer API",
+    "Authentication Service",
+    "Inventory System",
+    "Payment Gateway",
+    "Order Management",
+    "Analytics Platform",
+    "CRM Integration",
+    "Security Compliance",
+    "DevOps Automation",
 ]
 
 
 def get_random_host(connection_type):
     """Get a random host for the given connection type."""
-    hosts = HOSTS.get(connection_type, ['localhost'])
+    hosts = HOSTS.get(connection_type, ["localhost"])
     return random.choice(hosts)
 
 
 def get_random_port(connection_type):
     """Get a sensible port for the given connection type."""
     port_ranges = {
-        'database': [1433, 3306, 5432, 1521],
-        'api': [80, 443, 8080, 8443],
-        'ssh': [22, 2222],
-        'kubernetes': [6443, 8443, 10250],
-        'aws': [443],
-        'azure': [443]
+        "database": [1433, 3306, 5432, 1521],
+        "api": [80, 443, 8080, 8443],
+        "ssh": [22, 2222],
+        "kubernetes": [6443, 8443, 10250],
+        "aws": [443],
+        "azure": [443],
     }
     ports = port_ranges.get(connection_type, [80, 443, 8080])
     return random.choice(ports)
@@ -85,51 +101,51 @@ def generate_connection_config(protocol, config_type):
     port = get_random_port(config_type)
 
     # Create different config_data based on connection type
-    if config_type == 'database':
+    if config_type == "database":
         config_data = {
-            'database_type': random.choice(['postgresql', 'mysql', 'oracle', 'mssql']),
-            'database': f"test_db_{uuid.uuid4().hex[:8]}",
-            'username': 'db_user',
-            'password': '${DB_PASSWORD}',  # Reference to an environment variable
-            'options': {
-                'ssl': random.choice([True, False]),
-                'timeout': random.randint(10, 60)
-            }
+            "database_type": random.choice(["postgresql", "mysql", "oracle", "mssql"]),
+            "database": f"test_db_{uuid.uuid4().hex[:8]}",
+            "username": "db_user",
+            "password": "${DB_PASSWORD}",  # Reference to an environment variable
+            "options": {
+                "ssl": random.choice([True, False]),
+                "timeout": random.randint(10, 60),
+            },
         }
-    elif config_type == 'api':
+    elif config_type == "api":
         config_data = {
-            'auth_method': random.choice(['none', 'basic', 'bearer', 'api_key']),
-            'api_key_name': 'X-API-Key',
-            'api_key_location': 'header',
-            'default_headers': {
-                'Accept': 'application/json',
-                'User-Agent': 'TestAutomation/1.0'
-            }
+            "auth_method": random.choice(["none", "basic", "bearer", "api_key"]),
+            "api_key_name": "X-API-Key",
+            "api_key_location": "header",
+            "default_headers": {
+                "Accept": "application/json",
+                "User-Agent": "TestAutomation/1.0",
+            },
         }
-    elif config_type == 'ssh':
+    elif config_type == "ssh":
         config_data = {
-            'auth_method': random.choice(['password', 'publickey']),
-            'username': 'ssh_user',
-            'private_key': '/path/to/key' if random.choice([True, False]) else None
+            "auth_method": random.choice(["password", "publickey"]),
+            "username": "ssh_user",
+            "private_key": "/path/to/key" if random.choice([True, False]) else None,
         }
-    elif config_type == 'kubernetes':
+    elif config_type == "kubernetes":
         config_data = {
-            'auth_method': random.choice(['config', 'token']),
-            'namespace': random.choice(['default', 'app', 'monitoring']),
-            'verify_ssl': random.choice([True, False])
+            "auth_method": random.choice(["config", "token"]),
+            "namespace": random.choice(["default", "app", "monitoring"]),
+            "verify_ssl": random.choice([True, False]),
         }
-    elif config_type == 'aws':
+    elif config_type == "aws":
         config_data = {
-            'auth_method': random.choice(['access_key', 'profile', 'instance_role']),
-            'service': random.choice(['s3', 'ec2', 'rds', 'lambda']),
-            'region': random.choice(['us-east-1', 'us-west-2', 'eu-west-1'])
+            "auth_method": random.choice(["access_key", "profile", "instance_role"]),
+            "service": random.choice(["s3", "ec2", "rds", "lambda"]),
+            "region": random.choice(["us-east-1", "us-west-2", "eu-west-1"]),
         }
     else:  # azure
         config_data = {
-            'auth_method': random.choice(['service_principal', 'managed_identity']),
-            'tenant_id': f"{uuid.uuid4()}",
-            'subscription_id': f"{uuid.uuid4()}",
-            'resource_group': f"rg-{random.choice(['dev', 'test', 'prod'])}"
+            "auth_method": random.choice(["service_principal", "managed_identity"]),
+            "tenant_id": f"{uuid.uuid4()}",
+            "subscription_id": f"{uuid.uuid4()}",
+            "resource_group": f"rg-{random.choice(['dev', 'test', 'prod'])}",
         }
 
     connection = ConnectionConfig(
@@ -137,7 +153,7 @@ def generate_connection_config(protocol, config_type):
         config_type=config_type,
         timeout_seconds=random.randint(10, 120),
         retry_attempts=random.randint(1, 5),
-        config_data=config_data
+        config_data=config_data,
     )
     connection.save()
     return connection
@@ -146,29 +162,33 @@ def generate_connection_config(protocol, config_type):
 def generate_verification_method(step, name, method_type):
     """Generate a verification method for an execution step."""
     # Create different expected results based on verification type
-    if 'string' in method_type:
+    if "string" in method_type:
         expected_result = {"result": "Expected string value"}
-    elif 'numeric' in method_type:
+    elif "numeric" in method_type:
         expected_result = {"result": random.randint(1, 100)}
-    elif 'api_status_code' in method_type:
+    elif "api_status_code" in method_type:
         expected_result = {"result": random.choice([200, 201, 204])}
-    elif 'db_row_count' in method_type:
+    elif "db_row_count" in method_type:
         expected_result = {"result": random.randint(1, 1000)}
     else:
         expected_result = {"result": "default_value"}
 
     # Determine if this type supports comparison
-    supports_comparison = any(t in method_type for t in ['string', 'numeric', 'api_status', 'db_row'])
+    supports_comparison = any(
+        t in method_type for t in ["string", "numeric", "api_status", "db_row"]
+    )
 
     # Choose a comparison method if applicable
-    comparison_method = ''
+    comparison_method = ""
     if supports_comparison:
-        if 'string' in method_type:
-            comparison_method = random.choice(['eq', 'contains', 'starts_with', 'ends_with'])
-        elif 'numeric' in method_type:
-            comparison_method = random.choice(['eq', 'gt', 'lt', 'gte', 'lte'])
+        if "string" in method_type:
+            comparison_method = random.choice(
+                ["eq", "contains", "starts_with", "ends_with"]
+            )
+        elif "numeric" in method_type:
+            comparison_method = random.choice(["eq", "gt", "lt", "gte", "lte"])
         else:
-            comparison_method = 'eq'  # Default to equals for other types
+            comparison_method = "eq"  # Default to equals for other types
 
     # Create the verification method
     verification = VerificationMethod(
@@ -183,11 +203,8 @@ def generate_verification_method(step, name, method_type):
         supports_dynamic_expected=random.choice([True, False]),
         config_schema={
             "type": "object",
-            "properties": {
-                "timeout": {"type": "number"},
-                "retry": {"type": "boolean"}
-            }
-        }
+            "properties": {"timeout": {"type": "number"}, "retry": {"type": "boolean"}},
+        },
     )
     verification.save()
     return verification
@@ -198,43 +215,39 @@ def generate_execution_step(protocol, index):
     step_name = f"Step {index + 1}: {random.choice(['Prepare', 'Execute', 'Validate', 'Cleanup'])}"
 
     # Create different kwargs based on the step name
-    if 'Prepare' in step_name:
+    if "Prepare" in step_name:
         kwargs = {
             "setup": True,
             "initialize": random.choice([True, False]),
             "config": {
                 "timeout": random.randint(10, 30),
-                "retries": random.randint(1, 3)
-            }
+                "retries": random.randint(1, 3),
+            },
         }
-    elif 'Execute' in step_name:
+    elif "Execute" in step_name:
         kwargs = {
             "command": random.choice(["get_data", "process_items", "trigger_action"]),
             "parameters": {
                 "limit": random.randint(10, 100),
-                "filter": random.choice(["active", "pending", "completed"])
-            }
+                "filter": random.choice(["active", "pending", "completed"]),
+            },
         }
-    elif 'Validate' in step_name:
+    elif "Validate" in step_name:
         kwargs = {
             "validation_type": random.choice(["schema", "count", "content"]),
             "expected": {
                 "status": random.choice(["success", "partial", "error"]),
-                "count": random.randint(0, 1000)
-            }
+                "count": random.randint(0, 1000),
+            },
         }
     else:  # Cleanup
         kwargs = {
             "cleanup": True,
             "remove_temp_files": random.choice([True, False]),
-            "reset_state": random.choice([True, False])
+            "reset_state": random.choice([True, False]),
         }
 
-    step = ExecutionStep(
-        test_protocol=protocol,
-        name=step_name,
-        kwargs=kwargs
-    )
+    step = ExecutionStep(test_protocol=protocol, name=step_name, kwargs=kwargs)
     step.save()
 
     # Generate verification methods for this step
@@ -252,17 +265,17 @@ def generate_environment_variable(project, key_index):
     key = f"TEST_VAR_{key_index}"
 
     # Generate different values based on type
-    if variable_type == 'text':
+    if variable_type == "text":
         value = f"text_value_{uuid.uuid4().hex[:8]}"
-    elif variable_type == 'number':
+    elif variable_type == "number":
         value = str(random.randint(1, 10000))
-    elif variable_type == 'boolean':
+    elif variable_type == "boolean":
         value = str(random.choice([True, False])).lower()
-    elif variable_type == 'secret':
+    elif variable_type == "secret":
         value = f"secret_{uuid.uuid4().hex}"
-    elif variable_type == 'json':
+    elif variable_type == "json":
         value = '{"key": "value", "enabled": true, "count": 42}'
-    elif variable_type == 'url':
+    elif variable_type == "url":
         value = f"https://example.com/{uuid.uuid4().hex[:8]}"
 
     env_var = Environment(
@@ -271,7 +284,7 @@ def generate_environment_variable(project, key_index):
         value=value,
         variable_type=variable_type,
         description=f"Test variable {key_index} of type {variable_type}",
-        is_enabled=random.choice([True, False])
+        is_enabled=random.choice([True, False]),
     )
     env_var.save()
     return env_var
@@ -280,17 +293,17 @@ def generate_environment_variable(project, key_index):
 def generate_test_protocol(suite, index):
     """Generate a test protocol for a suite."""
     status = random.choice(PROTOCOL_STATUSES)
-    if status == 'active':
+    if status == "active":
         # Weight the distribution to have more active protocols
         if random.random() < 0.7:
-            status = 'active'
+            status = "active"
 
     protocol = TestProtocol(
         suite=suite,
         name=f"Protocol {index + 1}: {random.choice(['API Test', 'DB Verification', 'Config Check', 'System Health', 'Performance Test'])}",
         description=f"This is a test protocol {index + 1} for suite {suite.name}",
         status=status,
-        order_index=index * 10  # Space them out for easy reordering
+        order_index=index * 10,  # Space them out for easy reordering
     )
     protocol.save()
 
@@ -310,7 +323,7 @@ def generate_test_suite(project, index):
     suite = TestSuite(
         name=f"Suite {index + 1}: {random.choice(['Regression', 'Smoke', 'Integration', 'Performance', 'Security'])}",
         description=f"This is a test suite {index + 1} for project {project.name}",
-        project=project
+        project=project,
     )
     suite.save()
 
@@ -343,7 +356,7 @@ def generate_all_test_data():
             project = Project(
                 name=f"{random.choice(PROJECT_NAMES)} {i + 1}",
                 description=f"Test project {i + 1}",
-                status="active"
+                status="active",
             )
             project.save()
             projects.append(project)
@@ -361,10 +374,14 @@ def generate_all_test_data():
         print(f"  Creating {NUM_SUITES_PER_PROJECT} test suites")
         for suite_index in range(NUM_SUITES_PER_PROJECT):
             suite = generate_test_suite(project, suite_index)
-            print(f"    Created suite: {suite.name} with {NUM_PROTOCOLS_PER_SUITE} protocols")
+            print(
+                f"    Created suite: {suite.name} with {NUM_PROTOCOLS_PER_SUITE} protocols"
+            )
 
     end_time = datetime.now()
-    print(f"Finished test data generation in {(end_time - start_time).total_seconds():.2f} seconds")
+    print(
+        f"Finished test data generation in {(end_time - start_time).total_seconds():.2f} seconds"
+    )
 
     # Print summary
     projects_count = Project.objects.count()

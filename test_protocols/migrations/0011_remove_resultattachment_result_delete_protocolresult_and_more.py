@@ -6,18 +6,18 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('test_protocols', '0010_remove_verificationmethod_test_protocol'),
+        ("test_protocols", "0010_remove_verificationmethod_test_protocol"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='resultattachment',
-            name='result',
+            model_name="resultattachment",
+            name="result",
         ),
         migrations.DeleteModel(
-            name='ProtocolResult',
+            name="ProtocolResult",
         ),
         migrations.DeleteModel(
-            name='ResultAttachment',
+            name="ResultAttachment",
         ),
     ]

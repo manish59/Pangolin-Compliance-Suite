@@ -7,13 +7,21 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('test_protocols', '0011_remove_resultattachment_result_delete_protocolresult_and_more'),
+        (
+            "test_protocols",
+            "0011_remove_resultattachment_result_delete_protocolresult_and_more",
+        ),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='verificationresult',
-            name='verification_step',
-            field=models.ForeignKey(help_text='The verification step that was performed', on_delete=django.db.models.deletion.CASCADE, related_name='results', to='test_protocols.verificationmethod'),
+            model_name="verificationresult",
+            name="verification_step",
+            field=models.ForeignKey(
+                help_text="The verification step that was performed",
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="results",
+                to="test_protocols.verificationmethod",
+            ),
         ),
     ]

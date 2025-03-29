@@ -107,8 +107,7 @@ class APIConnection(BaseConnection):
         """
         if self._response is None:
             raise APIConnectionError(
-                message="No response received during connection test",
-                status_code=None
+                message="No response received during connection test", status_code=None
             )
 
         if self._response.status_code in [200, 201, 204]:
@@ -195,7 +194,7 @@ class APIConnection(BaseConnection):
         endpoint: str,
         data: Optional[Any] = None,
         params: Optional[Dict[str, Any]] = None,
-        headers: Optional[Dict[str, str]] = None
+        headers: Optional[Dict[str, str]] = None,
     ) -> Dict[str, Any]:
         """
         Perform the actual API request.

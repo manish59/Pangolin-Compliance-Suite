@@ -7,13 +7,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('test_protocols', '0001_initial'),
+        ("test_protocols", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='verificationmethod',
-            name='run',
-            field=models.ForeignKey(default=None, on_delete=django.db.models.deletion.CASCADE, related_name='verfication_method', to='test_protocols.protocolrun'),
+            model_name="verificationmethod",
+            name="run",
+            field=models.ForeignKey(
+                default=None,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="verfication_method",
+                to="test_protocols.protocolrun",
+            ),
         ),
     ]

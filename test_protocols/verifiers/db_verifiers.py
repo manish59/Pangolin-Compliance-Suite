@@ -9,7 +9,7 @@ class DbRowCountVerifier(BaseVerifier):
             try:
                 if isinstance(actual_value, list):
                     row_count = len(actual_value)
-                elif hasattr(actual_value, '__len__'):
+                elif hasattr(actual_value, "__len__"):
                     row_count = len(actual_value)
                 else:
                     row_count = int(actual_value)
@@ -19,14 +19,18 @@ class DbRowCountVerifier(BaseVerifier):
                     message="Actual value cannot be interpreted as a row count",
                     actual_value=actual_value,
                     expected_value=expected_value,
-                    method="db_row_count"
+                    method="db_row_count",
                 )
 
             # Expected value can be a single count or a range dict
-            if isinstance(expected_value, dict) and 'min' in expected_value and 'max' in expected_value:
+            if (
+                isinstance(expected_value, dict)
+                and "min" in expected_value
+                and "max" in expected_value
+            ):
                 # Range check
-                min_count = int(expected_value['min'])
-                max_count = int(expected_value['max'])
+                min_count = int(expected_value["min"])
+                max_count = int(expected_value["max"])
 
                 success = min_count <= row_count <= max_count
 
@@ -44,7 +48,7 @@ class DbRowCountVerifier(BaseVerifier):
                         message="Expected value cannot be interpreted as a row count",
                         actual_value=row_count,
                         expected_value=expected_value,
-                        method="db_row_count"
+                        method="db_row_count",
                     )
 
                 # Use comparison operator if provided, otherwise check for equality
@@ -56,7 +60,7 @@ class DbRowCountVerifier(BaseVerifier):
                             message=f"Invalid comparison method: {comparison_method}",
                             actual_value=row_count,
                             expected_value=expected_count,
-                            method="db_row_count"
+                            method="db_row_count",
                         )
                     success = operator(row_count, expected_count)
                     if success:
@@ -76,7 +80,7 @@ class DbRowCountVerifier(BaseVerifier):
                 message=message,
                 actual_value=row_count,
                 expected_value=expected_value,
-                method="db_row_count"
+                method="db_row_count",
             )
         except Exception as e:
             return self.format_result(
@@ -85,8 +89,9 @@ class DbRowCountVerifier(BaseVerifier):
                 actual_value=actual_value,
                 expected_value=expected_value,
                 method="db_row_count",
-                error=str(e)
+                error=str(e),
             )
+
 
 class DbColumnExistsVerifier(BaseVerifier):
     def verify(self, actual_value, expected_value, comparison_method=None, config=None):
@@ -102,7 +107,7 @@ class DbColumnExistsVerifier(BaseVerifier):
                     message="Expected value must be a column name or list of column names",
                     actual_value=actual_value,
                     expected_value=expected_value,
-                    method="db_column_exists"
+                    method="db_column_exists",
                 )
 
             # Actual value can be various types of database results
@@ -116,10 +121,10 @@ class DbColumnExistsVerifier(BaseVerifier):
                 # If it's a list of dicts (common DB result format), use keys from first row
                 if isinstance(actual_value[0], dict):
                     available_columns = list(actual_value[0].keys())
-            elif hasattr(actual_value, 'columns'):
+            elif hasattr(actual_value, "columns"):
                 # If it has a columns attribute (like pandas DataFrame)
                 available_columns = list(actual_value.columns)
-            elif hasattr(actual_value, 'description') and actual_value.description:
+            elif hasattr(actual_value, "description") and actual_value.description:
                 # If it has a description attribute with column info (like DB cursor)
                 available_columns = [col[0] for col in actual_value.description]
             else:
@@ -128,11 +133,13 @@ class DbColumnExistsVerifier(BaseVerifier):
                     message="Could not extract column names from the provided value",
                     actual_value=actual_value,
                     expected_value=expected_value,
-                    method="db_column_exists"
+                    method="db_column_exists",
                 )
 
             # Check if all expected columns exist
-            missing_columns = [col for col in column_names if col not in available_columns]
+            missing_columns = [
+                col for col in column_names if col not in available_columns
+            ]
             success = len(missing_columns) == 0
 
             if success:
@@ -146,7 +153,7 @@ class DbColumnExistsVerifier(BaseVerifier):
                 actual_value=available_columns,
                 expected_value=column_names,
                 method="db_column_exists",
-                missing_columns=missing_columns
+                missing_columns=missing_columns,
             )
         except Exception as e:
             return self.format_result(
@@ -155,7 +162,7 @@ class DbColumnExistsVerifier(BaseVerifier):
                 actual_value=actual_value,
                 expected_value=expected_value,
                 method="db_column_exists",
-                error=str(e)
+                error=str(e),
             )
 
 
@@ -171,36 +178,36 @@ class DbQueryResultVerifier(BaseVerifier):
                     message="Expected value must be a dictionary with verification criteria",
                     actual_value=actual_value,
                     expected_value=expected_value,
-                    method="db_query_result"
+                    method="db_query_result",
                 )
 
             # Extract verification type from expected value
-            verification_type = expected_value.get('type', 'exact_match')
+            verification_type = expected_value.get("type", "exact_match")
 
             # Normalize actual value to a consistent format
             query_result = actual_value
-            if hasattr(actual_value, 'fetchall'):
+            if hasattr(actual_value, "fetchall"):
                 # If it's a cursor, fetch all results
                 query_result = actual_value.fetchall()
 
                 # Convert to list of dicts if we have column info
-                if hasattr(actual_value, 'description') and actual_value.description:
+                if hasattr(actual_value, "description") and actual_value.description:
                     columns = [col[0] for col in actual_value.description]
                     query_result = [dict(zip(columns, row)) for row in query_result]
 
             # Handle different verification types
-            if verification_type == 'exact_match':
+            if verification_type == "exact_match":
                 # Expected value should contain 'value' to match exactly
-                if 'value' not in expected_value:
+                if "value" not in expected_value:
                     return self.format_result(
                         success=False,
                         message="Expected value for exact match must contain 'value' key",
                         actual_value=query_result,
                         expected_value=expected_value,
-                        method="db_query_result"
+                        method="db_query_result",
                     )
 
-                expected_result = expected_value['value']
+                expected_result = expected_value["value"]
                 success = query_result == expected_result
 
                 if success:
@@ -208,21 +215,23 @@ class DbQueryResultVerifier(BaseVerifier):
                 else:
                     message = "Query result does not match expected value"
 
-            elif verification_type == 'contains_row':
+            elif verification_type == "contains_row":
                 # Expected value should contain 'row' to check for in results
-                if 'row' not in expected_value:
+                if "row" not in expected_value:
                     return self.format_result(
                         success=False,
                         message="Expected value for contains_row must contain 'row' key",
                         actual_value=query_result,
                         expected_value=expected_value,
-                        method="db_query_result"
+                        method="db_query_result",
                     )
 
-                expected_row = expected_value['row']
+                expected_row = expected_value["row"]
 
                 # Check if any row matches the expected row
-                if isinstance(query_result, list) and all(isinstance(row, dict) for row in query_result):
+                if isinstance(query_result, list) and all(
+                    isinstance(row, dict) for row in query_result
+                ):
                     # If query_result is a list of dicts
                     success = any(
                         all(k in row and row[k] == v for k, v in expected_row.items())
@@ -230,7 +239,11 @@ class DbQueryResultVerifier(BaseVerifier):
                     )
                 elif isinstance(query_result, list):
                     # If query_result is a list of tuples/lists, convert expected_row to set for comparison
-                    expected_set = set(expected_row.values() if isinstance(expected_row, dict) else expected_row)
+                    expected_set = set(
+                        expected_row.values()
+                        if isinstance(expected_row, dict)
+                        else expected_row
+                    )
                     success = any(set(row) == expected_set for row in query_result)
                 else:
                     success = False
@@ -240,7 +253,7 @@ class DbQueryResultVerifier(BaseVerifier):
                 else:
                     message = "Query result does not contain the expected row"
 
-            elif verification_type == 'no_rows':
+            elif verification_type == "no_rows":
                 # Check if the query returned no rows
                 if isinstance(query_result, list):
                     success = len(query_result) == 0
@@ -252,14 +265,14 @@ class DbQueryResultVerifier(BaseVerifier):
                 else:
                     message = "Query returned rows when none were expected"
 
-            elif verification_type == 'custom':
+            elif verification_type == "custom":
                 # Custom verification not implemented - would require DSL or safe eval
                 return self.format_result(
                     success=False,
                     message="Custom query result verification is not implemented",
                     actual_value=query_result,
                     expected_value=expected_value,
-                    method="db_query_result"
+                    method="db_query_result",
                 )
             else:
                 return self.format_result(
@@ -267,7 +280,7 @@ class DbQueryResultVerifier(BaseVerifier):
                     message=f"Unknown verification type: {verification_type}",
                     actual_value=query_result,
                     expected_value=expected_value,
-                    method="db_query_result"
+                    method="db_query_result",
                 )
 
             return self.format_result(
@@ -276,7 +289,7 @@ class DbQueryResultVerifier(BaseVerifier):
                 actual_value=query_result,
                 expected_value=expected_value,
                 method="db_query_result",
-                verification_type=verification_type
+                verification_type=verification_type,
             )
         except Exception as e:
             return self.format_result(
@@ -285,7 +298,7 @@ class DbQueryResultVerifier(BaseVerifier):
                 actual_value=actual_value,
                 expected_value=expected_value,
                 method="db_query_result",
-                error=str(e)
+                error=str(e),
             )
 
 
@@ -301,7 +314,7 @@ class DbExecutionTimeVerifier(BaseVerifier):
                     message="Actual value cannot be interpreted as an execution time",
                     actual_value=actual_value,
                     expected_value=expected_value,
-                    method="db_execution_time"
+                    method="db_execution_time",
                 )
 
             # Expected value is the maximum acceptable execution time (in seconds)
@@ -313,7 +326,7 @@ class DbExecutionTimeVerifier(BaseVerifier):
                     message="Expected value cannot be interpreted as a maximum execution time",
                     actual_value=execution_time,
                     expected_value=expected_value,
-                    method="db_execution_time"
+                    method="db_execution_time",
                 )
 
             # Use comparison operator if provided, otherwise check if execution_time <= max_time
@@ -325,7 +338,7 @@ class DbExecutionTimeVerifier(BaseVerifier):
                         message=f"Invalid comparison method: {comparison_method}",
                         actual_value=execution_time,
                         expected_value=max_time,
-                        method="db_execution_time"
+                        method="db_execution_time",
                     )
                 success = operator(execution_time, max_time)
                 if success:
@@ -345,7 +358,7 @@ class DbExecutionTimeVerifier(BaseVerifier):
                 message=message,
                 actual_value=execution_time,
                 expected_value=max_time,
-                method="db_execution_time"
+                method="db_execution_time",
             )
         except Exception as e:
             return self.format_result(
@@ -354,5 +367,5 @@ class DbExecutionTimeVerifier(BaseVerifier):
                 actual_value=actual_value,
                 expected_value=expected_value,
                 method="db_execution_time",
-                error=str(e)
+                error=str(e),
             )

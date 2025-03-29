@@ -6,12 +6,12 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('test_protocols', '0013_remove_connectionconfig_host_and_more'),
+        ("test_protocols", "0013_remove_connectionconfig_host_and_more"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='executionstep',
-            name='args',
+            model_name="executionstep",
+            name="args",
         ),
     ]

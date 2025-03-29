@@ -14,6 +14,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.static import static
@@ -21,13 +22,13 @@ from django.conf import settings
 from pangolin_compliance_suite.views import home
 
 urlpatterns = [
-    path('', home, name="home"),
-    path('admin/', admin.site.urls),
-    path('authentication/', include("authentication.urls"), name="authentication"),
-    path('projects/', include("projects.urls"), name="projects"),
-    path('environments/', include("environments.urls"), name="environments"),
-    path('test_suites/', include("test_protocols.urls"), name="test_protocols"),
-    path('dashboard/', include("dashboard.urls"), name="dashboard"),
+    path("", home, name="home"),
+    path("admin/", admin.site.urls),
+    path("authentication/", include("authentication.urls"), name="authentication"),
+    path("projects/", include("projects.urls"), name="projects"),
+    path("environments/", include("environments.urls"), name="environments"),
+    path("test_suites/", include("test_protocols.urls"), name="test_protocols"),
+    path("dashboard/", include("dashboard.urls"), name="dashboard"),
 ]
 
 

@@ -14,14 +14,14 @@ class ListLengthVerifier(BaseVerifier):
                     message="Actual value is not a list or doesn't support length calculation",
                     actual_value=actual_value,
                     expected_value=expected_value,
-                    method="list_length"
+                    method="list_length",
                 )
 
             # Expected value can be a single length value or a range dict
             if isinstance(expected_value, (int, float)):
                 # Single value - exact length check
                 expected_length = int(expected_value)
-                comparison = comparison_method if comparison_method else 'eq'
+                comparison = comparison_method if comparison_method else "eq"
                 operator = self.get_comparison_operator(comparison)
 
                 if not operator:
@@ -30,7 +30,7 @@ class ListLengthVerifier(BaseVerifier):
                         message=f"Invalid comparison method: {comparison}",
                         actual_value=actual_length,
                         expected_value=expected_length,
-                        method="list_length"
+                        method="list_length",
                     )
 
                 success = operator(actual_length, expected_length)
@@ -40,10 +40,14 @@ class ListLengthVerifier(BaseVerifier):
                 else:
                     message = f"List length ({actual_length}) does not meet the {comparison} condition with expected value {expected_length}"
 
-            elif isinstance(expected_value, dict) and 'min' in expected_value and 'max' in expected_value:
+            elif (
+                isinstance(expected_value, dict)
+                and "min" in expected_value
+                and "max" in expected_value
+            ):
                 # Range check
-                min_length = expected_value.get('min')
-                max_length = expected_value.get('max')
+                min_length = expected_value.get("min")
+                max_length = expected_value.get("max")
 
                 success = min_length <= actual_length <= max_length
 
@@ -57,7 +61,7 @@ class ListLengthVerifier(BaseVerifier):
                     message=f"Invalid expected value for list length verification: {expected_value}",
                     actual_value=actual_length,
                     expected_value=expected_value,
-                    method="list_length"
+                    method="list_length",
                 )
 
             return self.format_result(
@@ -66,7 +70,7 @@ class ListLengthVerifier(BaseVerifier):
                 actual_value=actual_length,
                 expected_value=expected_value,
                 method="list_length",
-                list_value=actual_value
+                list_value=actual_value,
             )
         except Exception as e:
             return self.format_result(
@@ -75,7 +79,7 @@ class ListLengthVerifier(BaseVerifier):
                 actual_value=actual_value,
                 expected_value=expected_value,
                 method="list_length",
-                error=str(e)
+                error=str(e),
             )
 
 
@@ -91,13 +95,15 @@ class ListContainsVerifier(BaseVerifier):
                     message="Actual value is not a list or iterable",
                     actual_value=actual_value,
                     expected_value=expected_value,
-                    method="list_contains"
+                    method="list_contains",
                 )
 
             # Handle different types of expected_value
             if isinstance(expected_value, list):
                 # Check if all elements in expected_value are in actual_value
-                missing_elements = [item for item in expected_value if item not in actual_value]
+                missing_elements = [
+                    item for item in expected_value if item not in actual_value
+                ]
                 success = len(missing_elements) == 0
 
                 if success:
@@ -111,7 +117,7 @@ class ListContainsVerifier(BaseVerifier):
                     actual_value=actual_value,
                     expected_value=expected_value,
                     method="list_contains",
-                    missing_elements=missing_elements
+                    missing_elements=missing_elements,
                 )
             else:
                 # Single element check
@@ -127,7 +133,7 @@ class ListContainsVerifier(BaseVerifier):
                     message=message,
                     actual_value=actual_value,
                     expected_value=expected_value,
-                    method="list_contains"
+                    method="list_contains",
                 )
         except Exception as e:
             return self.format_result(
@@ -136,7 +142,7 @@ class ListContainsVerifier(BaseVerifier):
                 actual_value=actual_value,
                 expected_value=expected_value,
                 method="list_contains",
-                error=str(e)
+                error=str(e),
             )
 
 
@@ -153,7 +159,7 @@ class ListUniqueVerifier(BaseVerifier):
                     message="Actual value is not a list or iterable",
                     actual_value=actual_value,
                     expected_value=expected_value,
-                    method="list_unique"
+                    method="list_unique",
                 )
 
             # Find duplicate elements
@@ -190,7 +196,7 @@ class ListUniqueVerifier(BaseVerifier):
                 actual_value=actual_list,
                 expected_value=expected_value,  # Not used for this verifier
                 method="list_unique",
-                duplicate_elements=duplicates
+                duplicate_elements=duplicates,
             )
         except Exception as e:
             return self.format_result(
@@ -199,7 +205,7 @@ class ListUniqueVerifier(BaseVerifier):
                 actual_value=actual_value,
                 expected_value=expected_value,
                 method="list_unique",
-                error=str(e)
+                error=str(e),
             )
 
 
@@ -216,7 +222,7 @@ class ListSortedVerifier(BaseVerifier):
                     message="Actual value is not a list or iterable",
                     actual_value=actual_value,
                     expected_value=expected_value,
-                    method="list_sorted"
+                    method="list_sorted",
                 )
 
             if len(actual_list) <= 1:
@@ -226,20 +232,28 @@ class ListSortedVerifier(BaseVerifier):
                     message="List is sorted (has 0 or 1 elements)",
                     actual_value=actual_list,
                     expected_value=expected_value,
-                    method="list_sorted"
+                    method="list_sorted",
                 )
 
             # Check if the list is sorted
-            sort_order = expected_value if isinstance(expected_value, str) else 'ascending'
+            sort_order = (
+                expected_value if isinstance(expected_value, str) else "ascending"
+            )
 
             # Get comparison function based on sort order
-            if sort_order.lower() in ('desc', 'descending', 'reverse'):
+            if sort_order.lower() in ("desc", "descending", "reverse"):
                 # Check if list is sorted in descending order
-                is_sorted = all(actual_list[i] >= actual_list[i + 1] for i in range(len(actual_list) - 1))
+                is_sorted = all(
+                    actual_list[i] >= actual_list[i + 1]
+                    for i in range(len(actual_list) - 1)
+                )
                 order_text = "descending"
             else:
                 # Default: Check if list is sorted in ascending order
-                is_sorted = all(actual_list[i] <= actual_list[i + 1] for i in range(len(actual_list) - 1))
+                is_sorted = all(
+                    actual_list[i] <= actual_list[i + 1]
+                    for i in range(len(actual_list) - 1)
+                )
                 order_text = "ascending"
 
             if is_sorted:
@@ -247,10 +261,13 @@ class ListSortedVerifier(BaseVerifier):
             else:
                 # Find the first out-of-order element
                 for i in range(len(actual_list) - 1):
-                    if (sort_order.lower() in ('desc', 'descending', 'reverse') and actual_list[i] < actual_list[
-                        i + 1]) or \
-                            (sort_order.lower() not in ('desc', 'descending', 'reverse') and actual_list[i] >
-                             actual_list[i + 1]):
+                    if (
+                        sort_order.lower() in ("desc", "descending", "reverse")
+                        and actual_list[i] < actual_list[i + 1]
+                    ) or (
+                        sort_order.lower() not in ("desc", "descending", "reverse")
+                        and actual_list[i] > actual_list[i + 1]
+                    ):
                         message = f"List is not sorted in {order_text} order (first unsorted elements at indices {i} and {i + 1})"
                         break
                 else:
@@ -262,7 +279,7 @@ class ListSortedVerifier(BaseVerifier):
                 actual_value=actual_list,
                 expected_value=sort_order,
                 method="list_sorted",
-                sort_order=order_text
+                sort_order=order_text,
             )
         except Exception as e:
             return self.format_result(
@@ -271,7 +288,7 @@ class ListSortedVerifier(BaseVerifier):
                 actual_value=actual_value,
                 expected_value=expected_value,
                 method="list_sorted",
-                error=str(e)
+                error=str(e),
             )
 
 
@@ -288,7 +305,7 @@ class ListAllMatchVerifier(BaseVerifier):
                     message="Actual value is not a list or iterable",
                     actual_value=actual_value,
                     expected_value=expected_value,
-                    method="list_all_match"
+                    method="list_all_match",
                 )
 
             if not actual_list:
@@ -298,11 +315,11 @@ class ListAllMatchVerifier(BaseVerifier):
                     message="List is empty (all elements trivially match the criteria)",
                     actual_value=actual_list,
                     expected_value=expected_value,
-                    method="list_all_match"
+                    method="list_all_match",
                 )
 
             # The expected_value should be a criterion to apply to each element
-            if isinstance(expected_value, dict) and 'predicate' in expected_value:
+            if isinstance(expected_value, dict) and "predicate" in expected_value:
                 # Advanced predicate-based matching
                 # Not implemented here - would require safe eval or a DSL
                 return self.format_result(
@@ -310,7 +327,7 @@ class ListAllMatchVerifier(BaseVerifier):
                     message="Predicate-based matching is not implemented",
                     actual_value=actual_list,
                     expected_value=expected_value,
-                    method="list_all_match"
+                    method="list_all_match",
                 )
             else:
                 # Simple equality-based matching
@@ -320,7 +337,9 @@ class ListAllMatchVerifier(BaseVerifier):
                 if all_match:
                     message = f"All list elements match the expected value"
                 else:
-                    non_matching = [item for item in actual_list if item != expected_value]
+                    non_matching = [
+                        item for item in actual_list if item != expected_value
+                    ]
                     message = f"Not all list elements match the expected value ({len(non_matching)} non-matching elements)"
 
                 return self.format_result(
@@ -329,7 +348,7 @@ class ListAllMatchVerifier(BaseVerifier):
                     actual_value=actual_list,
                     expected_value=expected_value,
                     method="list_all_match",
-                    non_matching_elements=[] if all_match else non_matching
+                    non_matching_elements=[] if all_match else non_matching,
                 )
         except Exception as e:
             return self.format_result(
@@ -338,5 +357,5 @@ class ListAllMatchVerifier(BaseVerifier):
                 actual_value=actual_value,
                 expected_value=expected_value,
                 method="list_all_match",
-                error=str(e)
+                error=str(e),
             )

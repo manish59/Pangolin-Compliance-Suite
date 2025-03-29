@@ -26,7 +26,7 @@ from pangolin_sdk.constants import (
     KubernetesAuthMethod,
     AWSAuthMethod,
     AWSService,
-    AWSRegion
+    AWSRegion,
 )
 
 # Import connection classes
@@ -49,7 +49,7 @@ from pangolin_sdk.exceptions import (
     BaseExecutionError,
     DatabaseConnectionError,
     APIConnectionError,
-    SSHConnectionError
+    SSHConnectionError,
 )
 
 logger = logging.getLogger(__name__)
@@ -80,137 +80,139 @@ def create_connection(connection_config):
             if value:
                 config_data[key] = value
         except (ValueError, AttributeError, TypeError):
-             continue
-    if connection_config.config_type == 'database':
+            continue
+    if connection_config.config_type == "database":
         # Create database connection
-        db_type = config_data.get('database_type', 'postgresql')
+        db_type = config_data.get("database_type", "postgresql")
 
         # Map string to DatabaseType enum
         db_type_map = {
-            'postgresql': DatabaseType.POSTGRESQL,
-            'mysql': DatabaseType.MYSQL,
-            'oracle': DatabaseType.ORACLE,
-            'mssql': DatabaseType.MSSQL,
-            'sqlite': DatabaseType.SQLITE
+            "postgresql": DatabaseType.POSTGRESQL,
+            "mysql": DatabaseType.MYSQL,
+            "oracle": DatabaseType.ORACLE,
+            "mssql": DatabaseType.MSSQL,
+            "sqlite": DatabaseType.SQLITE,
         }
 
         db_config = DatabaseConnectionConfig(
             name=f"db_connection_{connection_config.id}",
             host=connection_config.host,
             port=connection_config.port,
-            database=config_data.get('database'),
-            username=config_data.get('username'),
-            password=config_data.get('password'),
+            database=config_data.get("database"),
+            username=config_data.get("username"),
+            password=config_data.get("password"),
             database_type=db_type_map.get(db_type, DatabaseType.POSTGRESQL),
             timeout=connection_config.timeout_seconds,
             max_retries=connection_config.retry_attempts,
-            options=config_data.get('options', {})
+            options=config_data.get("options", {}),
         )
 
         return DatabaseConnection(db_config)
 
-    elif connection_config.config_type == 'api':
+    elif connection_config.config_type == "api":
         # Create API connection
-        auth_method_str = config_data.get('auth_method', 'none')
+        auth_method_str = config_data.get("auth_method", "none")
 
         # Map string to AuthMethod enum
         auth_method_map = {
-            'none': AuthMethod.NONE,
-            'basic': AuthMethod.BASIC,
-            'bearer': AuthMethod.BEARER,
-            'jwt': AuthMethod.JWT,
-            'api_key': AuthMethod.API_KEY,
-            'oauth2': AuthMethod.OAUTH2,
-            'digest': AuthMethod.DIGEST,
-            'hmac': AuthMethod.HMAC
+            "none": AuthMethod.NONE,
+            "basic": AuthMethod.BASIC,
+            "bearer": AuthMethod.BEARER,
+            "jwt": AuthMethod.JWT,
+            "api_key": AuthMethod.API_KEY,
+            "oauth2": AuthMethod.OAUTH2,
+            "digest": AuthMethod.DIGEST,
+            "hmac": AuthMethod.HMAC,
         }
 
         api_config = APIConfig(
             name=f"api_connection_{connection_config.id}",
             host=connection_config.host,
             port=connection_config.port,
-            username=config_data.get('username'),
-            password=config_data.get('password'),
+            username=config_data.get("username"),
+            password=config_data.get("password"),
             auth_method=auth_method_map.get(auth_method_str, AuthMethod.NONE),
-            auth_token=config_data.get('secret_key'),
+            auth_token=config_data.get("secret_key"),
             timeout=connection_config.timeout_seconds,
             max_retries=connection_config.retry_attempts,
             # Additional API-specific configurations
-            api_key=config_data.get('api_key'),
-            api_key_name=config_data.get('api_key_name'),
-            api_key_location=config_data.get('api_key_location', 'header'),
-            default_headers=config_data.get('default_headers', {})
+            api_key=config_data.get("api_key"),
+            api_key_name=config_data.get("api_key_name"),
+            api_key_location=config_data.get("api_key_location", "header"),
+            default_headers=config_data.get("default_headers", {}),
         )
 
         return APIConnection(api_config)
 
-    elif connection_config.config_type == 'ssh':
+    elif connection_config.config_type == "ssh":
         # Create SSH connection
-        if 'auth_method' in config_data:
-            config_data['auth_method'] = SSHAuthMethod(config_data['auth_method'])
-        ssh_config=SSHConnectionConfig.from_dict(config_data)
+        if "auth_method" in config_data:
+            config_data["auth_method"] = SSHAuthMethod(config_data["auth_method"])
+        ssh_config = SSHConnectionConfig.from_dict(config_data)
         ssh_config.get_info()
         # Map string to SSHAuthMethod enum
         return SSHConnection(ssh_config)
 
-    elif connection_config.config_type == 'kubernetes':
+    elif connection_config.config_type == "kubernetes":
         # Create Kubernetes connection
-        auth_method_str = config_data.get('auth_method', 'config')
+        auth_method_str = config_data.get("auth_method", "config")
 
         # Map string to KubernetesAuthMethod enum
         auth_method_map = {
-            'config': KubernetesAuthMethod.CONFIG,
-            'token': KubernetesAuthMethod.TOKEN,
-            'certificate': KubernetesAuthMethod.CERTIFICATE,
-            'basic': KubernetesAuthMethod.BASIC
+            "config": KubernetesAuthMethod.CONFIG,
+            "token": KubernetesAuthMethod.TOKEN,
+            "certificate": KubernetesAuthMethod.CERTIFICATE,
+            "basic": KubernetesAuthMethod.BASIC,
         }
 
         k8s_config = KubernetesConnectionConfig(
             name=f"k8s_connection_{connection_config.id}",
             host=connection_config.host,
             port=connection_config.port,
-            username=config_data.get('username'),
-            password=config_data.get('password'),
-            auth_method=auth_method_map.get(auth_method_str, KubernetesAuthMethod.CONFIG),
-            api_token=config_data.get('secret_key'),
-            kubeconfig_path=config_data.get('kubeconfig_path'),
-            namespace=config_data.get('namespace', 'default'),
-            verify_ssl=config_data.get('verify_ssl', True),
+            username=config_data.get("username"),
+            password=config_data.get("password"),
+            auth_method=auth_method_map.get(
+                auth_method_str, KubernetesAuthMethod.CONFIG
+            ),
+            api_token=config_data.get("secret_key"),
+            kubeconfig_path=config_data.get("kubeconfig_path"),
+            namespace=config_data.get("namespace", "default"),
+            verify_ssl=config_data.get("verify_ssl", True),
             timeout=connection_config.timeout_seconds,
-            max_retries=connection_config.retry_attempts
+            max_retries=connection_config.retry_attempts,
         )
 
         return KubernetesConnection(k8s_config)
 
-    elif connection_config.config_type == 'aws':
+    elif connection_config.config_type == "aws":
         # Create AWS connection
-        auth_method_str = config_data.get('auth_method', 'access_key')
-        service_str = config_data.get('service', 's3')
-        region_str = config_data.get('region', 'us-east-1')
+        auth_method_str = config_data.get("auth_method", "access_key")
+        service_str = config_data.get("service", "s3")
+        region_str = config_data.get("region", "us-east-1")
 
         # Map strings to enums
         auth_method_map = {
-            'access_key': AWSAuthMethod.ACCESS_KEY,
-            'profile': AWSAuthMethod.PROFILE,
-            'instance_role': AWSAuthMethod.INSTANCE_ROLE,
-            'web_identity': AWSAuthMethod.WEB_IDENTITY,
-            'sso': AWSAuthMethod.SSO
+            "access_key": AWSAuthMethod.ACCESS_KEY,
+            "profile": AWSAuthMethod.PROFILE,
+            "instance_role": AWSAuthMethod.INSTANCE_ROLE,
+            "web_identity": AWSAuthMethod.WEB_IDENTITY,
+            "sso": AWSAuthMethod.SSO,
         }
 
         service_map = {
-            's3': AWSService.S3,
-            'ec2': AWSService.EC2,
-            'rds': AWSService.RDS,
-            'lambda': AWSService.LAMBDA,
-            'dynamodb': AWSService.DYNAMODB
+            "s3": AWSService.S3,
+            "ec2": AWSService.EC2,
+            "rds": AWSService.RDS,
+            "lambda": AWSService.LAMBDA,
+            "dynamodb": AWSService.DYNAMODB,
         }
 
         region_map = {
-            'us-east-1': AWSRegion.US_EAST_1,
-            'us-east-2': AWSRegion.US_EAST_2,
-            'us-west-1': AWSRegion.US_WEST_1,
-            'us-west-2': AWSRegion.US_WEST_2,
-            'eu-west-1': AWSRegion.EU_WEST_1
+            "us-east-1": AWSRegion.US_EAST_1,
+            "us-east-2": AWSRegion.US_EAST_2,
+            "us-west-1": AWSRegion.US_WEST_1,
+            "us-west-2": AWSRegion.US_WEST_2,
+            "eu-west-1": AWSRegion.EU_WEST_1,
         }
 
         aws_config = AWSConnectionConfig(
@@ -219,20 +221,22 @@ def create_connection(connection_config):
             auth_method=auth_method_map.get(auth_method_str, AWSAuthMethod.ACCESS_KEY),
             service=service_map.get(service_str, AWSService.S3),
             region=region_map.get(region_str, AWSRegion.US_EAST_1),
-            access_key_id=config_data.get('username'),
-            secret_access_key=config_data.get('password'),
-            session_token=config_data.get('secret_key'),
+            access_key_id=config_data.get("username"),
+            secret_access_key=config_data.get("password"),
+            session_token=config_data.get("secret_key"),
             timeout=connection_config.timeout_seconds,
-            max_retries=connection_config.retry_attempts
+            max_retries=connection_config.retry_attempts,
         )
 
         return AWSConnection(aws_config)
 
     else:
-        raise ValueError(f"Unsupported connection type: {connection_config.config_type}")
+        raise ValueError(
+            f"Unsupported connection type: {connection_config.config_type}"
+        )
 
 
-@shared_task(queue='protocol_queue')
+@shared_task(queue="protocol_queue")
 def run_test_protocol(protocol_run_id, user_id=None):
     """
     Runs a single test protocol.
@@ -251,13 +255,15 @@ def run_test_protocol(protocol_run_id, user_id=None):
         protocol_run = ProtocolRun.objects.get(pk=protocol_run_uuid)
         execution_steps = ExecutionStep.objects.filter(
             test_protocol=protocol_run.protocol
-        ).prefetch_related('verification_methods')
+        ).prefetch_related("verification_methods")
         # verification_methods = VerificationMethod.objects.filter(test_protocol=protocol, e)
         # Create a run record
-        protocol_run.status = 'running'
+        protocol_run.status = "running"
         protocol_run.save()
 
-        logger.info(f"Starting test protocol run: {protocol_run.protocol.name} (ID: {protocol_run.pk})")
+        logger.info(
+            f"Starting test protocol run: {protocol_run.protocol.name} (ID: {protocol_run.pk})"
+        )
         start_time = time.time()
 
         # Initialize variables to store execution results
@@ -280,7 +286,9 @@ def run_test_protocol(protocol_run_id, user_id=None):
                 connection.connect()
 
                 if connection.get_status() != ConnectionStatus.CONNECTED:
-                    raise ConnectionError(f"Failed to connect to {connection_config.config_type} service")
+                    raise ConnectionError(
+                        f"Failed to connect to {connection_config.config_type} service"
+                    )
 
                 # Execute the test - this will depend on the connection type
                 verification_results = []
@@ -293,19 +301,23 @@ def run_test_protocol(protocol_run_id, user_id=None):
                     for method in verification_methods:
                         expected_result = method.expected_result
                         config_schema = method.config_schema
-                        result = method.verify(last_result, expected_result, config_schema)
+                        result = method.verify(
+                            last_result, expected_result, config_schema
+                        )
                         VerificationResult.objects.create(
                             verification_step=method,
-                            success= True if result['success'] else False,
-                            status=result['message'],
-                            actual_value=result['actual_value'],
-                            expected_value=result['expected_value'],
-                            message = result['message'],
-                            error_message = result.get('error', ''),
-                            result_data = json.dumps(result)
+                            success=True if result["success"] else False,
+                            status=result["message"],
+                            actual_value=result["actual_value"],
+                            expected_value=result["expected_value"],
+                            message=result["message"],
+                            error_message=result.get("error", ""),
+                            result_data=json.dumps(result),
                         )
                         verification_results.append(result)
-                all_verifications_passed = all(vr["success"] for vr in verification_results)
+                all_verifications_passed = all(
+                    vr["success"] for vr in verification_results
+                )
                 if all_verifications_passed:
                     success = True
                 else:
@@ -338,34 +350,38 @@ def run_test_protocol(protocol_run_id, user_id=None):
         end_time = time.time()
         duration = end_time - start_time
         # Update the run record
-        protocol_run.status = 'completed'
-        protocol_run.result_status = 'pass' if success else 'fail'
+        protocol_run.status = "completed"
+        protocol_run.result_status = "pass" if success else "fail"
         protocol_run.completed_at = timezone.now()
         protocol_run.duration_seconds = duration
         protocol_run.error_message = error_message
         protocol_run.save()
 
-        logger.info(f"Completed test protocol run: {protocol_run.protocol.name} in {duration:.2f}s - Success: {success}")
+        logger.info(
+            f"Completed test protocol run: {protocol_run.protocol.name} in {duration:.2f}s - Success: {success}"
+        )
 
         return {
-            'protocol_id': str(protocol_run.protocol.pk),
-            'run_id': str(protocol_run.pk),
-            'success': success,
-            'duration': duration,
-            'error_message': error_message
+            "protocol_id": str(protocol_run.protocol.pk),
+            "run_id": str(protocol_run.pk),
+            "success": success,
+            "duration": duration,
+            "error_message": error_message,
         }
 
     except Exception as e:
-        logger.error(f"Error running test protocol {protocol_run.protocol.pk}: {str(e)}")
+        logger.error(
+            f"Error running test protocol {protocol_run.protocol.pk}: {str(e)}"
+        )
 
         # If we already created a run record, update it with the error
         try:
-            if 'run' in locals():
-                protocol_run.status = 'error'
-                protocol_run.result_status = 'error'
+            if "run" in locals():
+                protocol_run.status = "error"
+                protocol_run.result_status = "error"
                 protocol_run.error_message = str(e)
                 protocol_run.completed_at = timezone.now()
-                if 'start_time' in locals():
+                if "start_time" in locals():
                     protocol_run.duration_seconds = time.time() - start_time
                 protocol_run.save()
 
@@ -376,7 +392,7 @@ def run_test_protocol(protocol_run_id, user_id=None):
         raise
 
 
-@shared_task(queue='suite_queue')
+@shared_task(queue="suite_queue")
 def run_test_suite(suite_id, user_id=None):
     """
     Runs all protocols in a test suite.
@@ -402,11 +418,11 @@ def run_test_suite(suite_id, user_id=None):
 
         # Track results
         results = {
-            'total': len(protocols),
-            'succeeded': 0,
-            'failed': 0,
-            'errors': 0,
-            'protocol_results': []
+            "total": len(protocols),
+            "succeeded": 0,
+            "failed": 0,
+            "errors": 0,
+            "protocol_results": [],
         }
 
         # Run each protocol in sequence - directly call the function instead of using apply_async
@@ -414,35 +430,35 @@ def run_test_suite(suite_id, user_id=None):
             try:
                 # Call the function directly (still goes through Celery's task system)
                 protocol_run = ProtocolRun.objects.create(
-                    protocol=protocol,
-                    status='pending',
-                    executed_by=user_id
+                    protocol=protocol, status="pending", executed_by=user_id
                 )
                 protocol_result = run_test_protocol(str(protocol_run.id), user_id)
 
                 # Track success/failure
-                if protocol_result['success']:
-                    results['succeeded'] += 1
+                if protocol_result["success"]:
+                    results["succeeded"] += 1
                 else:
-                    results['failed'] += 1
+                    results["failed"] += 1
 
-                results['protocol_results'].append(protocol_result)
+                results["protocol_results"].append(protocol_result)
 
             except Exception as e:
-                logger.error(f"Error running protocol {protocol.id} in suite {suite_id}: {str(e)}")
-                results['errors'] += 1
-                results['protocol_results'].append({
-                    'protocol_id': str(protocol.id),
-                    'success': False,
-                    'error': str(e)
-                })
+                logger.error(
+                    f"Error running protocol {protocol.id} in suite {suite_id}: {str(e)}"
+                )
+                results["errors"] += 1
+                results["protocol_results"].append(
+                    {"protocol_id": str(protocol.id), "success": False, "error": str(e)}
+                )
 
         # Calculate duration
         duration = time.time() - start_time
-        results['duration'] = duration
+        results["duration"] = duration
 
-        logger.info(f"Completed test suite: {suite.name} in {duration:.2f}s - "
-                    f"Success: {results['succeeded']}/{results['total']}")
+        logger.info(
+            f"Completed test suite: {suite.name} in {duration:.2f}s - "
+            f"Success: {results['succeeded']}/{results['total']}"
+        )
 
         return results
 

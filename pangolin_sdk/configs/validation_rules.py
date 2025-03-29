@@ -16,32 +16,30 @@ logger = logging.getLogger(__name__)
 # Dictionary for mapping custom validation functions
 CUSTOM_VALIDATOR_FUNCTIONS = {
     # Oracle database validation
-    'oracle_connection_requires_identifier': lambda cfg: (
-            cfg.database_type == 'ORACLE' and
-            not cfg.connection_string and
-            not cfg.sid and
-            not cfg.tns_name
+    "oracle_connection_requires_identifier": lambda cfg: (
+        cfg.database_type == "ORACLE"
+        and not cfg.connection_string
+        and not cfg.sid
+        and not cfg.tns_name
     ),
-
     # Kubernetes validation functions
-    'config_auth_without_in_cluster': lambda cfg: (
-            cfg.auth_method == 'CONFIG' and not cfg.in_cluster
+    "config_auth_without_in_cluster": lambda cfg: (
+        cfg.auth_method == "CONFIG" and not cfg.in_cluster
     ),
-    'config_auth_without_kubeconfig': lambda cfg: (
-            cfg.auth_method == 'CONFIG' and not cfg.kubeconfig_path
+    "config_auth_without_kubeconfig": lambda cfg: (
+        cfg.auth_method == "CONFIG" and not cfg.kubeconfig_path
     ),
-
     # SSH validation functions
-    'public_key_auth_without_encrypted_key': lambda cfg: (
-            cfg.auth_method == 'PUBLIC_KEY' and not cfg.encrypted_key_str
+    "public_key_auth_without_encrypted_key": lambda cfg: (
+        cfg.auth_method == "PUBLIC_KEY" and not cfg.encrypted_key_str
     ),
-    'public_key_auth_without_key_filename': lambda cfg: (
-            cfg.auth_method == 'PUBLIC_KEY' and not cfg.key_filename
+    "public_key_auth_without_key_filename": lambda cfg: (
+        cfg.auth_method == "PUBLIC_KEY" and not cfg.key_filename
     ),
-    'encrypted_key_without_filename': lambda cfg: (
-            cfg.auth_method == 'PUBLIC_KEY' and
-            cfg.encrypted_key_str and
-            not cfg.key_filename
+    "encrypted_key_without_filename": lambda cfg: (
+        cfg.auth_method == "PUBLIC_KEY"
+        and cfg.encrypted_key_str
+        and not cfg.key_filename
     ),
 }
 
@@ -78,26 +76,27 @@ class ValidationRulesLoader:
 
         # Default rules file path
         default_rules_path = os.path.join(
-            os.path.dirname(__file__),
-            'validation_rules.yaml'
+            os.path.dirname(__file__), "validation_rules.yaml"
         )
 
         # Custom rules path from environment variable
-        custom_rules_path = os.environ.get('PANGOLIN_VALIDATION_RULES')
+        custom_rules_path = os.environ.get("PANGOLIN_VALIDATION_RULES")
 
         # Load default rules
         if os.path.exists(default_rules_path):
             try:
-                with open(default_rules_path, 'r') as f:
+                with open(default_rules_path, "r") as f:
                     rules = yaml.safe_load(f)
-                logger.debug(f"Loaded default validation rules from {default_rules_path}")
+                logger.debug(
+                    f"Loaded default validation rules from {default_rules_path}"
+                )
             except Exception as e:
                 logger.error(f"Error loading validation rules: {e}")
 
         # Override with custom rules if available
         if custom_rules_path and os.path.exists(custom_rules_path):
             try:
-                with open(custom_rules_path, 'r') as f:
+                with open(custom_rules_path, "r") as f:
                     custom_rules = yaml.safe_load(f)
                     # Update rules with custom values
                     rules = self._deep_update(rules, custom_rules)
@@ -127,7 +126,9 @@ class ValidationRulesLoader:
 
         return result
 
-    def get_rules_for_config(self, config_class: Type[BaseConfig]) -> Dict[str, Dict[str, Any]]:
+    def get_rules_for_config(
+        self, config_class: Type[BaseConfig]
+    ) -> Dict[str, Dict[str, Any]]:
         """Get validation rules for a specific configuration class.
 
         Args:
@@ -142,20 +143,20 @@ class ValidationRulesLoader:
         # Map class name to rule set
         rule_key = None
 
-        if 'aws' in class_name:
-            rule_key = 'aws_connection'
-        elif 'database' in class_name:
-            rule_key = 'database_connection'
-        elif 'kubernetes' in class_name:
-            rule_key = 'kubernetes_connection'
-        elif 'ssh' in class_name:
-            rule_key = 'ssh_connection'
-        elif 'api' in class_name:
-            rule_key = 'api_connection'
-        elif 'azure' in class_name:
-            rule_key = 'azure_connection'
+        if "aws" in class_name:
+            rule_key = "aws_connection"
+        elif "database" in class_name:
+            rule_key = "database_connection"
+        elif "kubernetes" in class_name:
+            rule_key = "kubernetes_connection"
+        elif "ssh" in class_name:
+            rule_key = "ssh_connection"
+        elif "api" in class_name:
+            rule_key = "api_connection"
+        elif "azure" in class_name:
+            rule_key = "azure_connection"
         else:
-            rule_key = 'base_connection'
+            rule_key = "base_connection"
 
         # Get rules or empty dict if not found
         rules = self._rules_cache.get(rule_key, {})
@@ -174,21 +175,21 @@ class ValidationRulesLoader:
             rules: Rules dictionary to process
         """
         for field_name, field_rules in rules.items():
-            if 'required_if_custom' in field_rules:
-                validator_name = field_rules['required_if_custom']
+            if "required_if_custom" in field_rules:
+                validator_name = field_rules["required_if_custom"]
 
                 if isinstance(validator_name, str):
                     # Replace validator name with actual function
                     validator_func = CUSTOM_VALIDATOR_FUNCTIONS.get(validator_name)
 
                     if validator_func:
-                        field_rules['required_if_custom'] = {
-                            'condition': validator_func
+                        field_rules["required_if_custom"] = {
+                            "condition": validator_func
                         }
                     else:
                         logger.warning(f"Custom validator '{validator_name}' not found")
                         # Remove invalid validator to prevent errors
-                        del field_rules['required_if_custom']
+                        del field_rules["required_if_custom"]
 
 
 # Function to get validation rules for a config class

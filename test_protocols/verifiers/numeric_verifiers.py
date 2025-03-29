@@ -15,7 +15,7 @@ class NumericEqualVerifier(BaseVerifier):
                     message="One or both values could not be converted to a number",
                     actual_value=actual_value,
                     expected_value=expected_value,
-                    method="numeric_equal"
+                    method="numeric_equal",
                 )
 
             # If both are integers, compare as integers
@@ -24,7 +24,7 @@ class NumericEqualVerifier(BaseVerifier):
                 expected_num = int(expected_num)
 
             # Use comparison method if provided, otherwise default to equality
-            comparison = comparison_method if comparison_method else 'eq'
+            comparison = comparison_method if comparison_method else "eq"
             operator = self.get_comparison_operator(comparison)
 
             if not operator:
@@ -33,7 +33,7 @@ class NumericEqualVerifier(BaseVerifier):
                     message=f"Invalid comparison method: {comparison}",
                     actual_value=actual_num,
                     expected_value=expected_num,
-                    method="numeric_equal"
+                    method="numeric_equal",
                 )
 
             success = operator(actual_num, expected_num)
@@ -49,7 +49,7 @@ class NumericEqualVerifier(BaseVerifier):
                 actual_value=actual_num,
                 expected_value=expected_num,
                 method="numeric_equal",
-                comparison=comparison
+                comparison=comparison,
             )
         except Exception as e:
             return self.format_result(
@@ -58,7 +58,7 @@ class NumericEqualVerifier(BaseVerifier):
                 actual_value=actual_value,
                 expected_value=expected_value,
                 method="numeric_equal",
-                error=str(e)
+                error=str(e),
             )
 
 
@@ -74,29 +74,33 @@ class NumericRangeVerifier(BaseVerifier):
                     message="Actual value could not be converted to a number",
                     actual_value=actual_value,
                     expected_value=expected_value,
-                    method="numeric_range"
+                    method="numeric_range",
                 )
 
             # Expected value should be a dict with min and max keys
-            if not isinstance(expected_value, dict) or 'min' not in expected_value or 'max' not in expected_value:
+            if (
+                not isinstance(expected_value, dict)
+                or "min" not in expected_value
+                or "max" not in expected_value
+            ):
                 return self.format_result(
                     success=False,
                     message="Expected value must be a dict with 'min' and 'max' keys",
                     actual_value=actual_num,
                     expected_value=expected_value,
-                    method="numeric_range"
+                    method="numeric_range",
                 )
 
             try:
-                min_value = float(expected_value['min'])
-                max_value = float(expected_value['max'])
+                min_value = float(expected_value["min"])
+                max_value = float(expected_value["max"])
             except (ValueError, TypeError):
                 return self.format_result(
                     success=False,
                     message="Min or max values could not be converted to numbers",
                     actual_value=actual_num,
                     expected_value=expected_value,
-                    method="numeric_range"
+                    method="numeric_range",
                 )
 
             # Check if value is in range (inclusive)
@@ -105,14 +109,16 @@ class NumericRangeVerifier(BaseVerifier):
             if success:
                 message = f"Value {actual_num} is in range [{min_value}, {max_value}]"
             else:
-                message = f"Value {actual_num} is outside range [{min_value}, {max_value}]"
+                message = (
+                    f"Value {actual_num} is outside range [{min_value}, {max_value}]"
+                )
 
             return self.format_result(
                 success=success,
                 message=message,
                 actual_value=actual_num,
                 expected_value=expected_value,
-                method="numeric_range"
+                method="numeric_range",
             )
         except Exception as e:
             return self.format_result(
@@ -121,7 +127,7 @@ class NumericRangeVerifier(BaseVerifier):
                 actual_value=actual_value,
                 expected_value=expected_value,
                 method="numeric_range",
-                error=str(e)
+                error=str(e),
             )
 
 
@@ -137,7 +143,7 @@ class NumericThresholdVerifier(BaseVerifier):
                     message="Actual value could not be converted to a number",
                     actual_value=actual_value,
                     expected_value=expected_value,
-                    method="numeric_threshold"
+                    method="numeric_threshold",
                 )
 
             # Expected value is the threshold
@@ -149,11 +155,13 @@ class NumericThresholdVerifier(BaseVerifier):
                     message="Threshold value could not be converted to a number",
                     actual_value=actual_num,
                     expected_value=expected_value,
-                    method="numeric_threshold"
+                    method="numeric_threshold",
                 )
 
             # Use comparison method to determine which threshold check to apply
-            comparison = comparison_method if comparison_method else 'lte'  # Default to less than or equal
+            comparison = (
+                comparison_method if comparison_method else "lte"
+            )  # Default to less than or equal
             operator = self.get_comparison_operator(comparison)
 
             if not operator:
@@ -162,7 +170,7 @@ class NumericThresholdVerifier(BaseVerifier):
                     message=f"Invalid comparison method: {comparison}",
                     actual_value=actual_num,
                     expected_value=threshold,
-                    method="numeric_threshold"
+                    method="numeric_threshold",
                 )
 
             success = operator(actual_num, threshold)
@@ -178,7 +186,7 @@ class NumericThresholdVerifier(BaseVerifier):
                 actual_value=actual_num,
                 expected_value=threshold,
                 method="numeric_threshold",
-                comparison=comparison
+                comparison=comparison,
             )
         except Exception as e:
             return self.format_result(
@@ -187,5 +195,5 @@ class NumericThresholdVerifier(BaseVerifier):
                 actual_value=actual_value,
                 expected_value=expected_value,
                 method="numeric_threshold",
-                error=str(e)
+                error=str(e),
             )
