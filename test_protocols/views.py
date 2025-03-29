@@ -165,16 +165,18 @@ class ConnectionConfigCreateView(CreateView):
     model = ConnectionConfig
     template_name = 'test_protocols/connection_form.html'
     fields = ['protocol', 'config_type',
-               'timeout_seconds', 'retry_attempts', 'config_data']
+              'timeout_seconds', 'retry_attempts', 'config_data']
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
         # Pre-select protocol if passed in URL
         protocol_id = self.kwargs.get('protocol_id')
-        test_protocol = TestProtocol.objects.get(pk=protocol_id)
-        environments = Environment.objects.filter(project=test_protocol.suite.project)
         if protocol_id:
-            form.initial['protocol'] = protocol_id
+            try:
+                test_protocol = TestProtocol.objects.get(pk=protocol_id)
+                form.initial['protocol'] = protocol_id
+            except TestProtocol.DoesNotExist:
+                pass
         return form
 
     def get_context_data(self, **kwargs):
@@ -186,11 +188,52 @@ class ConnectionConfigCreateView(CreateView):
                 test_protocol = TestProtocol.objects.get(pk=protocol_id)
                 project = test_protocol.suite.project
                 context['environments'] = Environment.objects.filter(project=project)
+                context['existing_connections'] = ConnectionConfig.objects.filter(protocol__suite=test_protocol.suite)
             except (TestProtocol.DoesNotExist, Environment.DoesNotExist):
                 context['environments'] = None
+                context['existing_connections'] = ConnectionConfig.objects.none()
         return context
 
+    def post(self, request, *args, **kwargs):
+        # Check if using an existing connection
+        selected_connection_id = request.POST.get('selected_connection_id')
+        if selected_connection_id:
+            try:
+                # Get the existing connection
+                existing_connection = ConnectionConfig.objects.get(pk=selected_connection_id)
+
+                # Get the protocol
+                protocol_id = self.kwargs.get('protocol_id')
+                if protocol_id:
+                    protocol = get_object_or_404(TestProtocol, pk=protocol_id)
+
+                    # Create a new connection with the same configuration
+                    new_connection = ConnectionConfig.objects.create(
+                        protocol=protocol,
+                        config_type=existing_connection.config_type,
+                        timeout_seconds=existing_connection.timeout_seconds,
+                        retry_attempts=existing_connection.retry_attempts,
+                        config_data=existing_connection.config_data
+                    )
+
+                    # Set the object for get_success_url
+                    self.object = new_connection
+
+                    # Return success
+                    return HttpResponseRedirect(self.get_success_url())
+                else:
+                    # Handle missing protocol ID error
+                    return self.form_invalid(self.get_form())
+            except ConnectionConfig.DoesNotExist:
+                # Handle invalid connection ID
+                messages.error(request, "The selected connection does not exist.")
+                return self.form_invalid(self.get_form())
+
+        # If no existing connection was selected, proceed with normal form processing
+        return super().post(request, *args, **kwargs)
+
     def form_valid(self, form):
+        # Only called when no existing connection was selected
         # Set protocol if it's in the URL
         protocol_id = self.kwargs.get('protocol_id')
         if protocol_id:
@@ -209,7 +252,7 @@ class ConnectionConfigUpdateView(UpdateView):
     model = ConnectionConfig
     template_name = 'test_protocols/connection_form.html'
     fields = ['protocol', 'config_type',
-               'timeout_seconds', 'retry_attempts', 'config_data']
+              'timeout_seconds', 'retry_attempts', 'config_data']
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -219,19 +262,51 @@ class ConnectionConfigUpdateView(UpdateView):
             try:
                 project = test_protocol.suite.project
                 context['environments'] = Environment.objects.filter(project=project)
+                # Add existing connections to context
+                context['existing_connections'] = ConnectionConfig.objects.filter(
+                    protocol__suite=test_protocol.suite
+                ).exclude(pk=context['object'].pk)  # Exclude current connection
+
                 if isinstance(config_data, str):
                     value = json.loads(config_data)
                     yaml_string = yaml.dump(value, default_flow_style=False,
-                                            indent=2,sort_keys=False)
+                                            indent=2, sort_keys=False)
                     context['object'].config_data = mark_safe(yaml_string)
-                # context['object'].config_data = yaml.load(context['object'].config_data)
             except (TestProtocol.DoesNotExist, Environment.DoesNotExist):
                 context['environments'] = None
+                context['existing_connections'] = ConnectionConfig.objects.none()
         return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+
+        # Check if using an existing connection
+        selected_connection_id = request.POST.get('selected_connection_id')
+        if selected_connection_id:
+            try:
+                # Get the existing connection
+                existing_connection = ConnectionConfig.objects.get(pk=selected_connection_id)
+
+                # Update the current connection with values from existing connection
+                self.object.config_type = existing_connection.config_type
+                self.object.timeout_seconds = existing_connection.timeout_seconds
+                self.object.retry_attempts = existing_connection.retry_attempts
+                self.object.config_data = existing_connection.config_data
+                self.object.save()
+
+                messages.success(request,
+                                 "Connection updated successfully using the selected connection's configuration.")
+                return HttpResponseRedirect(self.get_success_url())
+            except ConnectionConfig.DoesNotExist:
+                # Handle invalid connection ID
+                messages.error(request, "The selected connection does not exist.")
+                return self.form_invalid(self.get_form())
+
+        # If no existing connection was selected, proceed with normal form processing
+        return super().post(request, *args, **kwargs)
 
     def get_success_url(self):
         return reverse('testsuite:connection_detail', kwargs={'pk': self.object.pk})
-
 
 # ProtocolRun Views
 class ProtocolRunListView(ListView):

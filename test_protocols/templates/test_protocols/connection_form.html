@@ -13,6 +13,19 @@
         background-color: #4f46e5;
         transform: translateY(-1px);
     }
+    .disabled-form-field {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+    .error-message {
+        display: none;
+        padding: 0.75rem;
+        margin: 1rem 0;
+        border-radius: 0.375rem;
+        background-color: #fee2e2;
+        color: #b91c1c;
+        border-left: 4px solid #ef4444;
+    }
 </style>
 {% endblock %}
 
@@ -61,116 +74,141 @@
 
 {% block main_content %}
 <div class="p-6">
-    <form method="post" class="space-y-6">
+    <form method="post" class="space-y-6" id="connection-form" data-original-button-text="{% if object %}Update{% else %}Create{% endif %} Connection">
         {% csrf_token %}
-
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-            {% if 'protocol' in form.fields %}
-            <div>
-                <label for="{{ form.protocol.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Protocol <span class="text-red-500">*</span>
-                </label>
-                <div class="mt-1">
-                    <select name="{{ form.protocol.name }}" id="{{ form.protocol.id_for_label }}"
-                            class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
-                            required>
-                        {% for choice in form.protocol.field.queryset %}
-                            <option value="{{ choice.id }}" {% if form.protocol.value|stringformat:"s" == choice.id|stringformat:"s" %}selected{% endif %}>
-                                {{ choice }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                {% if form.protocol.errors %}
-                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.protocol.errors.0 }}</p>
-                {% endif %}
-            </div>
-            {% endif %}
-
-            <div>
-                <label for="{{ form.config_type.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Connection Type <span class="text-red-500">*</span>
-                </label>
-                <div class="mt-1">
-                    <select name="{{ form.config_type.name }}" id="{{ form.config_type.id_for_label }}"
-                            class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
-                            required onchange="updateConfigHints()">
-                        {% for choice in form.config_type.field.choices %}
-                            <option value="{{ choice.0 }}" {% if form.config_type.value == choice.0 %}selected{% endif %}>
-                                {{ choice.1 }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                {% if form.config_type.errors %}
-                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.config_type.errors.0 }}</p>
-                {% endif %}
-            </div>
-
-
-            <div>
-                <label for="{{ form.timeout_seconds.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Timeout (seconds) <span class="text-red-500">*</span>
-                </label>
-                <div class="mt-1">
-                    <input type="number" name="{{ form.timeout_seconds.name }}" id="{{ form.timeout_seconds.id_for_label }}"
-                           class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
-                           placeholder="Enter timeout in seconds" value="{{ form.timeout_seconds.value|default:30 }}" required>
-                </div>
-                {% if form.timeout_seconds.errors %}
-                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.timeout_seconds.errors.0 }}</p>
-                {% endif %}
-            </div>
-
-            <div>
-                <label for="{{ form.retry_attempts.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Retry Attempts <span class="text-red-500">*</span>
-                </label>
-                <div class="mt-1">
-                    <input type="number" name="{{ form.retry_attempts.name }}" id="{{ form.retry_attempts.id_for_label }}"
-                           class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
-                           placeholder="Enter number of retry attempts" value="{{ form.retry_attempts.value|default:3 }}" required>
-                </div>
-                {% if form.retry_attempts.errors %}
-                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.retry_attempts.errors.0 }}</p>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Environment Variable Selector for YAML Editor -->
-        <div class="env-var-selector mt-4">
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Insert Environment Variable to Configuration
+    <!-- Existing connections select dropdown -->
+        <div class="mb-6">
+            <label for="existing_connection" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Select Existing Connection
             </label>
-            <div class="flex items-center space-x-2">
-                <select id="env_var_selector" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 flex-grow text-base px-4 py-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
-                    <option value="">Select an environment variable</option>
-                    {% for env in environments %}
-                        <option value="{{ env.pk }}">{{ env.project.name }} : {{ env.key }}</option>
+            <div class="mt-1">
+                <select id="existing_connection"
+                        class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                        onchange="handleExistingConnectionChange()">
+                    <option value="">None (Create/Edit New Connection)</option>
+                    {% for conn in existing_connections %}
+                        <option value="{{ conn.id }}">{{ conn.protocol.name }} - {{ conn.get_config_type_display }}</option>
                     {% endfor %}
                 </select>
-                <button type="button" id="copy_env_var" class="insert-btn px-4 py-2 bg-indigo-600 text-white rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Copy to Clipboard
-                </button>
             </div>
-            <p class="mt-1 text-xs text-gray-500">
-                Select and copy environment variables to paste into your configuration
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Select an existing connection to use as a template, or select 'None' to create/edit a connection
             </p>
         </div>
 
-        <!-- Configuration hints -->
-        <div id="config_hints" class="bg-blue-50 dark:bg-blue-900 p-4 rounded-md text-sm text-blue-800 dark:text-blue-200 mb-4 hidden">
-            <h3 class="font-medium mb-2">Configuration Hints</h3>
-            <div id="hint_content"></div>
+        <!-- Error message when existing connection is selected -->
+        <div id="connection-locked-error" class="error-message">
+            <p class="font-medium">Using Existing Connection</p>
+            <p>You have selected an existing connection. The form fields are disabled because you'll be using the selected connection configuration. Click the submit button to proceed with this connection.</p>
         </div>
 
-        <!-- YAML Editor for config_data -->
-        <div class="mt-6">
-            {% include "test_protocols/yaml_editor.html" with field_name="config_data" initial_content=form.config_data.value label="Additional Configuration" help_text="Enter configuration data in YAML format. This will be used to configure the connection based on the selected type." required=False %}
+        <div id="form-fields-container">
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                {% if 'protocol' in form.fields %}
+                <div>
+                    <label for="{{ form.protocol.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Protocol <span class="text-red-500">*</span>
+                    </label>
+                    <div class="mt-1">
+                        <select name="{{ form.protocol.name }}" id="{{ form.protocol.id_for_label }}"
+                                class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                                required>
+                            {% for choice in form.protocol.field.queryset %}
+                                <option value="{{ choice.id }}" {% if form.protocol.value|stringformat:"s" == choice.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ choice }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% if form.protocol.errors %}
+                    <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.protocol.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+            <div>
+                    <label for="{{ form.config_type.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Connection Type <span class="text-red-500">*</span>
+                    </label>
+                    <div class="mt-1">
+                        <select name="{{ form.config_type.name }}" id="{{ form.config_type.id_for_label }}"
+                                class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                                required onchange="updateConfigHints()">
+                            {% for choice in form.config_type.field.choices %}
+                                <option value="{{ choice.0 }}" {% if form.config_type.value == choice.0 %}selected{% endif %}>
+                                    {{ choice.1 }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% if form.config_type.errors %}
+                    <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.config_type.errors.0 }}</p>
+                    {% endif %}
+                </div>
 
-            {% if form.config_data.errors %}
-            <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.config_data.errors.0 }}</p>
-            {% endif %}
+
+                <div>
+                    <label for="{{ form.timeout_seconds.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Timeout (seconds) <span class="text-red-500">*</span>
+                    </label>
+                    <div class="mt-1">
+                        <input type="number" name="{{ form.timeout_seconds.name }}" id="{{ form.timeout_seconds.id_for_label }}"
+                               class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                               placeholder="Enter timeout in seconds" value="{{ form.timeout_seconds.value|default:30 }}" required>
+                    </div>
+                    {% if form.timeout_seconds.errors %}
+                    <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.timeout_seconds.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="{{ form.retry_attempts.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Retry Attempts <span class="text-red-500">*</span>
+                    </label>
+                    <div class="mt-1">
+                        <input type="number" name="{{ form.retry_attempts.name }}" id="{{ form.retry_attempts.id_for_label }}"
+                               class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base px-4 py-3 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                               placeholder="Enter number of retry attempts" value="{{ form.retry_attempts.value|default:3 }}" required>
+                    </div>
+                    {% if form.retry_attempts.errors %}
+                    <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.retry_attempts.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Environment Variable Selector for YAML Editor -->
+            <div class="env-var-selector mt-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Insert Environment Variable to Configuration
+                </label>
+                <div class="flex items-center space-x-2">
+                    <select id="env_var_selector" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 flex-grow text-base px-4 py-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
+                        <option value="">Select an environment variable</option>
+                        {% for env in environments %}
+                            <option value="{{ env.pk }}">{{ env.project.name }} : {{ env.key }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="button" id="copy_env_var" class="insert-btn px-4 py-2 bg-indigo-600 text-white rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Copy to Clipboard
+                    </button>
+                </div>
+                <p class="mt-1 text-xs text-gray-500">
+                    Select and copy environment variables to paste into your configuration
+                </p>
+            </div>
+        <!-- Configuration hints -->
+            <div id="config_hints" class="bg-blue-50 dark:bg-blue-900 p-4 rounded-md text-sm text-blue-800 dark:text-blue-200 mb-4 hidden">
+                <h3 class="font-medium mb-2">Configuration Hints</h3>
+                <div id="hint_content"></div>
+            </div>
+
+            <!-- YAML Editor for config_data -->
+            <div class="mt-6">
+                {% include "test_protocols/yaml_editor.html" with field_name="config_data" initial_content=form.config_data.value label="Additional Configuration" help_text="Enter configuration data in YAML format. This will be used to configure the connection based on the selected type." required=False %}
+
+                {% if form.config_data.errors %}
+                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ form.config_data.errors.0 }}</p>
+                {% endif %}
+            </div>
         </div>
 
         <div class="flex justify-end space-x-3">
@@ -185,22 +223,97 @@
                 Cancel
             </a>
             {% endif %}
-            <button type="submit"
+            <button type="submit" id="submit-button"
                    class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-800 dark:hover:bg-blue-900">
                 {% if object %}Update{% else %}Create{% endif %} Connection
             </button>
         </div>
     </form>
 </div>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Save the original button text when the page loads
+    const submitButton = document.getElementById('submit-button');
+    const form = document.getElementById('connection-form');
+    if (submitButton && form) {
+        const originalText = form.getAttribute('data-original-button-text');
+        if (originalText) {
+            form.setAttribute('data-original-button-text', originalText);
+        } else {
+            form.setAttribute('data-original-button-text', submitButton.innerText);
+        }
+    }
+
     // Wait for the editor to be fully initialized
     setTimeout(function() {
         setupEnvVarCopy();
         updateConfigHints();
+        // Initialize the form state on page load
+        handleExistingConnectionChange();
     }, 500);
 });
+
+function handleExistingConnectionChange() {
+    const selectedConnection = document.getElementById('existing_connection').value;
+    const formFields = document.getElementById('form-fields-container');
+    const errorMessage = document.getElementById('connection-locked-error');
+    const submitButton = document.getElementById('submit-button');
+
+    // Get all input, select, and textarea elements in the form
+    const formInputs = formFields.querySelectorAll('input, select, textarea');
+
+    if (selectedConnection) {
+        // A connection is selected, disable form fields visually
+        formFields.classList.add('disabled-form-field');
+        errorMessage.style.display = 'block';
+
+        // Properly disable each form field and remove the required attribute
+        formInputs.forEach(input => {
+            input.disabled = true;
+            if (input.hasAttribute('required')) {
+                input.setAttribute('data-was-required', 'true');
+                input.removeAttribute('required');
+            }
+        });
+
+        // Add a hidden input field with the selected connection ID
+        let hiddenInput = document.getElementById('selected_connection_id');
+        if (!hiddenInput) {
+            hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.id = 'selected_connection_id';
+            hiddenInput.name = 'selected_connection_id';
+            document.getElementById('connection-form').appendChild(hiddenInput);
+        }
+        hiddenInput.value = selectedConnection;
+
+        // Change the submit button text to reflect using existing connection
+        submitButton.innerText = "Use Selected Connection";
+    } else {
+        // No connection selected, enable form fields
+        formFields.classList.remove('disabled-form-field');
+        errorMessage.style.display = 'none';
+
+        // Re-enable each form field and restore the required attribute if it had one
+        formInputs.forEach(input => {
+            input.disabled = false;
+            if (input.getAttribute('data-was-required') === 'true') {
+                input.setAttribute('required', 'required');
+            }
+        });
+
+        // Remove the hidden input field if it exists
+        const hiddenInput = document.getElementById('selected_connection_id');
+        if (hiddenInput) {
+            hiddenInput.remove();
+        }
+
+        // Reset the submit button text
+        const form = document.getElementById('connection-form');
+        submitButton.innerText = form.getAttribute('data-original-button-text') ||
+                                "Create Connection";
+    }
+}
 
 function setupEnvVarCopy() {
     // Get references to the elements
